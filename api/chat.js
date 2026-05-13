@@ -1,6 +1,8 @@
-// Vercel serverless function. Proxies chat requests to Anthropic so the
-// API key never reaches the browser. If no key is configured, returns a
-// canned demo response so the UI is still useful for show-and-tell.
+// Vercel serverless function. Proxies chat requests to Google Gemini so
+// the API key never reaches the browser. If GEMINI_API_KEY isn't set,
+// returns canned demo responses so the UI is still useful for show-and-tell.
+
+const DEFAULT_MODEL = "gemini-2.5-flash";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -8,8 +10,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  const { system, messages, max_tokens = 800, model = "claude-sonnet-4-5-20250929" } = req.body || {};
+  const apiKey = process.env.GEMINI_API_KEY;
+  const { system, messages, max_tokens = 800, model = DEFAULT_MODEL } = req.body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
     res.status(400).json({ error: "messages array required" });
@@ -25,14 +27,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
+    const contents = messages.map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: String(m.content || "") }],
+    }));
+
+    const body = {
+      contents,
+      generationConfig: { maxOutputTokens: max_tokens, temperature: 0.7 },
+    };
+    if (system) body.systemInstruction = { parts: [{ text: system }] };
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const upstream = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({ model, max_tokens, system, messages }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
 
     const data = await upstream.json();
@@ -42,7 +52,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const text = data?.content?.[0]?.text || "";
+    const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
     res.status(200).json({ content: text, demo: false });
   } catch (err) {
     res.status(500).json({ error: err.message || "Unknown server error" });
@@ -55,7 +65,7 @@ function demoResponse(system, messages) {
 
   if (lower.includes("empathy") || lower.includes("transcript") || lower.includes("interview")) {
     return [
-      "**Demo mode** — set ANTHROPIC_API_KEY for live responses.",
+      "**Demo mode** — set GEMINI_API_KEY for live responses.",
       "",
       "Here's what I'd pull from a real transcript:",
       "",
@@ -70,7 +80,7 @@ function demoResponse(system, messages) {
 
   if (lower.includes("how might we") || lower.includes("hmw") || lower.includes("problem statement")) {
     return [
-      "**Demo mode** — set ANTHROPIC_API_KEY for live responses.",
+      "**Demo mode** — set GEMINI_API_KEY for live responses.",
       "",
       "Three sharper HMW variations:",
       "",
@@ -84,7 +94,7 @@ function demoResponse(system, messages) {
 
   if (lower.includes("crazy") || lower.includes("brainstorm") || lower.includes("ideas")) {
     return [
-      "**Demo mode** — set ANTHROPIC_API_KEY for live responses.",
+      "**Demo mode** — set GEMINI_API_KEY for live responses.",
       "",
       "Five additional ideas:",
       "",
@@ -98,7 +108,7 @@ function demoResponse(system, messages) {
 
   if (lower.includes("persona")) {
     return [
-      "**Demo mode** — set ANTHROPIC_API_KEY for live responses.",
+      "**Demo mode** — set GEMINI_API_KEY for live responses.",
       "",
       "**Maria Chen**, 32 — software engineer, mom of two under 5",
       "",
@@ -109,9 +119,8 @@ function demoResponse(system, messages) {
     ].join("\n");
   }
 
-  // Generic conversational reply
   return [
-    "**Demo mode** — set ANTHROPIC_API_KEY in Vercel env vars for live AI.",
+    "**Demo mode** — set GEMINI_API_KEY in Vercel env vars for live AI.",
     "",
     "I hear you. Tell me more — what specifically have you tried so far, and what did you notice?",
   ].join("\n");

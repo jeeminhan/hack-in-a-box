@@ -2558,7 +2558,7 @@ async function callAI({ system, messages, max_tokens = 800 }) {
     return { text: data.content || "", demo: !!data.demo };
   } catch (err) {
     return {
-      text: `_AI is unavailable right now (${err.message}). Once you deploy this to Vercel and set ANTHROPIC_API_KEY, this will return live responses._`,
+      text: `_AI is unavailable right now (${err.message}). Once you deploy this to Vercel and set GEMINI_API_KEY, this will return live responses._`,
       demo: true,
     };
   }
@@ -2860,7 +2860,7 @@ function ThinkingPartner({ setMode }) {
 
       {demo && (
         <div style={{ background: "#FEF3C7", borderBottom: "1px solid #FBBF24", padding: "8px 20px", fontSize: 12, color: "#92400E", textAlign: "center" }}>
-          Running in <strong>demo mode</strong> — responses are canned examples. Deploy to Vercel with <code>ANTHROPIC_API_KEY</code> for live AI.
+          Running in <strong>demo mode</strong> — responses are canned examples. Deploy to Vercel with <code>GEMINI_API_KEY</code> for live AI.
         </div>
       )}
 
