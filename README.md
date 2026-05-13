@@ -1,16 +1,31 @@
-# React + Vite
+# Hack In A Box
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interactive React prototype for the Indigitous US Hack In A Box playbook. It includes a guided sprint journey, reference-mode playbook content, autosaved worksheets, and a printable sprint packet.
 
-Currently, two official plugins are available:
+## Run Locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## Quality Checks
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm run lint
+npm run build
+```
 
-## Expanding the ESLint configuration
+## AI Coach Configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The prototype does not call model providers directly from the browser. To enable AI coaching, provide a backend or serverless endpoint and expose it as:
+
+```bash
+VITE_HIAB_AI_ENDPOINT=/api/hiab-ai
+```
+
+The endpoint should accept JSON payloads with `type`, form responses, and step metadata, then return the structured JSON used by the UI.
+
+## Notes
+
+Worksheet data is stored in the browser via `localStorage`. The guided journey's final print packet renders the saved worksheet data into a printable handoff packet.

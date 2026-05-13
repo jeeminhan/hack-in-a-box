@@ -30,6 +30,112 @@ const phaseColors = {
   foundation: { bg: "#FFFAF0", accent: "#9D174D", light: "#FDE8EF" },
 };
 
+const AI_ENDPOINT = import.meta.env.VITE_HIAB_AI_ENDPOINT;
+
+const WORKSHEET_KEYS = {
+  empathy: "hiab-empathy-map-v1",
+  persona: "hiab-persona-v1",
+  problem: "hiab-problem-v1",
+  crazy8s: "hiab-crazy8s-v1",
+  feedback: "hiab-feedback-v1",
+  summary: "hiab-summary-v1",
+  proposal: "hiab-proposal-v1",
+  plan: "hiab-30-60-90-v1",
+  impact: "hiab-impact-v1",
+};
+
+function readStoredJson(key, fallback = {}) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? { ...fallback, ...JSON.parse(raw) } : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStoredJson(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readStoredString(key, fallback) {
+  try {
+    return localStorage.getItem(key) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStoredString(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function isAiConfigured() {
+  return Boolean(AI_ENDPOINT);
+}
+
+async function requestAiCoach(payload) {
+  if (!AI_ENDPOINT) {
+    throw new Error("AI coach endpoint is not configured.");
+  }
+
+  const response = await fetch(AI_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`AI coach request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+
+function buildHmw(problem) {
+  if (!problem?.action && !problem?.who && !problem?.outcome) return "";
+  return `How might we ${problem.action || "..."} for ${problem.who || "..."} so that ${problem.outcome || "..."}?`;
+}
+
+function loadSprintSummarySources() {
+  const problem = readStoredJson(WORKSHEET_KEYS.problem);
+  const crazy8s = readStoredJson(WORKSHEET_KEYS.crazy8s, { panels: [] });
+  const empathy = readStoredJson(WORKSHEET_KEYS.empathy);
+  return {
+    hmw: buildHmw(problem),
+    topPanels: (crazy8s.panels || []).filter((x) => x.starred && x.text).map((x) => x.text),
+    empathySubject: empathy.subject || "",
+    insights: empathy.insights || "",
+  };
+}
+
+function loadWorksheetSnapshot() {
+  return {
+    empathy: readStoredJson(WORKSHEET_KEYS.empathy, { says: [], thinks: [], does: [], feels: [] }),
+    persona: readStoredJson(WORKSHEET_KEYS.persona),
+    problem: readStoredJson(WORKSHEET_KEYS.problem, { pains: [], drafts: [] }),
+    crazy8s: readStoredJson(WORKSHEET_KEYS.crazy8s, { panels: [] }),
+    feedback: readStoredJson(WORKSHEET_KEYS.feedback, { likes: [], wishes: [], whatifs: [] }),
+    summary: readStoredJson(WORKSHEET_KEYS.summary),
+    proposal: readStoredJson(WORKSHEET_KEYS.proposal),
+    plan: readStoredJson(WORKSHEET_KEYS.plan, {
+      "30": { tasks: [] },
+      "60": { tasks: [] },
+      "90": { tasks: [] },
+    }),
+    impact: readStoredJson(WORKSHEET_KEYS.impact),
+  };
+}
+
 const SCIPAB_STEPS = [
   {
     key: "situation",
@@ -257,16 +363,6 @@ function VideoPlaceholder({ title, description, duration }) {
   );
 }
 
-function ComingSoon({ label = "Coming Soon" }) {
-  return (
-    <span style={{
-      display: "inline-block", background: "#E8890C", color: "#fff", fontSize: 10, fontWeight: 700,
-      padding: "2px 8px", borderRadius: 10, letterSpacing: 0.5, textTransform: "uppercase",
-      marginLeft: 8, verticalAlign: "middle",
-    }}>{label}</span>
-  );
-}
-
 function EmpathyMapVisual() {
   const quadrants = [
     { title: "SAYS", color: "#4361EE", prompt: "What does the person say out loud? Direct quotes, key phrases, statements about their experience.", },
@@ -287,7 +383,7 @@ function EmpathyMapVisual() {
 }
 
 function EmpathyMapWorksheet() {
-  const STORAGE_KEY = "hiab-empathy-map-v1";
+  const STORAGE_KEY = WORKSHEET_KEYS.empathy;
   const quadrants = [
     { key: "says", title: "SAYS", color: "#4361EE", prompt: "Direct quotes, key phrases" },
     { key: "thinks", title: "THINKS", color: "#2D9B3A", prompt: "Beliefs, worries, hopes" },
@@ -297,18 +393,11 @@ function EmpathyMapWorksheet() {
 
   const empty = { subject: "", says: [], thinks: [], does: [], feels: [], insights: "" };
 
-  const [data, setData] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? { ...empty, ...JSON.parse(raw) } : empty;
-    } catch {
-      return empty;
-    }
-  });
+  const [data, setData] = useState(() => readStoredJson(STORAGE_KEY, empty));
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
-  }, [data]);
+    writeStoredJson(STORAGE_KEY, data);
+  }, [STORAGE_KEY, data]);
 
   const addNote = (key) => {
     setData((d) => ({ ...d, [key]: [...d[key], { id: Date.now() + Math.random(), text: "" }] }));
@@ -453,14 +542,9 @@ const textareaStyle = { ...inputStyle, resize: "vertical", lineHeight: 1.55 };
 const fieldLabel = { fontSize: 13, fontWeight: 600, color: "#555", display: "block", marginBottom: 6 };
 
 function useWorksheet(storageKey, empty) {
-  const [data, setData] = useState(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      return raw ? { ...empty, ...JSON.parse(raw) } : empty;
-    } catch { return empty; }
-  });
+  const [data, setData] = useState(() => readStoredJson(storageKey, empty));
   useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(data)); } catch {}
+    writeStoredJson(storageKey, data);
   }, [storageKey, data]);
   const reset = (msg = "Clear this worksheet? This can't be undone.") => {
     if (confirm(msg)) setData(empty);
@@ -497,7 +581,7 @@ function PersonaCardWorksheet() {
     avatar: "👤", name: "", age: "", role: "", backstory: "",
     goals: "", pains: "", faith: "", needs: "", dayInLife: "",
   };
-  const [data, setData, reset] = useWorksheet("hiab-persona-v1", empty);
+  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.persona, empty);
   const avatars = ["👤","👩","👨","🧑","👵","👴","👧","👦","🧕","👳","👨‍🦱","👩‍🦰"];
   const sections = [
     { key: "goals", label: "Goals & Motivations", color: "#2D9B3A", placeholder: "What do they want? What drives them?" },
@@ -552,7 +636,7 @@ function PersonaCardWorksheet() {
 // ========== PROBLEM STATEMENT WORKSHEET ==========
 function ProblemStatementWorksheet() {
   const empty = { pains: [], action: "", who: "", outcome: "", drafts: [] };
-  const [data, setData, reset] = useWorksheet("hiab-problem-v1", empty);
+  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.problem, empty);
 
   const addPain = () => setData((d) => ({ ...d, pains: [...d.pains, { id: Date.now() + Math.random(), text: "", starred: false }] }));
   const updatePain = (id, text) => setData((d) => ({ ...d, pains: d.pains.map((p) => p.id === id ? { ...p, text } : p) }));
@@ -615,27 +699,36 @@ function ProblemStatementWorksheet() {
 // ========== CRAZY 8s WORKSHEET ==========
 function Crazy8sWorksheet() {
   const empty = { hmw: "", panels: Array.from({ length: 8 }, () => ({ text: "", starred: false })) };
-  const [data, setData, reset] = useWorksheet("hiab-crazy8s-v1", empty);
+  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.crazy8s, empty);
   const [timeLeft, setTimeLeft] = useState(0); // seconds remaining
   const [running, setRunning] = useState(false);
   const currentPanel = running || timeLeft > 0 ? Math.min(7, Math.floor((480 - timeLeft) / 60)) : -1;
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("hiab-problem-v1");
+      const saved = localStorage.getItem(WORKSHEET_KEYS.problem);
       if (saved && !data.hmw) {
         const p = JSON.parse(saved);
         const hmw = `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
         if (p.action || p.who || p.outcome) setData((d) => ({ ...d, hmw }));
       }
-    } catch {}
+    } catch {
+      return;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!running) return;
-    if (timeLeft <= 0) { setRunning(false); return; }
-    const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
+    const t = setTimeout(() => {
+      setTimeLeft((s) => {
+        if (s <= 1) {
+          setRunning(false);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
     return () => clearTimeout(t);
   }, [running, timeLeft]);
 
@@ -699,7 +792,7 @@ function Crazy8sWorksheet() {
 // ========== FEEDBACK CARDS WORKSHEET ==========
 function FeedbackCardsWorksheet() {
   const empty = { prototype: "", likes: [], wishes: [], whatifs: [], notes: "" };
-  const [data, setData, reset] = useWorksheet("hiab-feedback-v1", empty);
+  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.feedback, empty);
 
   const cols = [
     { key: "likes", label: "I like...", desc: "What's working?", color: "#2D9B3A", emoji: "👍" },
@@ -751,22 +844,8 @@ function FeedbackCardsWorksheet() {
 // ========== SPRINT SUMMARY ONE-PAGER ==========
 function SprintSummaryWorksheet() {
   const empty = { sprintName: "", date: "", topIdea: "", insights: "", nextSteps: "", owner: "" };
-  const [data, setData, reset] = useWorksheet("hiab-summary-v1", empty);
-  const [sources, setSources] = useState({ hmw: "", topPanels: [], empathySubject: "", insights: "" });
-
-  useEffect(() => {
-    try {
-      const p = JSON.parse(localStorage.getItem("hiab-problem-v1") || "{}");
-      const c = JSON.parse(localStorage.getItem("hiab-crazy8s-v1") || "{}");
-      const e = JSON.parse(localStorage.getItem("hiab-empathy-map-v1") || "{}");
-      setSources({
-        hmw: p.action || p.who || p.outcome ? `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?` : "",
-        topPanels: (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text),
-        empathySubject: e.subject || "",
-        insights: e.insights || "",
-      });
-    } catch {}
-  }, []);
+  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.summary, empty);
+  const [sources] = useState(loadSprintSummarySources);
 
   return (
     <WorksheetShell>
@@ -800,7 +879,13 @@ function SprintSummaryWorksheet() {
 
       <label style={{ display: "block", marginBottom: 14 }}>
         <span style={fieldLabel}>Three key insights</span>
-        <textarea value={data.insights || sources.insights} onChange={(e) => setData((d) => ({ ...d, insights: e.target.value }))} rows={3} style={textareaStyle} placeholder="What did you learn? What surprised you?" />
+        <textarea
+          value={data.insights}
+          onChange={(e) => setData((d) => ({ ...d, insights: e.target.value }))}
+          rows={3}
+          style={textareaStyle}
+          placeholder={sources.insights || "What did you learn? What surprised you?"}
+        />
       </label>
 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }} className="hiab-grid-2">
@@ -814,7 +899,7 @@ function SprintSummaryWorksheet() {
 // ========== LEADERSHIP PROPOSAL WORKSHEET ==========
 function LeadershipProposalWorksheet() {
   const empty = { title: "", problem: "", evidence: "", solution: "", served: "", impact: "", resources: "", timeline: "", success: "", ask: "" };
-  const [data, setData, reset] = useWorksheet("hiab-proposal-v1", empty);
+  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.proposal, empty);
 
   const sections = [
     { key: "problem", label: "The problem", placeholder: "What real human need are we addressing?", color: "#C2185B" },
@@ -853,7 +938,7 @@ function ThirtySixtyNinetyWorksheet() {
     "60": { goal: "", tasks: [], checkIn: "" },
     "90": { goal: "", tasks: [], checkIn: "" },
   };
-  const [data, setData, reset] = useWorksheet("hiab-30-60-90-v1", empty);
+  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.plan, empty);
   const phases = [
     { key: "30", label: "Day 1–30", subtitle: "Research, plan, assemble team", color: "#7C3AED" },
     { key: "60", label: "Day 31–60", subtitle: "Pilot or prototype in real setting", color: "#9333EA" },
@@ -902,7 +987,7 @@ function ThirtySixtyNinetyWorksheet() {
 // ========== IMPACT STORY WORKSHEET ==========
 function ImpactStoryWorksheet() {
   const empty = { title: "", date: "", challenge: "", built: "", outcomes: "", lessons: "", whatNext: "", photoUrl: "" };
-  const [data, setData, reset] = useWorksheet("hiab-impact-v1", empty);
+  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.impact, empty);
 
   const sections = [
     { key: "challenge", label: "The original challenge", placeholder: "What problem were we trying to solve when we started?" },
@@ -975,6 +1060,7 @@ function SCIPABChatbot() {
   const [churchName, setChurchName] = useState("");
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+  const aiConfigured = isAiConfigured();
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1036,60 +1122,13 @@ function SCIPABChatbot() {
     addBotMessage("Let me refine your submission into a polished SCIPAB problem statement and evaluate whether it's a hackable problem... ✨");
 
     try {
-      const scipabText = SCIPAB_STEPS.map(
-        (s) => `${s.label}: ${responses[s.key]}`
-      ).join("\n\n");
-
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [
-            {
-              role: "user",
-              content: `You are a friendly coach helping churches articulate their challenges clearly. A church called "${churchName}" submitted a problem using the SCIPAB framework. Here is their submission:
-
-${scipabText}
-
-Please do three things and respond ONLY with valid JSON (no markdown, no backticks, no preamble):
-
-1. Rewrite their SCIPAB as a polished, clear problem statement. Keep each section to 1-2 sentences max. Use their own words where possible — just clean up grammar and tighten the language. Do NOT add information they didn't provide. Do NOT repeat the same point across multiple sections.
-
-2. Convert it into a single "How Might We..." question. IMPORTANT: Keep the HMW question short and simple — ideally under 20 words. It should be easy to understand on first read, specific enough to act on, but open enough to allow creative solutions. Avoid jargon. A good HMW sounds like something a regular person would say, not an academic paper. Bad example: "How might we leverage intergenerational mentorship frameworks to facilitate authentic community engagement?" Good example: "How might we help new visitors build real friendships in their first month?"
-
-3. Evaluate whether this is a "hackable" problem — meaning it is specific enough to tackle in a 3-6 hour workshop, focused on real people, actionable, and leaves room for creative solutions. Give a score from 1-5 and brief feedback (2-3 sentences). If the score is below 4, suggest one specific way to sharpen the problem.
-
-Return JSON in this exact format:
-{
-  "refined": {
-    "situation": "...",
-    "complication": "...",
-    "implication": "...",
-    "position": "...",
-    "action": "...",
-    "benefit": "..."
-  },
-  "hmw": "How might we ...",
-  "hackability": {
-    "score": 4,
-    "feedback": "..."
-  }
-}`,
-            },
-          ],
-        }),
+      const data = await requestAiCoach({
+        type: "scipab",
+        churchName,
+        responses,
+        steps: SCIPAB_STEPS.map(({ key, label }) => ({ key, label })),
       });
-
-      const data = await response.json();
-      const text = data.content
-        .filter((item) => item.type === "text")
-        .map((item) => item.text)
-        .join("");
-      const clean = text.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean);
-      setAiSummary(parsed);
+      setAiSummary(data.result || data);
       setIsLoading(false);
     } catch (err) {
       console.error("AI refinement error:", err);
@@ -1202,14 +1241,14 @@ Return JSON in this exact format:
               }}>
                 📋 Copy to Clipboard
               </button>
-              <button onClick={handleAIRefine} style={{
+              <button onClick={handleAIRefine} disabled={!aiConfigured} title={aiConfigured ? "" : "Configure VITE_HIAB_AI_ENDPOINT to enable AI coaching."} style={{
                 flex: 2, padding: "14px 20px", borderRadius: 10, border: "none",
-                background: "linear-gradient(135deg, #0D7C5F, #2D9B3A)", color: "#fff",
-                fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, cursor: "pointer",
+                background: aiConfigured ? "linear-gradient(135deg, #0D7C5F, #2D9B3A)" : "#d1d5db", color: "#fff",
+                fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, cursor: aiConfigured ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                boxShadow: "0 4px 16px rgba(13,124,95,0.3)",
+                boxShadow: aiConfigured ? "0 4px 16px rgba(13,124,95,0.3)" : "none",
               }}>
-                <Icon name="sparkle" size={18} color="#fff" /> Refine with AI Coach
+                <Icon name="sparkle" size={18} color="#fff" /> {aiConfigured ? "Refine with AI Coach" : "AI Coach Not Configured"}
               </button>
             </div>
           )}
@@ -1644,6 +1683,7 @@ function ProposalChatbot({ autoStart = false }) {
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
   const hasAutoStarted = useRef(false);
+  const aiConfigured = isAiConfigured();
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatHistory, currentStep]);
   useEffect(() => { if (currentStep >= 0) inputRef.current?.focus(); }, [currentStep]);
@@ -1654,7 +1694,7 @@ function ProposalChatbot({ autoStart = false }) {
       setCurrentStep(0);
       setChatHistory([{ role: "bot", text: "Let's build a compelling proposal for your church leadership! I'll walk you through 6 sections. First — what's the name of your team or sprint group?" }]);
     }
-  }, [autoStart]);
+  }, [autoStart, currentStep]);
 
   const addBotMessage = (text) => setChatHistory((prev) => [...prev, { role: "bot", text }]);
   const addUserMessage = (text) => setChatHistory((prev) => [...prev, { role: "user", text }]);
@@ -1694,53 +1734,13 @@ function ProposalChatbot({ autoStart = false }) {
     setCurrentStep(7);
     addBotMessage("Refining your proposal into a polished, leadership-ready document... ✨");
     try {
-      const proposalText = PROPOSAL_STEPS.map((s) => `${s.label}: ${responses[s.key]}`).join("\n\n");
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: `You are a friendly coach helping a church team called "${teamName}" turn their workshop ideas into a clear pitch for church leadership (pastors, elders, board members).
-
-Here is their raw proposal:
-
-${proposalText}
-
-Please do two things and respond ONLY with valid JSON (no markdown, no backticks):
-
-1. Rewrite their proposal into a polished, clear leadership document. Rules:
-   - Keep each section to 1-3 sentences. Church leaders are busy — be concise.
-   - Use their own words and ideas. Do NOT invent details they didn't provide.
-   - Do NOT repeat the same information across sections. Each section should add something new.
-   - Use plain, warm language — not corporate or academic tone.
-   - Make the "What We Need" section very specific and actionable (exact budget, people, timeline).
-   - Make the "Action Plan" concrete with who does what and by when.
-
-2. Generate a concise "elevator pitch" version — 2-3 sentences max that a team member could say out loud in 30 seconds to explain the whole idea. Keep it conversational, not formal.
-
-Return JSON:
-{
-  "refined": {
-    "problem": "...",
-    "evidence": "...",
-    "solution": "...",
-    "impact": "...",
-    "resources": "...",
-    "plan": "..."
-  },
-  "elevator_pitch": "...",
-  "title": "A short, clear title for the proposal (under 8 words)"
-}`
-          }],
-        }),
+      const data = await requestAiCoach({
+        type: "proposal",
+        teamName,
+        responses,
+        steps: PROPOSAL_STEPS.map(({ key, label }) => ({ key, label })),
       });
-      const data = await response.json();
-      const text = data.content.filter((item) => item.type === "text").map((item) => item.text).join("");
-      const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-      setAiProposal(parsed);
+      setAiProposal(data.result || data);
       setIsLoading(false);
     } catch (err) {
       console.error(err);
@@ -1816,13 +1816,13 @@ Return JSON:
               }}>
                 📋 Copy to Clipboard
               </button>
-              <button onClick={handleAIRefine} style={{
+              <button onClick={handleAIRefine} disabled={!aiConfigured} title={aiConfigured ? "" : "Configure VITE_HIAB_AI_ENDPOINT to enable AI polishing."} style={{
                 flex: 2, padding: "14px 20px", borderRadius: 10, border: "none",
-                background: "linear-gradient(135deg, #1D4ED8, #4361EE)", color: "#fff",
-                fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, cursor: "pointer",
+                background: aiConfigured ? "linear-gradient(135deg, #1D4ED8, #4361EE)" : "#d1d5db", color: "#fff",
+                fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, cursor: aiConfigured ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                boxShadow: "0 4px 16px rgba(29,78,216,0.3)",
-              }}>✨ Polish with AI</button>
+                boxShadow: aiConfigured ? "0 4px 16px rgba(29,78,216,0.3)" : "none",
+              }}>✨ {aiConfigured ? "Polish with AI" : "AI Not Configured"}</button>
             </div>
           )}
         </div>
@@ -2083,12 +2083,166 @@ function DeeperGuidance({ items, accent }) {
   );
 }
 
+function PrintableSection({ title, children }) {
+  return (
+    <section style={{ breakInside: "avoid", marginBottom: 24 }}>
+      <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, margin: "0 0 10px", color: "#1a1a2e" }}>{title}</h2>
+      <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 16, background: "#fff" }}>{children}</div>
+    </section>
+  );
+}
+
+function PrintableValue({ label, value }) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 14, lineHeight: 1.6, color: "#1f2937", whiteSpace: "pre-wrap" }}>{value || "Not captured yet."}</div>
+    </div>
+  );
+}
+
+function PrintableLabel({ children }) {
+  return (
+    <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+      {children}
+    </div>
+  );
+}
+
+function PrintableList({ items }) {
+  const visible = (items || []).filter(Boolean);
+  if (visible.length === 0) return <div style={{ fontSize: 14, color: "#6b7280" }}>Not captured yet.</div>;
+  return (
+    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.6, color: "#1f2937" }}>
+      {visible.map((item, i) => <li key={i}>{item}</li>)}
+    </ul>
+  );
+}
+
+function PrintPacket({ onClose }) {
+  const [snapshot] = useState(loadWorksheetSnapshot);
+  const hmw = buildHmw(snapshot.problem);
+  const starredIdeas = (snapshot.crazy8s.panels || []).filter((p) => p.starred && p.text).map((p) => p.text);
+  const painPoints = (snapshot.problem.pains || []).filter((p) => p.text).map((p) => `${p.starred ? "★ " : ""}${p.text}`);
+  const planPhases = ["30", "60", "90"];
+
+  useEffect(() => {
+    document.body.classList.add("hiab-printing");
+    return () => document.body.classList.remove("hiab-printing");
+  }, []);
+
+  return (
+    <div className="hiab-print-packet" style={{
+      position: "fixed", inset: 0, zIndex: 200, overflowY: "auto",
+      background: "#f8f8f6", padding: "24px 20px 48px",
+    }}>
+      <style>{`
+        @media print {
+          body.hiab-printing * { visibility: hidden !important; }
+          body.hiab-printing .hiab-print-packet,
+          body.hiab-printing .hiab-print-packet * { visibility: visible !important; }
+          body.hiab-printing .hiab-print-packet {
+            position: absolute !important;
+            inset: 0 !important;
+            overflow: visible !important;
+            background: #fff !important;
+            padding: 0 !important;
+          }
+          .hiab-print-actions { display: none !important; }
+        }
+      `}</style>
+      <div style={{ maxWidth: 820, margin: "0 auto" }}>
+        <div className="hiab-print-actions" style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+          <button onClick={onClose} style={btnStyleSecondary}>Close</button>
+          <button onClick={() => window.print()} style={{ ...btnStyleSecondary, background: "#0D7C5F", color: "#fff", border: "none" }}>Print packet</button>
+        </div>
+
+        <header style={{ marginBottom: 24, borderBottom: "2px solid #1a1a2e", paddingBottom: 16 }}>
+          <div style={{ fontSize: 12, color: "#E8890C", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Hack In A Box Sprint Packet</div>
+          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 36, margin: "4px 0", color: "#1a1a2e" }}>
+            {snapshot.summary.sprintName || "Sprint Summary"}
+          </h1>
+          <div style={{ fontSize: 14, color: "#6b7280" }}>{snapshot.summary.date || "Date not captured"}</div>
+        </header>
+
+        <PrintableSection title="Problem Definition">
+          <PrintableValue label="How Might We" value={hmw} />
+          <PrintableLabel>Pain Points</PrintableLabel>
+          <PrintableList items={painPoints} />
+        </PrintableSection>
+
+        <PrintableSection title="Empathy Map">
+          <PrintableValue label="Subject" value={snapshot.empathy.subject} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {["says", "thinks", "does", "feels"].map((key) => (
+              <div key={key}>
+                <PrintableLabel>{key}</PrintableLabel>
+                <PrintableList items={(snapshot.empathy[key] || []).map((n) => n.text).filter(Boolean)} />
+              </div>
+            ))}
+          </div>
+          <PrintableValue label="Insights" value={snapshot.empathy.insights} />
+        </PrintableSection>
+
+        <PrintableSection title="Persona">
+          <PrintableValue label="Name" value={snapshot.persona.name} />
+          <PrintableValue label="Role / Age" value={[snapshot.persona.role, snapshot.persona.age].filter(Boolean).join(" · ")} />
+          <PrintableValue label="Backstory" value={snapshot.persona.backstory} />
+          <PrintableValue label="Goals" value={snapshot.persona.goals} />
+          <PrintableValue label="Pain Points" value={snapshot.persona.pains} />
+          <PrintableValue label="Needs from the Church" value={snapshot.persona.needs} />
+        </PrintableSection>
+
+        <PrintableSection title="Ideas & Feedback">
+          <PrintableLabel>Starred Crazy 8s Ideas</PrintableLabel>
+          <PrintableList items={starredIdeas} />
+          <PrintableValue label="Prototype" value={snapshot.feedback.prototype} />
+          <PrintableLabel>I Like</PrintableLabel>
+          <PrintableList items={(snapshot.feedback.likes || []).map((n) => n.text).filter(Boolean)} />
+          <PrintableLabel>I Wish</PrintableLabel>
+          <PrintableList items={(snapshot.feedback.wishes || []).map((n) => n.text).filter(Boolean)} />
+          <PrintableLabel>What If</PrintableLabel>
+          <PrintableList items={(snapshot.feedback.whatifs || []).map((n) => n.text).filter(Boolean)} />
+        </PrintableSection>
+
+        <PrintableSection title="Pitch & Next Steps">
+          <PrintableValue label="Top Idea" value={snapshot.summary.topIdea} />
+          <PrintableValue label="Key Insights" value={snapshot.summary.insights || snapshot.empathy.insights} />
+          <PrintableValue label="Immediate Next Steps" value={snapshot.summary.nextSteps} />
+          <PrintableValue label="Owner" value={snapshot.summary.owner} />
+          <PrintableValue label="Leadership Ask" value={snapshot.proposal.ask} />
+        </PrintableSection>
+
+        <PrintableSection title="30-60-90 Day Plan">
+          {planPhases.map((phase) => (
+            <div key={phase} style={{ marginBottom: 14 }}>
+              <PrintableValue label={`Day ${phase}`} value={snapshot.plan[phase]?.goal} />
+              <PrintableList items={(snapshot.plan[phase]?.tasks || []).map((task) => `${task.done ? "[x]" : "[ ]"} ${task.text}`).filter((text) => text.trim() !== "[ ]" && text.trim() !== "[x]")} />
+            </div>
+          ))}
+        </PrintableSection>
+
+        <PrintableSection title="Impact Story">
+          <PrintableValue label="Title" value={snapshot.impact.title} />
+          <PrintableValue label="Challenge" value={snapshot.impact.challenge} />
+          <PrintableValue label="What We Built" value={snapshot.impact.built} />
+          <PrintableValue label="Outcomes" value={snapshot.impact.outcomes} />
+          <PrintableValue label="Lessons" value={snapshot.impact.lessons} />
+          <PrintableValue label="What's Next" value={snapshot.impact.whatNext} />
+        </PrintableSection>
+      </div>
+    </div>
+  );
+}
+
 function GuidedFlow({ setMode }) {
   const [stepIdx, setStepIdx] = useState(() => {
-    try { return parseInt(localStorage.getItem("hiab-guided-step") || "0", 10); } catch { return 0; }
+    const saved = parseInt(readStoredString("hiab-guided-step", "0"), 10);
+    return Number.isNaN(saved) ? 0 : saved;
   });
+  const [printPacketOpen, setPrintPacketOpen] = useState(false);
   useEffect(() => {
-    try { localStorage.setItem("hiab-guided-step", String(stepIdx)); } catch {}
+    writeStoredString("hiab-guided-step", String(stepIdx));
   }, [stepIdx]);
 
   const step = GUIDED_STEPS[stepIdx];
@@ -2202,7 +2356,7 @@ function GuidedFlow({ setMode }) {
                 You just ran a complete design thinking sprint. Your pitch, plan, and worksheets are all saved. Print your Sprint Summary, share it with leadership, and start the real work.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
-                <button onClick={() => window.print()} style={{ background: "#0D7C5F", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>🖨️ Print everything</button>
+                <button onClick={() => setPrintPacketOpen(true)} style={{ background: "#0D7C5F", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>🖨️ Print everything</button>
                 <button onClick={() => goTo(0)} style={{ background: "#fff", color: "#1a1a2e", border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Start over</button>
               </div>
               <div style={{ fontSize: 14, color: "#666", marginTop: 24 }}>
@@ -2257,16 +2411,15 @@ function GuidedFlow({ setMode }) {
           ) : <div />}
         </div>
       )}
+      {printPacketOpen && <PrintPacket onClose={() => setPrintPacketOpen(false)} />}
     </div>
   );
 }
 
 export default function HackInABox() {
-  const [mode, setMode] = useState(() => {
-    try { return localStorage.getItem("hiab-mode") || "guided"; } catch { return "guided"; }
-  });
+  const [mode, setMode] = useState(() => readStoredString("hiab-mode", "guided"));
   useEffect(() => {
-    try { localStorage.setItem("hiab-mode", mode); } catch {}
+    writeStoredString("hiab-mode", mode);
   }, [mode]);
 
   const [activeSection, setActiveSection] = useState("home");
