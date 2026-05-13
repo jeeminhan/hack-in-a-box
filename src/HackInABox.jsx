@@ -2061,6 +2061,130 @@ function StepIntro({ accent, intro }) {
   );
 }
 
+function readWorksheet(key) {
+  try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch { return {}; }
+}
+
+function AIHelper({ stepKey, accent }) {
+  const [responses, setResponses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [demo, setDemo] = useState(false);
+
+  const presets = {
+    empathize: [
+      { label: "Critique my empathy map", build: () => {
+        const e = readWorksheet("hiab-empathy-map-v1");
+        return `Here's my empathy map for "${e.subject || "an unnamed subject"}":\n\nSAYS: ${(e.says || []).map((n) => n.text).join("; ") || "(empty)"}\nTHINKS: ${(e.thinks || []).map((n) => n.text).join("; ") || "(empty)"}\nDOES: ${(e.does || []).map((n) => n.text).join("; ") || "(empty)"}\nFEELS: ${(e.feels || []).map((n) => n.text).join("; ") || "(empty)"}\n\nAct as a design thinking coach. Tell me where I'm making assumptions vs. genuinely observing. What's missing? What surprises do I see?`;
+      }},
+      { label: "Process an interview transcript", build: () => "Paste an interview or testimony below, then ask AI to break it into the Says/Thinks/Does/Feels quadrants for an empathy map.\n\n(Replace this with your actual transcript and edit the request.)" },
+    ],
+    persona: [
+      { label: "Generate 2 alternative personas", build: () => {
+        const e = readWorksheet("hiab-empathy-map-v1");
+        const p = readWorksheet("hiab-persona-v1");
+        return `Based on this empathy map and persona, generate 2 alternative personas that represent different segments I might be missing:\n\nEMPATHY: subject=${e.subject || "(none)"}; insights=${e.insights || "(none)"}\nMY PERSONA: ${p.name || "(unnamed)"}, ${p.age || "?"} — ${p.role || "no role"}. Goals: ${p.goals || "(none)"}; Pains: ${p.pains || "(none)"}\n\nGive each alternative a name, age, role, top goal, top pain, and one concrete habit that would surprise me.`;
+      }},
+    ],
+    define: [
+      { label: "Sharpen my How Might We", build: () => {
+        const p = readWorksheet("hiab-problem-v1");
+        const hmw = `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
+        return `My current HMW: "${hmw}"\n\nGive me 3 sharper variations. Make each one specific enough to act on in a 3-hour sprint but open enough for creative solutions. Avoid jargon. Then tell me which of the 3 you'd pick and why.`;
+      }},
+      { label: "Is this a good problem to solve?", build: () => {
+        const p = readWorksheet("hiab-problem-v1");
+        const hmw = `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
+        const pains = (p.pains || []).map((x) => x.text).filter(Boolean).join("; ");
+        return `Evaluate my problem statement for a church design thinking sprint:\n\nHMW: "${hmw}"\nPains observed: ${pains || "(none listed)"}\n\nIs this a problem worth a 3-hour sprint? Score it 1-5 on: specificity, actionability, human-centeredness, and whether it leaves room for creative solutions. Be honest. If it's weak, tell me how to sharpen it.`;
+      }},
+    ],
+    ideate: [
+      { label: "Generate 10 more ideas", build: () => {
+        const p = readWorksheet("hiab-problem-v1");
+        const c = readWorksheet("hiab-crazy8s-v1");
+        const hmw = c.hmw || `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
+        const mine = (c.panels || []).map((x) => x.text).filter(Boolean);
+        return `HMW: "${hmw}"\n\nMy current ideas:\n${mine.length ? mine.map((x, i) => `${i + 1}. ${x}`).join("\n") : "(none yet)"}\n\nGenerate 10 NEW ideas I haven't thought of. Push for wild, unexpected combinations. Include at least 2 that sound impossible at first.`;
+      }},
+      { label: "Combine ideas in fresh ways", build: () => {
+        const c = readWorksheet("hiab-crazy8s-v1");
+        const starred = (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text);
+        return `My starred Crazy 8s ideas:\n${starred.length ? starred.map((x, i) => `${i + 1}. ${x}`).join("\n") : "(none starred yet — star some first)"}\n\nSuggest 3 hybrid ideas that combine elements of two or more of mine. What's the strongest combination, and why?`;
+      }},
+    ],
+    prototype: [
+      { label: "Suggest a prototype format", build: () => {
+        const c = readWorksheet("hiab-crazy8s-v1");
+        const starred = (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text);
+        const top = starred[0] || "(nothing starred yet)";
+        return `My top idea: "${top}"\n\nWhich prototype format would I learn the most from in 30 minutes? Options: storyboard, mock flyer, role-play, sketched landing page, schedule plan, or paper model. Recommend one and tell me exactly what to build.`;
+      }},
+      { label: "Stress-test the idea", build: () => {
+        const c = readWorksheet("hiab-crazy8s-v1");
+        const starred = (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text);
+        const top = starred[0] || "(nothing starred yet)";
+        return `My top idea: "${top}"\n\nAct as a skeptical 60-year-old long-time member of my church. What concerns would you raise? What's likely to go wrong? Where might this fail? Be specific and respectful.`;
+      }},
+    ],
+    pitch: [
+      { label: "Critique my proposal", build: () => {
+        const prop = readWorksheet("hiab-proposal-v1");
+        return `Critique my leadership proposal as if you were a pastor with limited time and a healthy skepticism toward new programs:\n\nTitle: ${prop.title || "(none)"}\nProblem: ${prop.problem || "(empty)"}\nEvidence: ${prop.evidence || "(empty)"}\nSolution: ${prop.solution || "(empty)"}\nThe ask: ${prop.ask || "(empty)"}\n\nWhere is this weak? What would make me say yes faster? Be direct.`;
+      }},
+      { label: "Write the elevator pitch", build: () => {
+        const sum = readWorksheet("hiab-summary-v1");
+        const prop = readWorksheet("hiab-proposal-v1");
+        return `Based on this sprint summary, write a 60-second elevator pitch I could deliver to my pastor in the hallway:\n\nTop idea: ${sum.topIdea || "(empty)"}\nProblem: ${prop.problem || "(empty)"}\nAsk: ${prop.ask || "(empty)"}\n\nFormat as something a normal person would say out loud. No jargon. Lead with a human story or concrete observation.`;
+      }},
+    ],
+  };
+
+  const stepPresets = presets[stepKey] || [];
+  if (stepPresets.length === 0) return null;
+
+  const ask = async (build) => {
+    const userMessage = build();
+    setLoading(true);
+    const result = await callAI({
+      system: "You are a sharp, kind design thinking coach for church lay leaders. Be concrete, specific, and brief. Use plain English. Never preachy. Bullet points and short paragraphs only.",
+      messages: [{ role: "user", content: userMessage }],
+      max_tokens: 700,
+    });
+    setDemo(result.demo);
+    setResponses((prev) => [...prev, { q: userMessage, a: result.text }]);
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ marginTop: 24, marginBottom: 16, borderRadius: 12, border: `1px solid ${accent}30`, background: `${accent}05`, padding: "16px 18px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 18 }}>🤖</span>
+        <div style={{ fontWeight: 700, color: accent, fontSize: 14 }}>AI Thinking Partner</div>
+        {demo && <span style={{ background: "#FEF3C7", color: "#92400E", fontSize: 10, padding: "2px 6px", borderRadius: 4, fontWeight: 600 }}>DEMO</span>}
+      </div>
+      <div style={{ fontSize: 13, color: "#666", marginBottom: 10 }}>
+        Stuck or want a second perspective? Click a prompt — AI uses what you've written so far.
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {stepPresets.map((p, i) => (
+          <button key={i} onClick={() => ask(p.build)} disabled={loading} style={{
+            background: "#fff", border: `1px solid ${accent}40`, color: accent,
+            borderRadius: 20, padding: "6px 14px", fontSize: 13, fontWeight: 500,
+            cursor: loading ? "wait" : "pointer", fontFamily: "inherit",
+          }}>✨ {p.label}</button>
+        ))}
+      </div>
+      {loading && <div style={{ marginTop: 12, fontSize: 13, color: "#999" }}>Thinking...</div>}
+      {responses.map((r, i) => (
+        <div key={i} style={{ marginTop: 14, padding: "12px 14px", background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: 12, color: "#999", marginBottom: 6, fontStyle: "italic" }}>You asked AI to help with this step.</div>
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: "#1a1a2e", whiteSpace: "pre-wrap" }}>{r.a}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function DeeperGuidance({ items, accent }) {
   const [open, setOpen] = useState(false);
   if (!items || items.length === 0) return null;
@@ -2265,9 +2389,13 @@ function GuidedFlow({ setMode }) {
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button onClick={() => setMode("picker")} title="Back to mode picker" style={{
+            background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8,
+            width: 36, height: 36, fontSize: 16, cursor: "pointer", fontFamily: "inherit",
+          }}>←</button>
           <div>
             <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, fontWeight: 900, color: "#1a1a2e", lineHeight: 1 }}>Hack In A Box</div>
-            <div style={{ fontSize: 10, color: "#E8890C", fontWeight: 600, letterSpacing: 0.5, marginTop: 2 }}>GUIDED JOURNEY</div>
+            <div style={{ fontSize: 10, color: "#E8890C", fontWeight: 600, letterSpacing: 0.5, marginTop: 2 }}>SOLO SPRINT</div>
           </div>
         </div>
         <button onClick={() => setMode("reference")} style={{
@@ -2382,6 +2510,7 @@ function GuidedFlow({ setMode }) {
               {step.Worksheet && <step.Worksheet />}
               {step.secondaryWorksheet && <step.secondaryWorksheet />}
 
+              <AIHelper stepKey={step.key} accent={step.accent} />
               <DeeperGuidance items={step.deeper} accent={step.accent} />
             </div>
           )}
@@ -2416,8 +2545,385 @@ function GuidedFlow({ setMode }) {
   );
 }
 
+// ========== SHARED: AI call helper ==========
+async function callAI({ system, messages, max_tokens = 800 }) {
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system, messages, max_tokens }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "AI request failed");
+    return { text: data.content || "", demo: !!data.demo };
+  } catch (err) {
+    return {
+      text: `_AI is unavailable right now (${err.message}). Once you deploy this to Vercel and set ANTHROPIC_API_KEY, this will return live responses._`,
+      demo: true,
+    };
+  }
+}
+
+// ========== SHARED: top header for non-picker modes ==========
+function ModeTopBar({ title, subtitle, accent, onHome }) {
+  return (
+    <div style={{
+      background: "#fff", borderBottom: "1px solid #e8e8e4", padding: "12px 20px",
+      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <button onClick={onHome} title="Back to mode picker" style={{
+          background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8,
+          width: 36, height: 36, fontSize: 16, cursor: "pointer", fontFamily: "inherit",
+        }}>←</button>
+        <div>
+          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, fontWeight: 900, color: "#1a1a2e", lineHeight: 1 }}>{title}</div>
+          {subtitle && <div style={{ fontSize: 10, color: accent, fontWeight: 600, letterSpacing: 0.5, marginTop: 2 }}>{subtitle}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== MODE PICKER LANDING ==========
+function ModePicker({ setMode }) {
+  const cards = [
+    {
+      key: "solo",
+      label: "Solo Sprint",
+      time: "~40 min · structured",
+      accent: "#E8890C",
+      desc: "Walk through all 6 steps for your specific challenge. Save multiple challenges. AI thinking-partner nudges at each step.",
+      bestFor: "I want the full design thinking experience for one focused challenge.",
+      icon: "🧭",
+    },
+    {
+      key: "mini",
+      label: "Mini-Modules",
+      time: "10–20 min each",
+      accent: "#0097A7",
+      desc: "Pick the one tool you need today. Sharpen a problem statement, brainstorm ideas, or write a pitch — independent of the full sprint.",
+      bestFor: "I have 15 minutes and want to work on one specific thing.",
+      icon: "🧩",
+    },
+    {
+      key: "partner",
+      label: "AI Thinking Partner",
+      time: "~15 min · chat",
+      accent: "#7C3AED",
+      desc: "Skip the worksheets. A conversational AI coach interviews you, asks follow-up questions, and synthesizes everything into a ready-to-use brief.",
+      bestFor: "I want to talk it out and have AI organize my thinking.",
+      icon: "💬",
+    },
+    {
+      key: "reference",
+      label: "Reference Library",
+      time: "browse anytime",
+      accent: "#1a1a2e",
+      desc: "The full playbook with every section, accordion, and facilitator note. Best for people running a HIAB with a group.",
+      bestFor: "I'm facilitating a sprint and need the complete guide.",
+      icon: "📚",
+    },
+  ];
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f8f8f6", fontFamily: "'DM Sans', sans-serif", overflowY: "auto" }}>
+      <div style={{ maxWidth: 920, margin: "0 auto", padding: "48px 24px 80px" }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#E8890C12", padding: "8px 18px", borderRadius: 40, color: "#E8890C", fontSize: 13, fontWeight: 600, letterSpacing: 0.5, marginBottom: 20, textTransform: "uppercase" }}>
+            ✦ By Indigitous US
+          </div>
+          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 900, color: "#1a1a2e", lineHeight: 1.05, margin: "0 0 12px" }}>Hack In A Box</h1>
+          <p style={{ fontSize: 18, lineHeight: 1.6, color: "#555", maxWidth: 560, margin: "0 auto 8px" }}>
+            Design thinking sprints for churches and faith-based organizations.
+          </p>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: "#888", maxWidth: 560, margin: "0 auto" }}>
+            Choose how you want to work — alone or with a team, in 15 minutes or 40.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          {cards.map((c) => (
+            <button key={c.key} onClick={() => setMode(c.key)} style={{
+              background: "#fff", border: `1px solid ${c.accent}25`,
+              borderRadius: 16, padding: "24px 22px", textAlign: "left",
+              cursor: "pointer", fontFamily: "inherit",
+              boxShadow: `0 2px 12px ${c.accent}10`, transition: "all 0.2s",
+              display: "flex", flexDirection: "column", gap: 10,
+            }} onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${c.accent}25`; }} onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 2px 12px ${c.accent}10`; }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${c.accent}12`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>{c.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e" }}>{c.label}</div>
+                  <div style={{ fontSize: 12, color: c.accent, fontWeight: 600, marginTop: 2 }}>{c.time}</div>
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#555" }}>{c.desc}</p>
+              <div style={{ fontSize: 13, color: c.accent, fontStyle: "italic", marginTop: "auto", paddingTop: 8 }}>
+                "{c.bestFor}"
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, color: c.accent, fontWeight: 600, fontSize: 14, marginTop: 4 }}>
+                Start {c.label} →
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: 40, fontSize: 13, color: "#999" }}>
+          Auto-saves to this browser · Switch modes anytime
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== MODE: MINI-MODULES ==========
+const MINI_MODULES = [
+  {
+    key: "problem",
+    title: "Sharpen Your Problem",
+    time: "10 min",
+    accent: "#4361EE",
+    icon: "🎯",
+    desc: "Turn a vague frustration into a clear 'How might we' question your team can act on.",
+    Worksheet: ProblemStatementWorksheet,
+    intro: "The most common reason innovation fails is solving the wrong problem. Capture the pains you observe, star the most urgent, then reframe them as one focused question.",
+  },
+  {
+    key: "empathy",
+    title: "Build Empathy",
+    time: "15 min",
+    accent: "#2D9B3A",
+    icon: "❤️",
+    desc: "Walk in someone's shoes. Capture what they say, think, do, and feel — then surface insights.",
+    Worksheet: EmpathyMapWorksheet,
+    intro: "Pick one specific person in your community. Listen to them, read what they've written, or recall what you know. Then map their world.",
+  },
+  {
+    key: "persona",
+    title: "Build a Persona",
+    time: "10 min",
+    accent: "#C2185B",
+    icon: "👤",
+    desc: "Make 'the people we serve' specific enough that you can ask 'would this work for them?'",
+    Worksheet: PersonaCardWorksheet,
+    intro: "Give them a name, age, and one detail that makes them real. Pull goals and pains from your empathy work. Keep this card visible.",
+  },
+  {
+    key: "ideate",
+    title: "Brainstorm Ideas",
+    time: "15 min",
+    accent: "#C6A200",
+    icon: "💡",
+    desc: "Quantity over quality. Run a timed 8-minute sprint with one idea per minute.",
+    Worksheet: Crazy8sWorksheet,
+    intro: "Wild ideas often lead to breakthroughs. The timer auto-advances every minute. Don't go back, don't judge. Star your top 2 at the end.",
+  },
+  {
+    key: "pitch",
+    title: "Pitch to Leadership",
+    time: "20 min",
+    accent: "#1D4ED8",
+    icon: "📝",
+    desc: "Turn your idea into a structured proposal pastors and elder boards can say yes to.",
+    Worksheet: LeadershipProposalWorksheet,
+    intro: "Lead with the problem and a human story. Ask for something small and concrete — 'a 6-week pilot,' '$200 to test,' '5 minutes on Sunday.'",
+  },
+];
+
+function MiniModules({ setMode }) {
+  const [active, setActive] = useState(null);
+  const mod = MINI_MODULES.find((m) => m.key === active);
+
+  if (mod) {
+    const W = mod.Worksheet;
+    return (
+      <div style={{ minHeight: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column" }}>
+        <ModeTopBar title="Mini-Modules" subtitle={mod.title.toUpperCase()} accent={mod.accent} onHome={() => setMode("picker")} />
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 20px 80px" }}>
+          <div style={{ maxWidth: 740, margin: "0 auto" }}>
+            <button onClick={() => setActive(null)} style={{ background: "none", border: "none", color: mod.accent, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 16 }}>← All modules</button>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, gap: 8, flexWrap: "wrap" }}>
+              <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 32, fontWeight: 800, color: "#1a1a2e", margin: 0 }}>{mod.icon} {mod.title}</h1>
+              <div style={{ fontSize: 13, color: "#999" }}>{mod.time}</div>
+            </div>
+            <p style={{ fontSize: 16, lineHeight: 1.7, color: "#555", margin: "12px 0 0", borderLeft: `3px solid ${mod.accent}`, paddingLeft: 16 }}>{mod.intro}</p>
+            <W />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column" }}>
+      <ModeTopBar title="Mini-Modules" subtitle="PICK A TOOL" accent="#0097A7" onHome={() => setMode("picker")} />
+      <div style={{ flex: 1, overflowY: "auto", padding: "32px 20px 80px" }}>
+        <div style={{ maxWidth: 740, margin: "0 auto" }}>
+          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 36, fontWeight: 800, color: "#1a1a2e", margin: "0 0 8px" }}>What do you need today?</h1>
+          <p style={{ fontSize: 16, color: "#666", marginBottom: 28 }}>Pick one standalone tool. Each one is self-contained and saves automatically. Mix and match across visits.</p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {MINI_MODULES.map((m) => (
+              <button key={m.key} onClick={() => setActive(m.key)} style={{
+                background: "#fff", border: `1px solid ${m.accent}22`, borderRadius: 14,
+                padding: "18px 20px", cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                display: "flex", alignItems: "center", gap: 16, boxShadow: `0 1px 6px ${m.accent}08`,
+              }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: `${m.accent}10`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>{m.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, fontWeight: 700, color: "#1a1a2e" }}>{m.title}</span>
+                    <span style={{ fontSize: 12, color: m.accent, fontWeight: 600 }}>{m.time}</span>
+                  </div>
+                  <p style={{ margin: "4px 0 0", fontSize: 14, color: "#666", lineHeight: 1.55 }}>{m.desc}</p>
+                </div>
+                <div style={{ color: m.accent, fontSize: 20 }}>→</div>
+              </button>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 28, padding: "16px 20px", background: "#fff", border: "1px dashed #d1d5db", borderRadius: 12, fontSize: 14, color: "#666" }}>
+            Want the full structured experience instead? <button onClick={() => setMode("solo")} style={{ background: "none", border: "none", color: "#E8890C", textDecoration: "underline", cursor: "pointer", fontFamily: "inherit", fontSize: 14, padding: 0 }}>Try Solo Sprint →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== MODE: AI THINKING PARTNER ==========
+const PARTNER_SYSTEM = `You are a warm, curious thinking partner helping a church lay leader work through a ministry challenge using design thinking. You are NOT a hype machine — you ask sharp follow-up questions, gently push back on vague answers, and help them get specific about the people involved.
+
+Your job in this conversation:
+1. Understand who they are and what challenge they're facing (1-2 questions)
+2. Get specific about WHO is affected — a real person or group with real characteristics (1-2 questions)
+3. Ask what they've already tried and what they noticed (1 question)
+4. Ask what they think would actually help (1 question)
+5. When you have enough context (usually after 5-7 exchanges), synthesize their thinking into a brief.
+
+Tone: friendly, curious, never preachy. Use short replies (2-4 sentences max per turn). Ask ONE question at a time. If they say something vague like "young people" or "engagement," ask them to get more specific.
+
+When you're ready to synthesize, start your message with "✦ Here's what I'm hearing:" and provide:
+- A clear "How might we..." question
+- A one-paragraph persona of who they're trying to serve
+- 3 specific ideas they could test
+- One next step they could take this week
+
+Do NOT synthesize too early. Make sure you have concrete details first.`;
+
+function ThinkingPartner({ setMode }) {
+  const STORAGE_KEY = "hiab-partner-v1";
+  const [messages, setMessages] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [
+        { role: "assistant", content: "Hi — I'm here to help you think through a challenge your church is facing. No worksheets, no formal process. Just tell me what's on your mind.\n\nWhat's a ministry situation you've been turning over in your head lately?" },
+      ];
+    } catch {
+      return [];
+    }
+  });
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [demo, setDemo] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch {}
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    const next = [...messages, { role: "user", content: text }];
+    setMessages(next);
+    setInput("");
+    setLoading(true);
+
+    const apiMessages = next.map((m) => ({ role: m.role, content: m.content }));
+    const result = await callAI({ system: PARTNER_SYSTEM, messages: apiMessages, max_tokens: 600 });
+    setDemo(result.demo);
+    setMessages((prev) => [...prev, { role: "assistant", content: result.text }]);
+    setLoading(false);
+  };
+
+  const reset = () => {
+    if (!confirm("Start a new conversation? This one will be deleted.")) return;
+    setMessages([{ role: "assistant", content: "Fresh start. What's a ministry challenge that's been on your mind?" }]);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", height: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column" }}>
+      <ModeTopBar title="AI Thinking Partner" subtitle="CHAT-BASED COACH" accent="#7C3AED" onHome={() => setMode("picker")} />
+
+      {demo && (
+        <div style={{ background: "#FEF3C7", borderBottom: "1px solid #FBBF24", padding: "8px 20px", fontSize: 12, color: "#92400E", textAlign: "center" }}>
+          Running in <strong>demo mode</strong> — responses are canned examples. Deploy to Vercel with <code>ANTHROPIC_API_KEY</code> for live AI.
+        </div>
+      )}
+
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
+          {messages.map((m, i) => (
+            <div key={i} style={{
+              alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+              maxWidth: "85%",
+              background: m.role === "user" ? "#7C3AED" : "#fff",
+              color: m.role === "user" ? "#fff" : "#1a1a2e",
+              padding: "12px 16px", borderRadius: 14,
+              border: m.role === "assistant" ? "1px solid #e5e7eb" : "none",
+              fontSize: 15, lineHeight: 1.6, whiteSpace: "pre-wrap",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+            }}>{m.content}</div>
+          ))}
+          {loading && (
+            <div style={{ alignSelf: "flex-start", padding: "12px 16px", background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", color: "#999", fontSize: 14 }}>
+              Thinking<span className="hiab-dots">...</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ background: "#fff", borderTop: "1px solid #e8e8e4", padding: "12px 20px" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 8, alignItems: "flex-end" }}>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+            placeholder="Type your reply... (Enter to send, Shift+Enter for new line)"
+            rows={2}
+            disabled={loading}
+            style={{
+              flex: 1, padding: "10px 14px", fontSize: 15, borderRadius: 12,
+              border: "1px solid #d1d5db", fontFamily: "inherit", resize: "none",
+              outline: "none", lineHeight: 1.5,
+            }}
+          />
+          <button onClick={send} disabled={loading || !input.trim()} style={{
+            background: loading || !input.trim() ? "#d1d5db" : "#7C3AED",
+            color: "#fff", border: "none", borderRadius: 12,
+            padding: "12px 20px", fontSize: 15, fontWeight: 600,
+            cursor: loading || !input.trim() ? "not-allowed" : "pointer", fontFamily: "inherit",
+          }}>Send</button>
+        </div>
+        <div style={{ maxWidth: 720, margin: "8px auto 0", display: "flex", justifyContent: "space-between", fontSize: 12, color: "#999" }}>
+          <button onClick={reset} style={{ background: "none", border: "none", color: "#999", cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>Start over</button>
+          <span>{messages.length - 1} exchanges</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HackInABox() {
-  const [mode, setMode] = useState(() => readStoredString("hiab-mode", "guided"));
+  const [mode, setMode] = useState(() => {
+    const stored = readStoredString("hiab-mode", "picker");
+    if (stored === "guided") return "solo"; // migrate legacy key
+    if (["picker", "solo", "mini", "partner", "reference"].includes(stored)) return stored;
+    return "picker";
+  });
   useEffect(() => {
     writeStoredString("hiab-mode", mode);
   }, [mode]);
@@ -2448,7 +2954,10 @@ export default function HackInABox() {
     return () => document.head.removeChild(link);
   }, []);
 
-  if (mode === "guided") return <GuidedFlow setMode={setMode} />;
+  if (mode === "picker") return <ModePicker setMode={setMode} />;
+  if (mode === "solo") return <GuidedFlow setMode={setMode} />;
+  if (mode === "mini") return <MiniModules setMode={setMode} />;
+  if (mode === "partner") return <ThinkingPartner setMode={setMode} />;
 
   const renderContent = () => {
     switch (activeSection) {
@@ -3236,11 +3745,11 @@ export default function HackInABox() {
         <div style={{ padding: "0 20px 20px", borderBottom: "1px solid #f0f0ec" }}>
           <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 900, color: "#1a1a2e", lineHeight: 1.2 }}>Hack In<br />A Box</div>
           <div style={{ fontSize: 12, color: "#E8890C", fontWeight: 600, marginTop: 4, letterSpacing: 0.5 }}>REFERENCE MODE</div>
-          <button onClick={() => setMode("guided")} style={{
+          <button onClick={() => setMode("picker")} style={{
             marginTop: 10, background: "#0D7C5F", color: "#fff", border: "none",
             borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 600,
             cursor: "pointer", fontFamily: "inherit", width: "100%",
-          }}>↩ Back to Guided Journey</button>
+          }}>↩ Back to Mode Picker</button>
         </div>
         <div style={{ padding: "16px 12px", flex: 1 }}>
           {sections.map((section) => {
