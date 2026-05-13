@@ -2793,6 +2793,79 @@ function MiniModules({ setMode }) {
 }
 
 // ========== MODE: AI THINKING PARTNER ==========
+// ========== VOICE: speech recognition + synthesis hook ==========
+function useVoice({ onTranscript, onSpeakEnd } = {}) {
+  const [listening, setListening] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [supported, setSupported] = useState({ recog: false, synth: false });
+  const recogRef = useRef(null);
+
+  useEffect(() => {
+    const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    const synth = typeof window !== "undefined" && window.speechSynthesis;
+    setSupported({ recog: !!SR, synth: !!synth });
+  }, []);
+
+  const startListening = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    if (recogRef.current) { try { recogRef.current.stop(); } catch {} }
+    const r = new SR();
+    r.lang = "en-US";
+    r.interimResults = true;
+    r.continuous = false;
+    let finalText = "";
+    r.onresult = (e) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t;
+        else interim += t;
+      }
+      if (onTranscript) onTranscript({ interim, final: finalText, isFinal: !!finalText && interim === "" });
+    };
+    r.onend = () => {
+      setListening(false);
+      if (finalText && onTranscript) onTranscript({ interim: "", final: finalText, isFinal: true, ended: true });
+    };
+    r.onerror = () => setListening(false);
+    recogRef.current = r;
+    setListening(true);
+    try { r.start(); } catch { setListening(false); }
+  };
+
+  const stopListening = () => {
+    if (recogRef.current) { try { recogRef.current.stop(); } catch {} }
+    setListening(false);
+  };
+
+  const speak = (text) => {
+    if (!window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const clean = String(text || "").replace(/[*_`#]/g, "").replace(/✦|🤖|🎯|💡|👤|❤️|📝|🧩|🧭|💬|📚/g, "");
+      const u = new SpeechSynthesisUtterance(clean);
+      u.rate = 1.0;
+      u.pitch = 1.0;
+      u.onstart = () => setSpeaking(true);
+      u.onend = () => { setSpeaking(false); if (onSpeakEnd) onSpeakEnd(); };
+      u.onerror = () => setSpeaking(false);
+      window.speechSynthesis.speak(u);
+    } catch {
+      setSpeaking(false);
+    }
+  };
+
+  const stopSpeaking = () => {
+    if (window.speechSynthesis) {
+      try { window.speechSynthesis.cancel(); } catch {}
+    }
+    setSpeaking(false);
+  };
+
+  return { listening, speaking, supported, startListening, stopListening, speak, stopSpeaking };
+}
+
 const PARTNER_SYSTEM = `You are a warm, curious thinking partner helping a church lay leader work through a ministry challenge using design thinking. You are NOT a hype machine — you ask sharp follow-up questions, gently push back on vague answers, and help them get specific about the people involved.
 
 Your job in this conversation:
@@ -2818,7 +2891,7 @@ function ThinkingPartner({ setMode }) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : [
-        { role: "assistant", content: "Hi — I'm here to help you think through a challenge your church is facing. No worksheets, no formal process. Just tell me what's on your mind.\n\nWhat's a ministry situation you've been turning over in your head lately?" },
+        { role: "assistant", content: "Hi — I'm here to help you think through a challenge your church is facing. No worksheets, no formal process. Just tell me what's on your mind.\n\nWant to talk it out in the car? Tap 🎤 to speak, or turn on 🚗 Hands-free mode to have a real conversation.\n\nWhat's a ministry situation you've been turning over in your head lately?" },
       ];
     } catch {
       return [];
@@ -2827,16 +2900,50 @@ function ThinkingPartner({ setMode }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [demo, setDemo] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(() => readStoredString("hiab-partner-autospeak", "off") === "on");
+  const [handsFree, setHandsFree] = useState(false);
   const scrollRef = useRef(null);
+  const lastSpokenRef = useRef(null);
+
+  useEffect(() => { writeStoredString("hiab-partner-autospeak", autoSpeak ? "on" : "off"); }, [autoSpeak]);
+
+  const sendRef = useRef(null);
+
+  const voice = useVoice({
+    onTranscript: ({ interim, final, isFinal, ended }) => {
+      if (interim) setInput(interim);
+      if (isFinal && final) {
+        setInput(final);
+        if (handsFree && ended) {
+          // auto-send when user stops talking in hands-free mode
+          setTimeout(() => sendRef.current && sendRef.current(final), 200);
+        }
+      }
+    },
+    onSpeakEnd: () => {
+      if (handsFree && !loading) {
+        // After AI finishes speaking, auto-listen for the next reply
+        setTimeout(() => voice.startListening(), 400);
+      }
+    },
+  });
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch {}
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, loading]);
 
-  const send = async () => {
-    const text = input.trim();
+    const last = messages[messages.length - 1];
+    if (last && last.role === "assistant" && autoSpeak && lastSpokenRef.current !== last.content) {
+      lastSpokenRef.current = last.content;
+      voice.speak(last.content);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, loading, autoSpeak]);
+
+  const send = async (overrideText) => {
+    const text = (overrideText ?? input).trim();
     if (!text || loading) return;
+    if (voice.listening) voice.stopListening();
     const next = [...messages, { role: "user", content: text }];
     setMessages(next);
     setInput("");
@@ -2848,14 +2955,37 @@ function ThinkingPartner({ setMode }) {
     setMessages((prev) => [...prev, { role: "assistant", content: result.text }]);
     setLoading(false);
   };
+  sendRef.current = send;
 
   const reset = () => {
     if (!confirm("Start a new conversation? This one will be deleted.")) return;
     setMessages([{ role: "assistant", content: "Fresh start. What's a ministry challenge that's been on your mind?" }]);
+    voice.stopSpeaking();
+  };
+
+  const toggleHandsFree = () => {
+    if (handsFree) {
+      voice.stopListening();
+      voice.stopSpeaking();
+      setHandsFree(false);
+    } else {
+      setHandsFree(true);
+      setAutoSpeak(true);
+      setTimeout(() => voice.startListening(), 100);
+    }
+  };
+
+  const micPress = () => {
+    if (voice.listening) {
+      voice.stopListening();
+    } else {
+      voice.startListening();
+    }
   };
 
   return (
     <div style={{ minHeight: "100vh", height: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column" }}>
+      <style>{`@keyframes hiab-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }`}</style>
       <ModeTopBar title="AI Thinking Partner" subtitle="CHAT-BASED COACH" accent="#7C3AED" onHome={() => setMode("picker")} />
 
       {demo && (
@@ -2887,26 +3017,68 @@ function ThinkingPartner({ setMode }) {
       </div>
 
       <div style={{ background: "#fff", borderTop: "1px solid #e8e8e4", padding: "12px 20px" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 8, alignItems: "flex-end" }}>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder="Type your reply... (Enter to send, Shift+Enter for new line)"
-            rows={2}
-            disabled={loading}
-            style={{
-              flex: 1, padding: "10px 14px", fontSize: 15, borderRadius: 12,
-              border: "1px solid #d1d5db", fontFamily: "inherit", resize: "none",
-              outline: "none", lineHeight: 1.5,
-            }}
-          />
-          <button onClick={send} disabled={loading || !input.trim()} style={{
-            background: loading || !input.trim() ? "#d1d5db" : "#7C3AED",
-            color: "#fff", border: "none", borderRadius: 12,
-            padding: "12px 20px", fontSize: 15, fontWeight: 600,
-            cursor: loading || !input.trim() ? "not-allowed" : "pointer", fontFamily: "inherit",
-          }}>Send</button>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+
+          {/* Voice control row */}
+          {(voice.supported.recog || voice.supported.synth) && (
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, flexWrap: "wrap", fontSize: 12, color: "#666" }}>
+              {voice.supported.synth && (
+                <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                  <input type="checkbox" checked={autoSpeak} onChange={(e) => setAutoSpeak(e.target.checked)} />
+                  🔊 Auto-speak replies
+                </label>
+              )}
+              {voice.supported.recog && voice.supported.synth && (
+                <button onClick={toggleHandsFree} style={{
+                  background: handsFree ? "#7C3AED" : "#fff",
+                  color: handsFree ? "#fff" : "#7C3AED",
+                  border: "1px solid #7C3AED", borderRadius: 20,
+                  padding: "4px 12px", fontSize: 12, fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}>{handsFree ? "🚗 Hands-free ON" : "🚗 Hands-free mode"}</button>
+              )}
+              {voice.speaking && (
+                <button onClick={voice.stopSpeaking} style={{ background: "none", border: "none", color: "#7C3AED", cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>⏹ Stop speaking</button>
+              )}
+              {voice.listening && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#DC2626", fontWeight: 600 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#DC2626", animation: "hiab-pulse 1.2s infinite" }} />
+                  Listening...
+                </span>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+            {voice.supported.recog && (
+              <button onClick={micPress} title={voice.listening ? "Stop listening" : "Speak instead of type"} style={{
+                background: voice.listening ? "#DC2626" : "#fff",
+                color: voice.listening ? "#fff" : "#7C3AED",
+                border: `1px solid ${voice.listening ? "#DC2626" : "#7C3AED"}`,
+                borderRadius: 12, width: 48, height: 48, fontSize: 20,
+                cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
+              }}>{voice.listening ? "⏺" : "🎤"}</button>
+            )}
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+              placeholder={voice.listening ? "Listening..." : "Type or tap 🎤 to speak (Enter to send)"}
+              rows={2}
+              disabled={loading}
+              style={{
+                flex: 1, padding: "10px 14px", fontSize: 15, borderRadius: 12,
+                border: "1px solid #d1d5db", fontFamily: "inherit", resize: "none",
+                outline: "none", lineHeight: 1.5,
+              }}
+            />
+            <button onClick={() => send()} disabled={loading || !input.trim()} style={{
+              background: loading || !input.trim() ? "#d1d5db" : "#7C3AED",
+              color: "#fff", border: "none", borderRadius: 12,
+              padding: "12px 20px", fontSize: 15, fontWeight: 600,
+              cursor: loading || !input.trim() ? "not-allowed" : "pointer", fontFamily: "inherit",
+            }}>Send</button>
+          </div>
         </div>
         <div style={{ maxWidth: 720, margin: "8px auto 0", display: "flex", justifyContent: "space-between", fontSize: 12, color: "#999" }}>
           <button onClick={reset} style={{ background: "none", border: "none", color: "#999", cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>Start over</button>
