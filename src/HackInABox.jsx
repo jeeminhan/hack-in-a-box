@@ -2617,7 +2617,7 @@ function ModePicker({ setMode }) {
     },
     {
       key: "reference",
-      label: "Reference Library",
+      label: "Playbook & Resource Kit for Facilitators",
       time: "browse anytime",
       accent: "#1a1a2e",
       desc: "The full playbook with every section, accordion, and facilitator note. Best for people running a HIAB with a group.",
