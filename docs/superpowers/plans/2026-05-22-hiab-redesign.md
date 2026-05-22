@@ -101,12 +101,12 @@ git commit -m "feat: load Noto Sans brand font"
 
 ---
 
-## Task 3: Phase / step navigation model
+## Task 3: Phase / step navigation model (additive)
 
 **Files:**
-- Modify: `src/HackInABox.jsx` (replace the `sections` array at lines 3-16)
+- Modify: `src/HackInABox.jsx` (add immediately AFTER the existing `sections` array at lines 3-16 — do NOT remove `sections` yet; it is deleted atomically in Task 6 so no commit ships a broken build)
 
-- [ ] **Step 1: Replace `sections` with `PHASES` + `STEPS`**
+- [ ] **Step 1: Add `PHASES` + `STEPS` (keep `sections` for now)**
 
 ```js
 // Five-phase spine. Each phase has an id, label, and the section ids it contains.
@@ -137,13 +137,13 @@ Note: `personas` content folds into the `empathy` section; the `submit` (SCIPAB)
 - [ ] **Step 2: Build**
 
 Run: `npm run build`
-Expected: build fails IF other code still references the removed `sections` const. Note each failing reference location for Task 6. If it builds, proceed.
+Expected: `✓ built`. Because `sections` is untouched and `PHASES`/`STEPS`/`phaseOf` are only newly-added (not yet referenced), the build stays green.
 
 - [ ] **Step 3: Commit**
 
 ```bash
 git add src/HackInABox.jsx
-git commit -m "feat: phase/step nav model replacing flat sections"
+git commit -m "feat: add phase/step nav model"
 ```
 
 ---
@@ -192,8 +192,10 @@ function BrandMark({ size = 26 }) {
 - [ ] **Step 3: Add the import at top of file**
 
 ```js
-import { color, font, radius, pill } from "./theme.js";
+import { color, font, pill } from "./theme.js";
 ```
+
+(Import only what `HackInABox.jsx` uses. `radius` lives inside `theme.js`'s `pill()` helper and is not referenced directly here — importing it would trip `no-unused-vars`.)
 
 - [ ] **Step 4: Build**
 
@@ -223,7 +225,6 @@ function StepBar({ activeSection, onNavigate }) {
     <div style={{ display: "flex", alignItems: "center", padding: "18px 28px", borderBottom: `1px solid ${color.lineSoft}`, background: color.surface, overflowX: "auto" }}>
       {STEPS.map((s, i) => {
         const state = i < idx ? "done" : i === idx ? "on" : "todo";
-        const dotBg = state === "todo" ? "transparent" : color.ink;
         return (
           <div key={s.id} style={{ display: "flex", alignItems: "center" }}>
             <button onClick={() => onNavigate(s.id)} style={{ display: "flex", alignItems: "center", gap: 9, background: "none", border: "none", cursor: "pointer", fontFamily: font.sans, fontSize: 12.5, fontWeight: state === "on" ? 700 : 500, color: state === "on" ? color.ink : color.faint }}>
@@ -275,25 +276,57 @@ const navigate = (id) => { setView(id); if (contentRef.current) contentRef.curre
 
 Keep `contentRef`, `isMobile`, and the font `useEffect`.
 
-- [ ] **Step 2: Replace the top-level render branches**
+- [ ] **Step 2: Delete the old `sections` array**
+
+Now remove the original `sections` array (lines 3-16) — every consumer is replaced in this task, so the swap is atomic and the build stays green by the end of the task. (`PHASES`/`STEPS`/`phaseOf` from Task 3 remain.)
+
+- [ ] **Step 3: Replace the top-level render branches**
 
 ```jsx
-if (view === "home") return <Home onStartSprint={() => setView("solo")} onBrowse={() => navigate("overview")} onNavigate={navigate} />;
-if (view === "solo") return <GuidedFlow setMode={(m) => setView(m === "picker" ? "home" : m)} />;
+// GuidedFlow internally calls setMode("picker") and setMode("reference") (src/HackInABox.jsx:2394,2403,2474,2493).
+// Map: picker -> home, reference -> the playbook entry (overview), anything else -> that section id.
+const fromGuided = (m) => setView(m === "picker" ? "home" : m === "reference" ? "overview" : m);
+
+if (view === "home") return <Home onStartSprint={() => setView("solo")} onBrowse={() => navigate("overview")} />;
+if (view === "solo") return <GuidedFlow setMode={fromGuided} />;
 
 const activePhase = phaseOf(view);
 const inRun = activePhase === "run";
 ```
 
-- [ ] **Step 3: Replace the layout JSX (sidebar + content) with the new shell**
+- [ ] **Step 4: Replace the layout JSX — responsive shell (permanent sidebar on desktop, drawer on mobile)**
+
+Add a drawer-open state alongside the others: `const [navOpen, setNavOpen] = useState(false);`. The permanent sidebar would be far too tight at 375px, so on mobile it becomes a slide-in drawer behind a top bar with a hamburger.
 
 ```jsx
+const goNav = (id) => { setNavOpen(false); id === "home" ? setView("home") : navigate(id); };
+
 return (
   <div style={{ display: "flex", minHeight: "100vh", background: color.bg, fontFamily: font.sans }}>
-    <Sidebar activePhase={activePhase} onNavigate={(id) => (id === "home" ? setView("home") : navigate(id))} />
+    {/* Desktop: permanent sidebar */}
+    {!isMobile && <Sidebar activePhase={activePhase} onNavigate={goNav} />}
+
+    {/* Mobile: drawer overlay */}
+    {isMobile && navOpen && (
+      <div onClick={() => setNavOpen(false)} style={{ position: "fixed", inset: 0, background: "#13131355", zIndex: 40 }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 41 }}>
+          <Sidebar activePhase={activePhase} onNavigate={goNav} />
+        </div>
+      </div>
+    )}
+
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      {isMobile && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: `1px solid ${color.lineSoft}`, background: color.rail }}>
+          <button onClick={() => setNavOpen(true)} aria-label="Open menu" style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+            <Icon name="menu" size={22} color={color.ink} />
+          </button>
+          <BrandMark size={24} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: color.ink }}>Hack In A Box</span>
+        </div>
+      )}
       {inRun && <StepBar activeSection={view} onNavigate={navigate} />}
-      <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: "34px 38px" }}>
+      <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: isMobile ? "22px 18px" : "34px 38px" }}>
         <div style={{ maxWidth: 860, margin: "0 auto" }}>{renderContent(view)}</div>
       </div>
     </div>
@@ -301,20 +334,20 @@ return (
 );
 ```
 
-- [ ] **Step 4: Make `renderContent` take the section id**
+- [ ] **Step 5: Make `renderContent` take the section id**
 
 Change `const renderContent = () => { switch (activeSection) {` to `const renderContent = (active) => { switch (active) {`. Remove the now-unused `activeSection`/`mobileMenuOpen` state and any old `<nav>` markup that mapped `sections`.
 
-- [ ] **Step 5: Build + screenshot**
+- [ ] **Step 6: Build + screenshot at 1440 AND 375**
 
 Run: `npm run build` then start dev server and run the verification helper at 1440 and 375.
-Expected: build passes; home renders; clicking a phase shows the sidebar highlight; the run phase shows the step bar; no console errors. Read `/tmp/v.png`.
+Expected: build passes; home renders; on desktop the permanent sidebar highlights the active phase; the run phase shows the step bar; on **mobile (375)** the sidebar is hidden, the hamburger top bar shows, tapping it opens the drawer, and tapping a phase navigates + closes it; no horizontal overflow; no console errors. Read both `/tmp/v.png`.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/HackInABox.jsx
-git commit -m "feat: new app shell (sidebar + stepbar + single view model)"
+git commit -m "feat: new responsive app shell (sidebar + drawer + stepbar)"
 ```
 
 ---
@@ -382,17 +415,38 @@ Create `case "pitch":` rendering the existing leadership proposal content (curre
 
 - [ ] **Step 4: Confirm every section id in PHASES/STEPS has a case**
 
-Ids needed: `overview`, `foundation`, `prepare`, `empathy`, `problem`, `ideate`, `prototype`, `pitch`, `after`, `templates`, `ai`, `partner`. For `partner`, render `<ThinkingPartner setMode={() => {}} />` inline (or a button that sets view to a partner section). Add any missing case; remove orphan cases (`home`, `personas`, `submit`).
+Ids needed: `overview`, `foundation`, `prepare`, `empathy`, `problem`, `ideate`, `prototype`, `pitch`, `after`, `templates`, `ai`, `partner`. For `partner`, render the AI Thinking Partner with a working home/back control:
 
-- [ ] **Step 5: Build + click through every phase via screenshots**
+```jsx
+case "partner":
+  return <ThinkingPartner setMode={(m) => (m === "picker" ? setView("home") : navigate(m))} />;
+```
 
-For each phase, set `localStorage.hiab-view` to a section id, reload, screenshot, Read it, and confirm content renders with no console errors. Check `empathy` (has personas), `problem` (has SCIPAB), `pitch`.
+Add any missing case; remove orphan cases (`home`, `personas`, `submit`).
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Fix all dangling references to removed/renamed targets**
+
+Deleting `submit`/`personas` and the old modes leaves dead links. Update each:
+- `onLaunch={() => navigate("submit")}` (template card, ~src/HackInABox.jsx:3903) → `navigate("problem")`
+- `onLaunch={() => navigate("personas")}` (template card, ~src/HackInABox.jsx:3901) → `navigate("empathy")`
+- `onClick={() => setMode("partner")}` (AI-section CTA, ~src/HackInABox.jsx:3319) → `navigate("partner")` (inside `renderContent`, `navigate` is in scope; `setMode` is not)
+- Any remaining `navigate("submit")` / `navigate("personas")` elsewhere → `problem` / `empathy`
+
+Verify none remain:
+```bash
+grep -nE 'navigate\("(submit|personas)"\)|setMode\("(partner|mini)"\)' src/HackInABox.jsx
+```
+Expected: no matches.
+
+- [ ] **Step 6: Build + click through every phase via screenshots**
+
+For each phase, set `localStorage.hiab-view` to a section id, reload, screenshot, Read it, and confirm content renders with no console errors. Check `empathy` (has personas), `problem` (has SCIPAB), `pitch`, and `partner`. Also click the Templates cards that pointed at `submit`/`personas` and confirm they now land on `problem`/`empathy`.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/HackInABox.jsx
-git commit -m "feat: rehome and merge sections into 5-phase spine"
+git commit -m "feat: rehome/merge sections + fix dangling nav references"
 ```
 
 ---
@@ -467,7 +521,11 @@ git commit -m "feat: align + restyle Solo Sprint guided flow"
 
 - [ ] **Step 1: Build + lint**
 
-Run: `npm run build` (expect `✓ built`) and `npm run lint` (expect only the pre-existing voice-mode errors at lines ~2849-2999; no NEW errors from redesigned code).
+Run: `npm run build` (expect `✓ built`).
+Run: `npm run lint`. The baseline before this redesign is **7 pre-existing errors** that are NOT in scope to fix here:
+- `api/chat.js:13` — `'process' is not defined` (no-undef; it's a Node serverless file)
+- `src/HackInABox.jsx` voice-mode block (~2847, 2853, 2879, 2902, 2973, 2999) — set-state-in-effect, empty blocks, refs-during-render
+Expected: **exactly those 7, and no NEW errors** introduced by the redesigned code. If the redesign added any error (e.g. unused var, undefined ref), fix it before proceeding. Capture the count with `npm run lint 2>&1 | grep -c error`.
 
 - [ ] **Step 2: Responsive screenshots**
 
