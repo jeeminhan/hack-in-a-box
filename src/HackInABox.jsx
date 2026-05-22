@@ -2395,7 +2395,7 @@ function GuidedFlow({ setMode }) {
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => setMode("picker")} title="Back to mode picker" style={{
+          <button onClick={() => setMode("picker")} title="Home" style={{
             background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
             width: 36, height: 36, fontSize: 16, cursor: "pointer", fontFamily: "inherit",
           }}>←</button>
