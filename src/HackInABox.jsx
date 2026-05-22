@@ -1,22 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { color, font, pill } from "./theme.js";
 
-const sections = [
-  { id: "home", label: "Home" },
-  { id: "overview", label: "What is HIAB?" },
-  { id: "foundation", label: "Heart of Innovation" },
-  { id: "ai", label: "✦ AI in Your Sprint" },
-  { id: "prepare", label: "Prepare" },
-  { id: "empathy", label: "Empathy Maps" },
-  { id: "personas", label: "Personas" },
-  { id: "problem", label: "Problem Statements" },
-  { id: "submit", label: "✦ Submit a Problem" },
-  { id: "ideate", label: "Ideation" },
-  { id: "prototype", label: "Prototyping" },
-  { id: "after", label: "After the Sprint" },
-  { id: "templates", label: "Templates" },
-];
-
 // Five-phase spine. Each phase has an id, label, and the section ids it contains.
 // eslint-disable-next-line react-refresh/only-export-components
 export const PHASES = [
@@ -2645,252 +2629,6 @@ function Home({ onStartSprint, onBrowse }) {
   );
 }
 
-// ========== MODE PICKER LANDING ==========
-function ModePicker({ setMode }) {
-  const hero = {
-    key: "solo",
-    label: "Solo Sprint",
-    time: "~40 min · guided, step-by-step",
-    accent: "#E8890C",
-    desc: "The guided way to prep your hack. Walk through all 6 design-thinking steps for your challenge — empathize, define, ideate, prototype, pitch — with an AI thinking-partner nudging you at each step. No facilitation experience needed.",
-    bestFor: "I'm leading a hack and want to be ready to run it confidently.",
-    icon: "🧭",
-  };
-
-  const playbook = {
-    key: "reference",
-    label: "The Full Playbook",
-    time: "browse anytime · the complete guide",
-    accent: "#1a1a2e",
-    desc: "Every section, exercise, and facilitator note in one place — what a Hack In A Box is, how to prepare, and how to run each tool with a group. Your reference while you plan and on the day itself.",
-    icon: "📚",
-  };
-
-  const tools = [
-    {
-      key: "mini",
-      label: "Mini-Modules",
-      time: "10–20 min each",
-      accent: "#0097A7",
-      desc: "Just need one tool today? Grab a single exercise — problem statement, brainstorm, or pitch — without the full sprint.",
-      icon: "🧩",
-    },
-    {
-      key: "partner",
-      label: "AI Thinking Partner",
-      time: "~15 min · chat",
-      accent: "#7C3AED",
-      desc: "Talk it out. A conversational AI coach interviews you and organizes your thinking into a ready-to-use brief.",
-      icon: "💬",
-    },
-  ];
-
-  return (
-    <div style={{ minHeight: "100vh", background: "#f8f8f6", fontFamily: "'DM Sans', sans-serif", overflowY: "auto" }}>
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px 80px" }}>
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#E8890C12", padding: "8px 18px", borderRadius: 40, color: "#E8890C", fontSize: 13, fontWeight: 600, letterSpacing: 0.5, marginBottom: 20, textTransform: "uppercase" }}>
-            ✦ By Indigitous US
-          </div>
-          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 900, color: "#1a1a2e", lineHeight: 1.05, margin: "0 0 12px" }}>Hack In A Box</h1>
-          <p style={{ fontSize: 18, lineHeight: 1.6, color: "#555", maxWidth: 560, margin: "0 auto 8px" }}>
-            A packaged playbook for running your own design-thinking sprint — even if you've never facilitated one.
-          </p>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: "#888", maxWidth: 560, margin: "0 auto" }}>
-            Built for hack champions and lay leaders leading a 2–6 hour mini-hackathon at their church or organization.
-          </p>
-        </div>
-
-        {/* HERO — Solo Sprint (recommended starting point) */}
-        <button onClick={() => setMode(hero.key)} style={{
-          width: "100%", background: "linear-gradient(135deg, #FFF8F0, #fff)",
-          border: `1.5px solid ${hero.accent}40`, borderRadius: 20, padding: "30px 28px",
-          textAlign: "left", cursor: "pointer", fontFamily: "inherit",
-          boxShadow: `0 4px 24px ${hero.accent}1f`, transition: "all 0.2s",
-          display: "flex", flexDirection: "column", gap: 14, marginBottom: 18,
-        }} onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 10px 32px ${hero.accent}33`; }} onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 4px 24px ${hero.accent}1f`; }}>
-          <div style={{ display: "inline-flex", alignSelf: "flex-start", alignItems: "center", gap: 6, background: hero.accent, color: "#fff", padding: "4px 12px", borderRadius: 30, fontSize: 11, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase" }}>
-            ✦ Start here
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ width: 60, height: 60, borderRadius: 16, background: `${hero.accent}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34, flexShrink: 0 }}>{hero.icon}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 28, fontWeight: 800, color: "#1a1a2e" }}>{hero.label}</div>
-              <div style={{ fontSize: 13, color: hero.accent, fontWeight: 600, marginTop: 2 }}>{hero.time}</div>
-            </div>
-          </div>
-          <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: "#444" }}>{hero.desc}</p>
-          <div style={{ fontSize: 14, color: hero.accent, fontStyle: "italic" }}>"{hero.bestFor}"</div>
-          <div style={{ display: "inline-flex", alignSelf: "flex-start", alignItems: "center", gap: 8, background: hero.accent, color: "#fff", padding: "12px 24px", borderRadius: 12, fontWeight: 700, fontSize: 15, marginTop: 2 }}>
-            Start Solo Sprint →
-          </div>
-        </button>
-
-        {/* PRIMARY — Full Playbook */}
-        <button onClick={() => setMode(playbook.key)} style={{
-          width: "100%", background: "#fff", border: `1px solid ${playbook.accent}22`,
-          borderRadius: 16, padding: "22px 24px", textAlign: "left", cursor: "pointer",
-          fontFamily: "inherit", boxShadow: `0 2px 12px ${playbook.accent}10`, transition: "all 0.2s",
-          display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 32,
-        }} onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${playbook.accent}22`; }} onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 2px 12px ${playbook.accent}10`; }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: `${playbook.accent}10`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>{playbook.icon}</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 21, fontWeight: 700, color: "#1a1a2e" }}>{playbook.label}</div>
-            <div style={{ fontSize: 12, color: playbook.accent, fontWeight: 600, margin: "2px 0 8px", opacity: 0.7 }}>{playbook.time}</div>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#555" }}>{playbook.desc}</p>
-          </div>
-          <div style={{ color: playbook.accent, fontWeight: 700, fontSize: 20, alignSelf: "center" }}>→</div>
-        </button>
-
-        {/* MORE TOOLS — secondary, à la carte */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: "#999" }}>More tools</span>
-          <div style={{ flex: 1, height: 1, background: "#e5e5e0" }} />
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
-          {tools.map((c) => (
-            <button key={c.key} onClick={() => setMode(c.key)} style={{
-              background: "#fff", border: `1px solid ${c.accent}22`,
-              borderRadius: 14, padding: "18px 18px", textAlign: "left",
-              cursor: "pointer", fontFamily: "inherit",
-              boxShadow: `0 1px 8px ${c.accent}0d`, transition: "all 0.2s",
-              display: "flex", flexDirection: "column", gap: 8,
-            }} onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 6px 18px ${c.accent}1f`; }} onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 1px 8px ${c.accent}0d`; }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${c.accent}12`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{c.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, fontWeight: 700, color: "#1a1a2e" }}>{c.label}</div>
-                  <div style={{ fontSize: 11, color: c.accent, fontWeight: 600, marginTop: 1 }}>{c.time}</div>
-                </div>
-              </div>
-              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "#666" }}>{c.desc}</p>
-            </button>
-          ))}
-        </div>
-
-        <div style={{ textAlign: "center", marginTop: 40, fontSize: 13, color: "#999" }}>
-          Auto-saves to this browser · Switch modes anytime
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ========== MODE: MINI-MODULES ==========
-const MINI_MODULES = [
-  {
-    key: "problem",
-    title: "Sharpen Your Problem",
-    time: "10 min",
-    accent: "#4361EE",
-    icon: "🎯",
-    desc: "Turn a vague frustration into a clear 'How might we' question your team can act on.",
-    Worksheet: ProblemStatementWorksheet,
-    intro: "The most common reason innovation fails is solving the wrong problem. Capture the pains you observe, star the most urgent, then reframe them as one focused question.",
-  },
-  {
-    key: "empathy",
-    title: "Build Empathy",
-    time: "15 min",
-    accent: "#2D9B3A",
-    icon: "❤️",
-    desc: "Walk in someone's shoes. Capture what they say, think, do, and feel — then surface insights.",
-    Worksheet: EmpathyMapWorksheet,
-    intro: "Pick one specific person in your community. Listen to them, read what they've written, or recall what you know. Then map their world.",
-  },
-  {
-    key: "persona",
-    title: "Build a Persona",
-    time: "10 min",
-    accent: "#C2185B",
-    icon: "👤",
-    desc: "Make 'the people we serve' specific enough that you can ask 'would this work for them?'",
-    Worksheet: PersonaCardWorksheet,
-    intro: "Give them a name, age, and one detail that makes them real. Pull goals and pains from your empathy work. Keep this card visible.",
-  },
-  {
-    key: "ideate",
-    title: "Brainstorm Ideas",
-    time: "15 min",
-    accent: "#C6A200",
-    icon: "💡",
-    desc: "Quantity over quality. Run a timed 8-minute sprint with one idea per minute.",
-    Worksheet: Crazy8sWorksheet,
-    intro: "Wild ideas often lead to breakthroughs. The timer auto-advances every minute. Don't go back, don't judge. Star your top 2 at the end.",
-  },
-  {
-    key: "pitch",
-    title: "Pitch to Leadership",
-    time: "20 min",
-    accent: "#1D4ED8",
-    icon: "📝",
-    desc: "Turn your idea into a structured proposal pastors and elder boards can say yes to.",
-    Worksheet: LeadershipProposalWorksheet,
-    intro: "Lead with the problem and a human story. Ask for something small and concrete — 'a 6-week pilot,' '$200 to test,' '5 minutes on Sunday.'",
-  },
-];
-
-function MiniModules({ setMode }) {
-  const [active, setActive] = useState(null);
-  const mod = MINI_MODULES.find((m) => m.key === active);
-
-  if (mod) {
-    const W = mod.Worksheet;
-    return (
-      <div style={{ minHeight: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column" }}>
-        <ModeTopBar title="Mini-Modules" subtitle={mod.title.toUpperCase()} accent={mod.accent} onHome={() => setMode("picker")} />
-        <div style={{ flex: 1, overflowY: "auto", padding: "24px 20px 80px" }}>
-          <div style={{ maxWidth: 740, margin: "0 auto" }}>
-            <button onClick={() => setActive(null)} style={{ background: "none", border: "none", color: mod.accent, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 16 }}>← All modules</button>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, gap: 8, flexWrap: "wrap" }}>
-              <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 32, fontWeight: 800, color: "#1a1a2e", margin: 0 }}>{mod.icon} {mod.title}</h1>
-              <div style={{ fontSize: 13, color: "#999" }}>{mod.time}</div>
-            </div>
-            <p style={{ fontSize: 16, lineHeight: 1.7, color: "#555", margin: "12px 0 0", borderLeft: `3px solid ${mod.accent}`, paddingLeft: 16 }}>{mod.intro}</p>
-            <W />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ minHeight: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column" }}>
-      <ModeTopBar title="Mini-Modules" subtitle="PICK A TOOL" accent="#0097A7" onHome={() => setMode("picker")} />
-      <div style={{ flex: 1, overflowY: "auto", padding: "32px 20px 80px" }}>
-        <div style={{ maxWidth: 740, margin: "0 auto" }}>
-          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 36, fontWeight: 800, color: "#1a1a2e", margin: "0 0 8px" }}>What do you need today?</h1>
-          <p style={{ fontSize: 16, color: "#666", marginBottom: 28 }}>Pick one standalone tool. Each one is self-contained and saves automatically. Mix and match across visits.</p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {MINI_MODULES.map((m) => (
-              <button key={m.key} onClick={() => setActive(m.key)} style={{
-                background: "#fff", border: `1px solid ${m.accent}22`, borderRadius: 14,
-                padding: "18px 20px", cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-                display: "flex", alignItems: "center", gap: 16, boxShadow: `0 1px 6px ${m.accent}08`,
-              }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: `${m.accent}10`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>{m.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-                    <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, fontWeight: 700, color: "#1a1a2e" }}>{m.title}</span>
-                    <span style={{ fontSize: 12, color: m.accent, fontWeight: 600 }}>{m.time}</span>
-                  </div>
-                  <p style={{ margin: "4px 0 0", fontSize: 14, color: "#666", lineHeight: 1.55 }}>{m.desc}</p>
-                </div>
-                <div style={{ color: m.accent, fontSize: 20 }}>→</div>
-              </button>
-            ))}
-          </div>
-
-          <div style={{ marginTop: 28, padding: "16px 20px", background: "#fff", border: "1px dashed #d1d5db", borderRadius: 12, fontSize: 14, color: "#666" }}>
-            Want the full structured experience instead? <button onClick={() => setMode("solo")} style={{ background: "none", border: "none", color: "#E8890C", textDecoration: "underline", cursor: "pointer", fontFamily: "inherit", fontSize: 14, padding: 0 }}>Try Solo Sprint →</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ========== MODE: AI THINKING PARTNER ==========
 // ========== VOICE: speech recognition + synthesis hook ==========
 function useVoice({ onTranscript, onSpeakEnd } = {}) {
@@ -3233,20 +2971,13 @@ function StepBar({ activeSection, onNavigate }) {
 }
 
 export default function HackInABox() {
-  const [mode, setMode] = useState(() => {
-    const stored = readStoredString("hiab-mode", "picker");
-    if (stored === "guided") return "solo"; // migrate legacy key
-    if (["picker", "solo", "mini", "partner", "reference"].includes(stored)) return stored;
-    return "picker";
-  });
-  useEffect(() => {
-    writeStoredString("hiab-mode", mode);
-  }, [mode]);
-
-  const [activeSection, setActiveSection] = useState("home");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const contentRef = useRef(null);
+
+  const [view, setView] = useState(() => readStoredString("hiab-view", "home")); // "home" | "solo" | <sectionId>
+  useEffect(() => { writeStoredString("hiab-view", view); }, [view]);
+  const [navOpen, setNavOpen] = useState(false);
+  const navigate = (id) => { setView(id); if (contentRef.current) contentRef.current.scrollTop = 0; };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -3254,12 +2985,6 @@ export default function HackInABox() {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  const navigate = (id) => {
-    setActiveSection(id);
-    setMobileMenuOpen(false);
-    if (contentRef.current) contentRef.current.scrollTop = 0;
-  };
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -3269,99 +2994,17 @@ export default function HackInABox() {
     return () => document.head.removeChild(link);
   }, []);
 
-  if (mode === "picker") return <ModePicker setMode={setMode} />;
-  if (mode === "solo") return <GuidedFlow setMode={setMode} />;
-  if (mode === "mini") return <MiniModules setMode={setMode} />;
-  if (mode === "partner") return <ThinkingPartner setMode={setMode} />;
+  // GuidedFlow internally calls setMode("picker") and setMode("reference"). Map them:
+  const fromGuided = (m) => setView(m === "picker" ? "home" : m === "reference" ? "overview" : m);
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case "home":
-        return (
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#E8890C12", padding: "8px 18px", borderRadius: 40, color: "#E8890C", fontSize: 13, fontWeight: 600, letterSpacing: 0.5, marginBottom: 24, textTransform: "uppercase" }}>
-              ✦ By Indigitous US
-            </div>
-            <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 900, color: "#1a1a2e", lineHeight: 1.1, margin: "0 0 8px" }}>Hack In A Box</h1>
-            <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(18px, 3vw, 24px)", fontWeight: 300, color: "#E8890C", margin: "0 0 24px", fontStyle: "italic" }}>Playbook &amp; Resource Kit</p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#555", maxWidth: 580, margin: "0 auto 40px" }}>
-              Everything your church needs to run a Design Thinking Brainstorm Sprint. Discover fresh, faith-driven strategies to foster unity, engage your community, and create lasting kingdom impact.
-            </p>
+  if (view === "home") return <Home onStartSprint={() => setView("solo")} onBrowse={() => navigate("overview")} />;
+  if (view === "solo") return <GuidedFlow setMode={fromGuided} />;
 
-            {/* Submit CTA */}
-            <div style={{
-              background: "linear-gradient(135deg, #0D7C5F, #2D9B3A)", borderRadius: 16, padding: "24px 28px",
-              color: "#fff", maxWidth: 580, margin: "0 auto 32px", textAlign: "left",
-              display: "flex", alignItems: "center", gap: 20, cursor: "pointer",
-              boxShadow: "0 4px 20px rgba(13,124,95,0.25)",
-            }} onClick={() => navigate("submit")}>
-              <div style={{
-                width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,0.15)",
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              }}>
-                <Icon name="chat" size={28} color="#fff" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: "0 0 4px", fontFamily: "'Fraunces', Georgia, serif", fontSize: 19 }}>
-                  Ready to Submit a Problem?
-                </h3>
-                <p style={{ margin: 0, fontSize: 14, opacity: 0.85 }}>
-                  Use our AI-guided SCIPAB tool to articulate your church's challenge and get instant feedback on whether it's ready for a design sprint.
-                </p>
-              </div>
-              <Icon name="arrow" size={22} color="#fff" />
-            </div>
+  const activePhase = phaseOf(view);
+  const inRun = activePhase === "run";
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, maxWidth: 720, margin: "0 auto 48px", textAlign: "left" }}>
-              {[
-                { icon: "target", title: "Define Real Problems", desc: "Learn to identify and articulate the challenges your church and community truly face.", color: "#4361EE" },
-                { icon: "heart", title: "Build Deep Empathy", desc: "Understand the people you serve through empathy maps and persona creation.", color: "#C2185B" },
-                { icon: "lightbulb", title: "Generate Bold Ideas", desc: "Use structured brainstorming to unlock creative, God-inspired solutions.", color: "#E8890C" },
-                { icon: "cube", title: "Prototype & Test", desc: "Turn ideas into tangible plans your church can implement immediately.", color: "#0097A7" },
-              ].map((card) => (
-                <div key={card.title} style={{ background: "#fff", borderRadius: 14, padding: "22px 20px", border: `1px solid ${card.color}15`, boxShadow: `0 2px 16px ${card.color}08` }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: `${card.color}12`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                    <Icon name={card.icon} size={22} color={card.color} />
-                  </div>
-                  <h3 style={{ margin: "0 0 6px", fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 16, color: "#1a1a2e" }}>{card.title}</h3>
-                  <p style={{ margin: 0, fontSize: 14, color: "#777", lineHeight: 1.55 }}>{card.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ background: "linear-gradient(135deg, #1a1a2e, #2d2b55)", borderRadius: 20, padding: "36px 32px", color: "#fff", maxWidth: 640, margin: "0 auto 32px" }}>
-              <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, margin: "0 0 12px", fontWeight: 700 }}>How to Use This Playbook</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, textAlign: "left" }}>
-                {[
-                  "Start with \"What is HIAB?\" to understand the heart behind Design Thinking Sprints",
-                  "Explore \"Heart of Innovation\" for the values and vision behind the process",
-                  "Work through \"Prepare\" to plan logistics, recruit participants, and choose your sprint format",
-                  "Learn each tool — Problem Statements, Empathy Maps, Personas, Ideation, and Prototyping",
-                  "Use \"After the Sprint\" to keep momentum alive and share results with leadership",
-                ].map((step, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                    <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces', Georgia, serif", fontSize: 14, fontWeight: 700, flexShrink: 0, color: "#E8890C" }}>{i + 1}</div>
-                    <span style={{ fontSize: 15, lineHeight: 1.55, opacity: 0.9 }}>{step}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 20, padding: "14px 18px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px dashed rgba(123,31,162,0.4)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontSize: 16 }}>🎓</span>
-                  <strong style={{ fontSize: 14, color: "#C4B5FD" }}>About Facilitator Notes</strong>
-                </div>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, opacity: 0.75 }}>
-                  Throughout this playbook, you'll see collapsible <strong style={{ color: "#C4B5FD" }}>Facilitator Notes</strong> with a 🎓 icon. These contain extra guidance for the person leading the sprint — discussion prompts, timing tips, presentation advice, and things to watch for. If you're a participant just working through the exercises, you can skip these. If you're facilitating, they're gold.
-                </p>
-              </div>
-            </div>
-
-            <button onClick={() => navigate("overview")} style={{ background: "#E8890C", color: "#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "0 4px 16px rgba(232, 137, 12, 0.3)" }}>
-              Get Started <Icon name="arrow" size={18} color="#fff" />
-            </button>
-          </div>
-        );
-
+  const renderContent = (active) => {
+    switch (active) {
       case "ai": {
         const ai = phaseColors.ai;
         const prompts = [
@@ -3418,7 +3061,7 @@ export default function HackInABox() {
               color: "#fff", margin: "0 0 32px", textAlign: "left",
               display: "flex", alignItems: "center", gap: 20, cursor: "pointer",
               boxShadow: "0 4px 20px rgba(124,58,237,0.25)",
-            }} onClick={() => setMode("partner")}>
+            }} onClick={() => setView("partner")}>
               <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name="chat" size={28} color="#fff" />
               </div>
@@ -4127,10 +3770,10 @@ export default function HackInABox() {
     }
   };
 
-  return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", display: "flex", height: "100vh", background: "#f8f8f6", color: "#333", overflow: "hidden" }}>
+  const goNav = (id) => { setNavOpen(false); id === "home" ? setView("home") : navigate(id); };
 
-      {/* Mobile-responsive styles */}
+  return (
+    <div style={{ display: "flex", minHeight: "100vh", background: color.bg, fontFamily: font.sans }}>
       <style>{`
         @media (max-width: 767px) {
           .hiab-grid-2 { grid-template-columns: 1fr !important; }
@@ -4139,114 +3782,29 @@ export default function HackInABox() {
         }
         html { -webkit-text-size-adjust: 100%; }
       `}</style>
-
-      {/* Mobile menu button */}
-      {isMobile && (
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{
-          position: "fixed", top: 12, left: 12, zIndex: 100, width: 44, height: 44,
-          borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff",
-          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        }}>
-          <Icon name={mobileMenuOpen ? "x" : "menu"} size={22} color="#1a1a2e" />
-        </button>
+      {!isMobile && <Sidebar activePhase={activePhase} onNavigate={goNav} />}
+      {isMobile && navOpen && (
+        <div onClick={() => setNavOpen(false)} style={{ position: "fixed", inset: 0, background: "#13131355", zIndex: 40 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 41 }}>
+            <Sidebar activePhase={activePhase} onNavigate={goNav} />
+          </div>
+        </div>
       )}
-
-      {/* Mobile overlay */}
-      {isMobile && mobileMenuOpen && (
-        <div onClick={() => setMobileMenuOpen(false)} style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 98,
-        }} />
-      )}
-
-      {/* Sidebar */}
-      <nav style={{
-        width: 260, background: "#fff", borderRight: "1px solid #e8e8e4", padding: "24px 0",
-        display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto",
-        ...(isMobile ? {
-          position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 99,
-          transform: mobileMenuOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.3s ease",
-          boxShadow: mobileMenuOpen ? "4px 0 24px rgba(0,0,0,0.12)" : "none",
-        } : {}),
-      }}>
-        <div style={{ padding: "0 20px 20px", borderBottom: "1px solid #f0f0ec" }}>
-          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 900, color: "#1a1a2e", lineHeight: 1.2 }}>Hack In<br />A Box</div>
-          <div style={{ fontSize: 12, color: "#E8890C", fontWeight: 600, marginTop: 4, letterSpacing: 0.5 }}>REFERENCE MODE</div>
-          <button onClick={() => setMode("picker")} style={{
-            marginTop: 10, background: "#0D7C5F", color: "#fff", border: "none",
-            borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 600,
-            cursor: "pointer", fontFamily: "inherit", width: "100%",
-          }}>↩ Back to Mode Picker</button>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        {isMobile && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: `1px solid ${color.lineSoft}`, background: color.rail }}>
+            <button onClick={() => setNavOpen(true)} aria-label="Open menu" style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+              <Icon name="menu" size={22} color={color.ink} />
+            </button>
+            <BrandMark size={24} />
+            <span style={{ fontWeight: 700, fontSize: 14, color: color.ink }}>Hack In A Box</span>
+          </div>
+        )}
+        {inRun && <StepBar activeSection={view} onNavigate={navigate} />}
+        <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: isMobile ? "22px 18px" : "34px 38px" }}>
+          <div style={{ maxWidth: 860, margin: "0 auto" }}>{renderContent(view)}</div>
         </div>
-        <div style={{ padding: "16px 12px", flex: 1 }}>
-          {sections.map((section) => {
-            const isActive = activeSection === section.id;
-            const isSubmit = section.id === "submit";
-            return (
-              <button key={section.id} onClick={() => navigate(section.id)} style={{
-                width: "100%", padding: "10px 14px", borderRadius: 8, border: "none",
-                background: isSubmit && !isActive ? "#0D7C5F08" : isActive ? (isSubmit ? "#0D7C5F12" : "#E8890C10") : "transparent",
-                color: isSubmit ? "#0D7C5F" : isActive ? "#E8890C" : "#555",
-                fontWeight: isActive || isSubmit ? 600 : 400, fontSize: 14,
-                fontFamily: "'DM Sans', sans-serif", cursor: "pointer", textAlign: "left",
-                display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s", marginBottom: 2,
-              }}>
-                {isActive && <div style={{ width: 3, height: 18, borderRadius: 2, background: isSubmit ? "#0D7C5F" : "#E8890C" }} />}
-                {section.label}
-              </button>
-            );
-          })}
-        </div>
-        <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f0ec", fontSize: 12, color: "#999" }}>
-          By Indigitous US<br /><span style={{ fontSize: 11, color: "#bbb" }}>indigitous.org</span>
-        </div>
-      </nav>
-
-      {/* Main content */}
-      <main ref={contentRef} style={{
-        flex: 1, overflowY: "auto",
-        padding: isMobile ? "60px 16px 32px" : "32px clamp(20px, 4vw, 48px)",
-      }}>
-        <div style={{ maxWidth: 740, margin: "0 auto" }}>
-          {renderContent()}
-          {activeSection !== "home" && (
-            <div style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "24px 0", marginTop: 32, borderTop: "1px solid #e8e8e4",
-              gap: 12, flexWrap: "wrap",
-            }}>
-              {(() => {
-                const idx = sections.findIndex((s) => s.id === activeSection);
-                const prev = idx > 0 ? sections[idx - 1] : null;
-                const next = idx < sections.length - 1 ? sections[idx + 1] : null;
-                return (
-                  <>
-                    {prev ? (
-                      <button onClick={() => navigate(prev.id)} style={{
-                        background: "none", border: "1px solid #e5e7eb", borderRadius: 8,
-                        padding: isMobile ? "10px 14px" : "10px 18px", cursor: "pointer",
-                        fontSize: isMobile ? 13 : 14, color: "#555", fontFamily: "'DM Sans', sans-serif",
-                        flex: isMobile ? 1 : "none", minWidth: 0,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      }}>← {prev.label}</button>
-                    ) : <div style={{ flex: isMobile ? 1 : "none" }} />}
-                    {next ? (
-                      <button onClick={() => navigate(next.id)} style={{
-                        background: "#E8890C", color: "#fff", border: "none", borderRadius: 8,
-                        padding: isMobile ? "10px 14px" : "10px 18px", cursor: "pointer",
-                        fontSize: isMobile ? 13 : 14, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
-                        flex: isMobile ? 1 : "none", minWidth: 0,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      }}>{next.label} →</button>
-                    ) : <div style={{ flex: isMobile ? 1 : "none" }} />}
-                  </>
-                );
-              })()}
-            </div>
-          )}
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
