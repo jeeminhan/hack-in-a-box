@@ -3118,9 +3118,6 @@ export default function HackInABox() {
         );
       }
 
-      case "submit":
-        return <SCIPABChatbot />;
-
       case "overview":
         return (
           <div>
@@ -3516,6 +3513,10 @@ export default function HackInABox() {
                 </div>
               ))}
             </Accordion>
+
+            <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", margin: "32px 0" }} />
+            <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, margin: "0 0 8px", color: "#1a1a2e" }}>Submit your problem (AI-guided)</h3>
+            <SCIPABChatbot />
           </div>
         );
 
@@ -3538,13 +3539,8 @@ export default function HackInABox() {
             <TipBox accent={phaseColors.empathy.accent} label="🙏 Ministry connection">
               Empathy mapping is a spiritual exercise. It's about genuinely understanding another person's reality — the heart of loving your neighbor. Open with prayer, asking God to help your team see through others' eyes.
             </TipBox>
-          </div>
-        );
 
-      case "personas":
-        return (
-          <div>
-            <PhaseHeader icon="users" title="Creating Personas" subtitle="Build a vivid picture of who you're designing for" accent={phaseColors.personas.accent} />
+            <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, margin: "32px 0 8px", color: "#1a1a2e" }}>Personas</h3>
             <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 20 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable.</p>
             <PersonaVisual />
             <PersonaCardWorksheet />
@@ -3643,9 +3639,9 @@ export default function HackInABox() {
             <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, margin: "0 0 14px", color: "#1a1a2e" }}>Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
               <TemplateCard title="Empathy Map Template" accent="#2D9B3A" desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
-              <TemplateCard title="Persona Card Template" accent="#C2185B" desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("personas")} />
+              <TemplateCard title="Persona Card Template" accent="#C2185B" desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("empathy")} />
               <TemplateCard title="Problem Statement Worksheet" accent="#4361EE" desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
-              <TemplateCard title="SCIPAB Submission Template" accent="#0D7C5F" desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("submit")} launchLabel="Open AI-guided chatbot" />
+              <TemplateCard title="SCIPAB Submission Template" accent="#0D7C5F" desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("problem")} launchLabel="Open AI-guided chatbot" />
               <TemplateCard title="Crazy 8s Sheet" accent="#C6A200" desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("ideate")} />
               <TemplateCard title="Feedback Cards" accent="#0097A7" desc="Structured feedback for prototyping." items={["I like...", "I wish...", "What if...", "Overall notes"]} onLaunch={() => navigate("prototype")} />
             </div>
@@ -3765,6 +3761,17 @@ export default function HackInABox() {
             </div>
           </div>
         );
+
+      case "pitch":
+        return (
+          <div>
+            <PhaseHeader icon="send" title="Pitch to leadership" subtitle="Turn your prototype into a one-page proposal you can hand to your pastor or leadership" accent={phaseColors.proposal.accent} />
+            <LeadershipProposalWorksheet />
+          </div>
+        );
+
+      case "partner":
+        return <ThinkingPartner setMode={(m) => (m === "picker" ? setView("home") : navigate(m))} />;
 
       default: return null;
     }
