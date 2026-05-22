@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { color, font } from "./theme.js";
+import { color, font, pill } from "./theme.js";
 
 const sections = [
   { id: "home", label: "Home" },
@@ -2617,6 +2617,29 @@ function ModeTopBar({ title, subtitle, accent, onHome }) {
           <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, fontWeight: 900, color: "#1a1a2e", lineHeight: 1 }}>{title}</div>
           {subtitle && <div style={{ fontSize: 10, color: accent, fontWeight: 600, letterSpacing: 0.5, marginTop: 2 }}>{subtitle}</div>}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== HOME ==========
+function Home({ onStartSprint, onBrowse }) {
+  return (
+    <div style={{ minHeight: "100vh", background: color.bg, fontFamily: font.sans, overflowY: "auto" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "64px 24px 80px", textAlign: "center" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+          <BrandMark size={30} /><span style={{ fontWeight: 700, fontSize: 16, color: color.ink }}>Hack In A Box</span>
+        </div>
+        <div style={{ fontSize: 11, letterSpacing: 2.5, textTransform: "uppercase", color: color.accent, fontWeight: 700, marginBottom: 18 }}>For hack champions</div>
+        <h1 style={{ fontSize: "clamp(34px, 6vw, 52px)", fontWeight: 800, letterSpacing: -1.5, lineHeight: 1.04, color: color.ink, margin: "0 0 18px" }}>Run your own design sprint.</h1>
+        <p style={{ fontSize: 17, lineHeight: 1.6, color: color.muted, maxWidth: 520, margin: "0 auto 36px" }}>
+          A packaged playbook for leading a 2–6 hour mini-hackathon at your church or organization — even if you've never facilitated one.
+        </p>
+        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <button onClick={onStartSprint} style={pill("primary")}>Start a Solo Sprint →</button>
+          <button onClick={onBrowse} style={pill("secondary")}>Browse the playbook</button>
+        </div>
+        <p style={{ fontSize: 13, color: color.faint, marginTop: 40 }}>Auto-saves to this browser · come back anytime</p>
       </div>
     </div>
   );
