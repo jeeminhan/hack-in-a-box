@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { color, font } from "./theme.js";
 
 const sections = [
   { id: "home", label: "Home" },
@@ -219,6 +220,15 @@ const SCIPAB_STEPS = [
     guideText: "Describe how solving this problem will address your church's specific needs. Be as concrete as possible.",
   },
 ];
+
+function BrandMark({ size = 26 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 261.9 261.9" style={{ borderRadius: 5, display: "block" }}>
+      <rect width="261.9" height="262.13" fill={color.accent} />
+      <path d="M142.85,87.3H87.3v55.55h55.55ZM127,127H103.17V103.17H127Zm31.74-14.29v30.16H174.6V112.69ZM87.3,174.6h87.3V158.73H87.3Z" fill={color.rail} />
+    </svg>
+  );
+}
 
 function Icon({ name, size = 24, color = "currentColor" }) {
   const icons = {
@@ -3152,6 +3162,25 @@ function ThinkingPartner({ setMode }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function Sidebar({ activePhase, onNavigate }) {
+  return (
+    <nav style={{ background: color.rail, borderRight: `1px solid ${color.lineSoft}`, padding: "22px 0", minWidth: 188 }}>
+      <button onClick={() => onNavigate("home")} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 20px 20px", background: "none", border: "none", cursor: "pointer" }}>
+        <BrandMark size={26} />
+        <span style={{ fontFamily: font.sans, fontWeight: 700, fontSize: 14, color: color.ink }}>Hack In A Box</span>
+      </button>
+      {PHASES.map((p) => (
+        <button key={p.id} onClick={() => onNavigate(p.sections[0])} style={{
+          display: "block", width: "100%", textAlign: "left", padding: "9px 20px",
+          fontFamily: font.sans, fontSize: 13.5, fontWeight: activePhase === p.id ? 700 : 500,
+          color: activePhase === p.id ? color.accent : color.body,
+          background: "none", border: "none", cursor: "pointer",
+        }}>{p.label}</button>
+      ))}
+    </nav>
   );
 }
 
