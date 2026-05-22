@@ -4,6 +4,7 @@ const sections = [
   { id: "home", label: "Home" },
   { id: "overview", label: "What is HIAB?" },
   { id: "foundation", label: "Heart of Innovation" },
+  { id: "ai", label: "✦ AI in Your Sprint" },
   { id: "prepare", label: "Prepare" },
   { id: "empathy", label: "Empathy Maps" },
   { id: "personas", label: "Personas" },
@@ -28,9 +29,10 @@ const phaseColors = {
   after: { bg: "#FFF8F0", accent: "#B45309", light: "#FEF3E2" },
   proposal: { bg: "#F0F8FF", accent: "#1D4ED8", light: "#DBEAFE" },
   foundation: { bg: "#FFFAF0", accent: "#9D174D", light: "#FDE8EF" },
+  ai: { bg: "#F3F0FF", accent: "#7C3AED", light: "#EDE7FF" },
 };
 
-const AI_ENDPOINT = import.meta.env.VITE_HIAB_AI_ENDPOINT;
+const AI_ENDPOINT = import.meta.env.VITE_HIAB_AI_ENDPOINT || "/api/chat";
 
 const WORKSHEET_KEYS = {
   empathy: "hiab-empathy-map-v1",
@@ -2587,23 +2589,32 @@ function ModeTopBar({ title, subtitle, accent, onHome }) {
 
 // ========== MODE PICKER LANDING ==========
 function ModePicker({ setMode }) {
-  const cards = [
-    {
-      key: "solo",
-      label: "Solo Sprint",
-      time: "~40 min · structured",
-      accent: "#E8890C",
-      desc: "Walk through all 6 steps for your specific challenge. Save multiple challenges. AI thinking-partner nudges at each step.",
-      bestFor: "I want the full design thinking experience for one focused challenge.",
-      icon: "🧭",
-    },
+  const hero = {
+    key: "solo",
+    label: "Solo Sprint",
+    time: "~40 min · guided, step-by-step",
+    accent: "#E8890C",
+    desc: "The guided way to prep your hack. Walk through all 6 design-thinking steps for your challenge — empathize, define, ideate, prototype, pitch — with an AI thinking-partner nudging you at each step. No facilitation experience needed.",
+    bestFor: "I'm leading a hack and want to be ready to run it confidently.",
+    icon: "🧭",
+  };
+
+  const playbook = {
+    key: "reference",
+    label: "The Full Playbook",
+    time: "browse anytime · the complete guide",
+    accent: "#1a1a2e",
+    desc: "Every section, exercise, and facilitator note in one place — what a Hack In A Box is, how to prepare, and how to run each tool with a group. Your reference while you plan and on the day itself.",
+    icon: "📚",
+  };
+
+  const tools = [
     {
       key: "mini",
       label: "Mini-Modules",
       time: "10–20 min each",
       accent: "#0097A7",
-      desc: "Pick the one tool you need today. Sharpen a problem statement, brainstorm ideas, or write a pitch — independent of the full sprint.",
-      bestFor: "I have 15 minutes and want to work on one specific thing.",
+      desc: "Just need one tool today? Grab a single exercise — problem statement, brainstorm, or pitch — without the full sprint.",
       icon: "🧩",
     },
     {
@@ -2611,60 +2622,90 @@ function ModePicker({ setMode }) {
       label: "AI Thinking Partner",
       time: "~15 min · chat",
       accent: "#7C3AED",
-      desc: "Skip the worksheets. A conversational AI coach interviews you, asks follow-up questions, and synthesizes everything into a ready-to-use brief.",
-      bestFor: "I want to talk it out and have AI organize my thinking.",
+      desc: "Talk it out. A conversational AI coach interviews you and organizes your thinking into a ready-to-use brief.",
       icon: "💬",
-    },
-    {
-      key: "reference",
-      label: "Reference Library",
-      time: "browse anytime",
-      accent: "#1a1a2e",
-      desc: "The full playbook with every section, accordion, and facilitator note. Best for people running a HIAB with a group.",
-      bestFor: "I'm facilitating a sprint and need the complete guide.",
-      icon: "📚",
     },
   ];
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8f8f6", fontFamily: "'DM Sans', sans-serif", overflowY: "auto" }}>
-      <div style={{ maxWidth: 920, margin: "0 auto", padding: "48px 24px 80px" }}>
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px 80px" }}>
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#E8890C12", padding: "8px 18px", borderRadius: 40, color: "#E8890C", fontSize: 13, fontWeight: 600, letterSpacing: 0.5, marginBottom: 20, textTransform: "uppercase" }}>
             ✦ By Indigitous US
           </div>
           <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 900, color: "#1a1a2e", lineHeight: 1.05, margin: "0 0 12px" }}>Hack In A Box</h1>
           <p style={{ fontSize: 18, lineHeight: 1.6, color: "#555", maxWidth: 560, margin: "0 auto 8px" }}>
-            Design thinking sprints for churches and faith-based organizations.
+            A packaged playbook for running your own design-thinking sprint — even if you've never facilitated one.
           </p>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: "#888", maxWidth: 560, margin: "0 auto" }}>
-            Choose how you want to work — alone or with a team, in 15 minutes or 40.
+            Built for hack champions and lay leaders leading a 2–6 hour mini-hackathon at their church or organization.
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-          {cards.map((c) => (
+        {/* HERO — Solo Sprint (recommended starting point) */}
+        <button onClick={() => setMode(hero.key)} style={{
+          width: "100%", background: "linear-gradient(135deg, #FFF8F0, #fff)",
+          border: `1.5px solid ${hero.accent}40`, borderRadius: 20, padding: "30px 28px",
+          textAlign: "left", cursor: "pointer", fontFamily: "inherit",
+          boxShadow: `0 4px 24px ${hero.accent}1f`, transition: "all 0.2s",
+          display: "flex", flexDirection: "column", gap: 14, marginBottom: 18,
+        }} onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 10px 32px ${hero.accent}33`; }} onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 4px 24px ${hero.accent}1f`; }}>
+          <div style={{ display: "inline-flex", alignSelf: "flex-start", alignItems: "center", gap: 6, background: hero.accent, color: "#fff", padding: "4px 12px", borderRadius: 30, fontSize: 11, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase" }}>
+            ✦ Start here
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div style={{ width: 60, height: 60, borderRadius: 16, background: `${hero.accent}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34, flexShrink: 0 }}>{hero.icon}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 28, fontWeight: 800, color: "#1a1a2e" }}>{hero.label}</div>
+              <div style={{ fontSize: 13, color: hero.accent, fontWeight: 600, marginTop: 2 }}>{hero.time}</div>
+            </div>
+          </div>
+          <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: "#444" }}>{hero.desc}</p>
+          <div style={{ fontSize: 14, color: hero.accent, fontStyle: "italic" }}>"{hero.bestFor}"</div>
+          <div style={{ display: "inline-flex", alignSelf: "flex-start", alignItems: "center", gap: 8, background: hero.accent, color: "#fff", padding: "12px 24px", borderRadius: 12, fontWeight: 700, fontSize: 15, marginTop: 2 }}>
+            Start Solo Sprint →
+          </div>
+        </button>
+
+        {/* PRIMARY — Full Playbook */}
+        <button onClick={() => setMode(playbook.key)} style={{
+          width: "100%", background: "#fff", border: `1px solid ${playbook.accent}22`,
+          borderRadius: 16, padding: "22px 24px", textAlign: "left", cursor: "pointer",
+          fontFamily: "inherit", boxShadow: `0 2px 12px ${playbook.accent}10`, transition: "all 0.2s",
+          display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 32,
+        }} onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${playbook.accent}22`; }} onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 2px 12px ${playbook.accent}10`; }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: `${playbook.accent}10`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>{playbook.icon}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 21, fontWeight: 700, color: "#1a1a2e" }}>{playbook.label}</div>
+            <div style={{ fontSize: 12, color: playbook.accent, fontWeight: 600, margin: "2px 0 8px", opacity: 0.7 }}>{playbook.time}</div>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#555" }}>{playbook.desc}</p>
+          </div>
+          <div style={{ color: playbook.accent, fontWeight: 700, fontSize: 20, alignSelf: "center" }}>→</div>
+        </button>
+
+        {/* MORE TOOLS — secondary, à la carte */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: "#999" }}>More tools</span>
+          <div style={{ flex: 1, height: 1, background: "#e5e5e0" }} />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
+          {tools.map((c) => (
             <button key={c.key} onClick={() => setMode(c.key)} style={{
-              background: "#fff", border: `1px solid ${c.accent}25`,
-              borderRadius: 16, padding: "24px 22px", textAlign: "left",
+              background: "#fff", border: `1px solid ${c.accent}22`,
+              borderRadius: 14, padding: "18px 18px", textAlign: "left",
               cursor: "pointer", fontFamily: "inherit",
-              boxShadow: `0 2px 12px ${c.accent}10`, transition: "all 0.2s",
-              display: "flex", flexDirection: "column", gap: 10,
-            }} onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${c.accent}25`; }} onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 2px 12px ${c.accent}10`; }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${c.accent}12`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>{c.icon}</div>
+              boxShadow: `0 1px 8px ${c.accent}0d`, transition: "all 0.2s",
+              display: "flex", flexDirection: "column", gap: 8,
+            }} onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 6px 18px ${c.accent}1f`; }} onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 1px 8px ${c.accent}0d`; }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${c.accent}12`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{c.icon}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e" }}>{c.label}</div>
-                  <div style={{ fontSize: 12, color: c.accent, fontWeight: 600, marginTop: 2 }}>{c.time}</div>
+                  <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, fontWeight: 700, color: "#1a1a2e" }}>{c.label}</div>
+                  <div style={{ fontSize: 11, color: c.accent, fontWeight: 600, marginTop: 1 }}>{c.time}</div>
                 </div>
               </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#555" }}>{c.desc}</p>
-              <div style={{ fontSize: 13, color: c.accent, fontStyle: "italic", marginTop: "auto", paddingTop: 8 }}>
-                "{c.bestFor}"
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, color: c.accent, fontWeight: 600, fontSize: 14, marginTop: 4 }}>
-                Start {c.label} →
-              </div>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "#666" }}>{c.desc}</p>
             </button>
           ))}
         </div>
@@ -3120,7 +3161,7 @@ export default function HackInABox() {
 
   useEffect(() => {
     const link = document.createElement("link");
-    link.href = "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap";
     link.rel = "stylesheet";
     document.head.appendChild(link);
     return () => document.head.removeChild(link);
@@ -3218,6 +3259,119 @@ export default function HackInABox() {
             </button>
           </div>
         );
+
+      case "ai": {
+        const ai = phaseColors.ai;
+        const prompts = [
+          {
+            title: "Empathy gathering",
+            subtitle: "Turn an interview or testimony into an empathy map",
+            body: "Paste a transcript of a conversation with the people you serve, then ask AI to sort it into the four quadrants. It surfaces patterns you might miss.",
+            prompt: "Here is a transcript of an interview with someone in our community. Sort what you hear into an empathy map with four columns — SAYS, THINKS, DOES, FEELS. Use direct quotes where you can, and flag any tensions between what they say and what they seem to feel.\n\n[paste transcript]",
+          },
+          {
+            title: "Sharper problem statements",
+            subtitle: "Go from a vague pain to a focused How Might We",
+            body: "Give AI your raw observations and have it draft several How Might We statements at different scopes, so you can pick the one that's hackable in a few hours.",
+            prompt: "Based on these observations about our community, draft 5 \"How Might We…\" problem statements. Make them specific and human-centered, not solution-disguised. Range from narrow to broad so we can choose the right scope for a 3-hour sprint.\n\n[paste observations]",
+          },
+          {
+            title: "More ideas, faster",
+            subtitle: "Push past the obvious during ideation",
+            body: "After your team's first round of Crazy 8s, ask AI to stretch the thinking with angles you haven't tried — then bring the best back to the group.",
+            prompt: "We're solving this problem: [problem statement]. We already have these ideas: [list]. Give us 10 more ideas from angles we haven't tried — including a few unconventional ones. Keep each to one sentence.",
+          },
+          {
+            title: "Draft the pitch",
+            subtitle: "Shape a prototype and leadership one-pager",
+            body: "Hand AI your winning idea and have it draft a clear pitch and a one-page proposal you can hand to your pastor or leadership.",
+            prompt: "Turn this idea into (1) a 60-second pitch and (2) a one-page proposal for church leadership with: the problem, who it serves, the proposed solution, what we'd build first, and what we need to start.\n\nIdea: [describe]",
+          },
+        ];
+        return (
+          <div>
+            <PhaseHeader icon="sparkle" title="AI in Your Sprint" subtitle="Using AI to prep faster and run a better Hack In A Box" accent={ai.accent} />
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 20 }}>
+              You don't need to be technical to put AI to work in a sprint. Used well, it's a tireless thinking partner — it helps you prepare faster, hear your community more clearly, and turn rough ideas into plans you can act on. Think of it as a tool that <strong>amplifies</strong> your team's discernment, never replaces it.
+            </p>
+
+            <div style={{ background: `linear-gradient(135deg, ${ai.light}, #fff)`, borderRadius: 16, padding: 28, border: `1px solid ${ai.accent}20`, marginBottom: 28 }}>
+              <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, margin: "0 0 16px", color: "#1a1a2e" }}>Why use AI in a Hack In A Box?</h3>
+              {[
+                { title: "Prep in a fraction of the time", desc: "Draft agendas, prompts, and participant invites in minutes so you can focus on the people in the room." },
+                { title: "Hear your community more clearly", desc: "Synthesize interviews and survey notes into themes and empathy maps — without losing the human details." },
+                { title: "Get unstuck during ideation", desc: "When the room goes quiet, AI can offer fresh angles to react to and build on." },
+                { title: "Lower the barrier to building", desc: "Teams can prototype something tangible — a flyer, a page, a script — within the workshop itself." },
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", gap: 12, marginBottom: i < 3 ? 14 : 0 }}>
+                  <div style={{ color: ai.accent, fontSize: 18, marginTop: 1 }}>✦</div>
+                  <div><strong style={{ color: "#1a1a2e", fontSize: 15 }}>{item.title}:</strong> <span style={{ color: "#555", fontSize: 15, lineHeight: 1.6 }}>{item.desc}</span></div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA to the live AI Thinking Partner */}
+            <div style={{
+              background: "linear-gradient(135deg, #7C3AED, #9333EA)", borderRadius: 16, padding: "24px 28px",
+              color: "#fff", margin: "0 0 32px", textAlign: "left",
+              display: "flex", alignItems: "center", gap: 20, cursor: "pointer",
+              boxShadow: "0 4px 20px rgba(124,58,237,0.25)",
+            }} onClick={() => setMode("partner")}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="chat" size={28} color="#fff" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: "0 0 4px", fontFamily: "'Fraunces', Georgia, serif", fontSize: 19 }}>Try it now — the AI Thinking Partner</h3>
+                <p style={{ margin: 0, fontSize: 14, opacity: 0.9 }}>
+                  A conversational coach built into this kit. It interviews you about your challenge and organizes your thinking into a ready-to-use brief.
+                </p>
+              </div>
+              <Icon name="arrow" size={22} color="#fff" />
+            </div>
+
+            <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, margin: "0 0 8px", color: "#1a1a2e" }}>Tools you can use</h3>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: "#555", marginBottom: 16 }}>
+              Any general AI assistant works. Most have a free tier that's plenty for a sprint — start with one you already have access to.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 32 }}>
+              {[
+                { name: "ChatGPT", note: "Great all-rounder for drafting, summarizing, and brainstorming." },
+                { name: "Claude", note: "Strong at working through long transcripts and nuanced writing." },
+                { name: "Gemini", note: "Built into Google Workspace — handy for Docs, Gmail, and notes." },
+              ].map((t) => (
+                <div key={t.name} style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", border: `1px solid ${ai.accent}18`, boxShadow: `0 2px 12px ${ai.accent}0a` }}>
+                  <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 16, fontWeight: 700, color: "#1a1a2e", marginBottom: 6 }}>{t.name}</div>
+                  <p style={{ margin: 0, fontSize: 13.5, color: "#777", lineHeight: 1.55 }}>{t.note}</p>
+                </div>
+              ))}
+            </div>
+
+            <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, margin: "0 0 8px", color: "#1a1a2e" }}>How to use AI at each step</h3>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: "#555", marginBottom: 16 }}>
+              Copy a prompt below, swap in your own details, and paste it into your AI tool. Always read the output with your team and keep what rings true.
+            </p>
+            {prompts.map((p) => (
+              <Accordion key={p.title} title={p.title} subtitle={p.subtitle} accent={ai.accent}>
+                <p style={{ margin: "0 0 12px", fontSize: 15, lineHeight: 1.7, color: "#444" }}>{p.body}</p>
+                <div style={{ background: "#1a1a2e", color: "#E9E3FF", borderRadius: 10, padding: "14px 16px", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                  {p.prompt}
+                </div>
+                <div style={{ fontSize: 12, color: ai.accent, marginTop: 8, fontWeight: 600 }}>↑ Copy, edit the [brackets], and paste into your AI tool</div>
+              </Accordion>
+            ))}
+
+            <div style={{ marginTop: 24, padding: "18px 22px", borderRadius: 12, background: "#FFFAF0", border: "1px dashed #E8890C55" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 16 }}>🙏</span>
+                <strong style={{ fontSize: 14, color: "#B45309" }}>Keep it human (and prayerful)</strong>
+              </div>
+              <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: "#7a5a2e" }}>
+                AI is fast, but it doesn't know your people or the Spirit's leading. Use it to get to a first draft quickly — then slow down, pray, and let your team shape the final direction. Don't paste anyone's private or sensitive details into a public AI tool.
+              </p>
+            </div>
+          </div>
+        );
+      }
 
       case "submit":
         return <SCIPABChatbot />;
