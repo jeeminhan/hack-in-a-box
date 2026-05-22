@@ -3184,6 +3184,31 @@ function Sidebar({ activePhase, onNavigate }) {
   );
 }
 
+function StepBar({ activeSection, onNavigate }) {
+  const idx = STEPS.findIndex((s) => s.id === activeSection);
+  return (
+    <div style={{ display: "flex", alignItems: "center", padding: "18px 28px", borderBottom: `1px solid ${color.lineSoft}`, background: color.surface, overflowX: "auto" }}>
+      {STEPS.map((s, i) => {
+        const state = i < idx ? "done" : i === idx ? "on" : "todo";
+        return (
+          <div key={s.id} style={{ display: "flex", alignItems: "center" }}>
+            <button onClick={() => onNavigate(s.id)} style={{ display: "flex", alignItems: "center", gap: 9, background: "none", border: "none", cursor: "pointer", fontFamily: font.sans, fontSize: 12.5, fontWeight: state === "on" ? 700 : 500, color: state === "on" ? color.ink : color.faint }}>
+              <span style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700,
+                background: state === "on" ? color.accent : state === "done" ? color.ink : "transparent",
+                border: state === "todo" ? `1.5px solid ${color.line}` : "none",
+                color: state === "todo" ? color.faint : "#fff" }}>
+                {state === "done" ? "✓" : s.n}
+              </span>
+              {s.label}
+            </button>
+            {i < STEPS.length - 1 && <span style={{ width: 34, height: 1.5, background: color.line, margin: "0 6px" }} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function HackInABox() {
   const [mode, setMode] = useState(() => {
     const stored = readStoredString("hiab-mode", "picker");
