@@ -16,6 +16,31 @@ const sections = [
   { id: "templates", label: "Templates" },
 ];
 
+// Five-phase spine. Each phase has an id, label, and the section ids it contains.
+// eslint-disable-next-line react-refresh/only-export-components
+export const PHASES = [
+  { id: "start",     label: "Get started",      sections: ["overview", "foundation"] },
+  { id: "prepare",   label: "Prepare",          sections: ["prepare"] },
+  { id: "run",       label: "Run the sprint",   sections: ["empathy", "problem", "ideate", "prototype", "pitch"] },
+  { id: "after",     label: "After the sprint", sections: ["after"] },
+  { id: "resources", label: "Resources",        sections: ["templates", "ai", "partner"] },
+];
+
+// The 5 numbered steps shown in the top step bar during the "run" phase.
+// eslint-disable-next-line react-refresh/only-export-components
+export const STEPS = [
+  { id: "empathy",   n: 1, label: "Empathize" },
+  { id: "problem",   n: 2, label: "Define" },
+  { id: "ideate",    n: 3, label: "Ideate" },
+  { id: "prototype", n: 4, label: "Prototype" },
+  { id: "pitch",     n: 5, label: "Pitch" },
+];
+
+// Flat lookup: which phase a section belongs to.
+// eslint-disable-next-line react-refresh/only-export-components
+export const phaseOf = (sectionId) =>
+  PHASES.find((p) => p.sections.includes(sectionId))?.id ?? "start";
+
 const phaseColors = {
   prepare: { bg: "#FFF8F0", accent: "#E8890C", light: "#FEF3E2" },
   problem: { bg: "#F0F4FF", accent: "#4361EE", light: "#E2EAFF" },
