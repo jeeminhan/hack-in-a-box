@@ -1,36 +1,34 @@
 import { useState, useEffect, useRef } from "react";
+import { color, font, pill } from "./theme.js";
 
-const sections = [
-  { id: "home", label: "Home" },
-  { id: "overview", label: "What is HIAB?" },
-  { id: "foundation", label: "Heart of Innovation" },
-  { id: "prepare", label: "Prepare" },
-  { id: "empathy", label: "Empathy Maps" },
-  { id: "personas", label: "Personas" },
-  { id: "problem", label: "Problem Statements" },
-  { id: "submit", label: "✦ Submit a Problem" },
-  { id: "ideate", label: "Ideation" },
-  { id: "prototype", label: "Prototyping" },
-  { id: "after", label: "After the Sprint" },
-  { id: "templates", label: "Templates" },
+// Five-phase spine. Each phase has an id, label, and the section ids it contains.
+// eslint-disable-next-line react-refresh/only-export-components
+export const PHASES = [
+  { id: "start",     label: "Get started",      sections: ["overview", "foundation"] },
+  { id: "prepare",   label: "Prepare",          sections: ["prepare"] },
+  { id: "run",       label: "Run the sprint",   sections: ["empathy", "problem", "ideate", "prototype", "pitch"] },
+  { id: "after",     label: "After the sprint", sections: ["after"] },
+  { id: "resources", label: "Resources",        sections: ["templates", "ai", "partner"] },
 ];
 
-const phaseColors = {
-  prepare: { bg: "#FFF8F0", accent: "#E8890C", light: "#FEF3E2" },
-  problem: { bg: "#F0F4FF", accent: "#4361EE", light: "#E2EAFF" },
-  empathy: { bg: "#F5FFF0", accent: "#2D9B3A", light: "#E2FBDF" },
-  personas: { bg: "#FFF0F8", accent: "#C2185B", light: "#FFE0EE" },
-  ideate: { bg: "#FFFFF0", accent: "#C6A200", light: "#FFF9D6" },
-  prototype: { bg: "#F0FFFF", accent: "#0097A7", light: "#D6F7FA" },
-  facilitate: { bg: "#F8F0FF", accent: "#7B1FA2", light: "#EFE0FF" },
-  templates: { bg: "#FFF5F0", accent: "#D84315", light: "#FFE8DD" },
-  submit: { bg: "#F0FFF8", accent: "#0D7C5F", light: "#D6FBF0" },
-  after: { bg: "#FFF8F0", accent: "#B45309", light: "#FEF3E2" },
-  proposal: { bg: "#F0F8FF", accent: "#1D4ED8", light: "#DBEAFE" },
-  foundation: { bg: "#FFFAF0", accent: "#9D174D", light: "#FDE8EF" },
-};
+// The 5 numbered steps shown in the top step bar during the "run" phase.
+// eslint-disable-next-line react-refresh/only-export-components
+export const STEPS = [
+  { id: "empathy",   n: 1, label: "Empathize" },
+  { id: "problem",   n: 2, label: "Define" },
+  { id: "ideate",    n: 3, label: "Ideate" },
+  { id: "prototype", n: 4, label: "Prototype" },
+  { id: "pitch",     n: 5, label: "Pitch" },
+];
 
-const AI_ENDPOINT = import.meta.env.VITE_HIAB_AI_ENDPOINT;
+// Flat lookup: which phase a section belongs to.
+// eslint-disable-next-line react-refresh/only-export-components
+export const phaseOf = (sectionId) =>
+  PHASES.find((p) => p.sections.includes(sectionId))?.id ?? "start";
+
+const phaseColors = new Proxy({}, { get: () => ({ bg: color.rail, accent: color.accent, light: color.accentSoft }) });
+
+const AI_ENDPOINT = import.meta.env.VITE_HIAB_AI_ENDPOINT || "/api/chat";
 
 const WORKSHEET_KEYS = {
   empathy: "hiab-empathy-map-v1",
@@ -141,7 +139,7 @@ const SCIPAB_STEPS = [
     key: "situation",
     label: "Situation",
     letter: "S",
-    color: "#4361EE",
+    color: color.accent,
     prompt: "Tell me about your church or ministry's current situation. What's the context? Think about your community, your congregation, your programs, or the people you're trying to reach.",
     helper: "Example: \"Our church is in a suburban neighborhood with a growing young professional population. We have about 200 members, mostly families, and run a traditional Sunday service with a small group program.\"",
     guideText: "State the current state of affairs — the relevant circumstances of your church or ministry.",
@@ -150,7 +148,7 @@ const SCIPAB_STEPS = [
     key: "complication",
     label: "Complication",
     letter: "C",
-    color: "#C2185B",
+    color: color.accent,
     prompt: "What's the critical issue or challenge that's disrupting your situation? What changes, pressures, or problems have emerged?",
     helper: "Example: \"Over the past two years, we've seen a significant drop in attendance among 20-35 year olds. Our small groups aren't attracting younger members, and we're struggling to connect with the new professionals moving into the area.\"",
     guideText: "Identify the critical issues — changes, pressures, or demands creating problems or opportunities.",
@@ -159,7 +157,7 @@ const SCIPAB_STEPS = [
     key: "implication",
     label: "Implication",
     letter: "I",
-    color: "#E8890C",
+    color: color.accent,
     prompt: "What happens if this problem isn't addressed? What are the consequences for your church, your community, or the people involved?",
     helper: "Example: \"If we don't engage this demographic, we risk becoming an aging congregation that can't sustain itself in 10 years. More importantly, there are hundreds of young professionals in our community who are spiritually hungry but feel disconnected from church.\"",
     guideText: "Show the personal or ministry consequences of failing to act on this problem.",
@@ -168,7 +166,7 @@ const SCIPAB_STEPS = [
     key: "position",
     label: "Position",
     letter: "P",
-    color: "#2D9B3A",
+    color: color.accent,
     prompt: "What do you believe needs to happen? What's your position on how this should be addressed? (It's okay if you're not sure — share your best thinking!)",
     helper: "Example: \"We believe we need to completely reimagine how we create community for young professionals — not just tweaking Sunday services, but creating new entry points and gathering formats that fit their lives.\"",
     guideText: "State clearly what you believe needs to be done to address this challenge.",
@@ -177,7 +175,7 @@ const SCIPAB_STEPS = [
     key: "action",
     label: "Action",
     letter: "A",
-    color: "#7B1FA2",
+    color: color.accent,
     prompt: "What specific action or next step are you hoping to take? What role do you want your church, your team, or a HIAB sprint to play?",
     helper: "Example: \"We want to run a HIAB sprint with a mix of our current young members and church leaders to brainstorm fresh approaches to community building. We'd also love to involve some of the unchurched professionals in the conversation.\"",
     guideText: "Describe the role you want others to play and the steps you'd like to explore.",
@@ -186,12 +184,21 @@ const SCIPAB_STEPS = [
     key: "benefit",
     label: "Benefit",
     letter: "B",
-    color: "#0097A7",
+    color: color.accent,
     prompt: "What would success look like? If this problem were solved, what would be the benefit to your church and community?",
     helper: "Example: \"If we crack this, we'd see a vibrant, multigenerational community where young professionals feel they belong. We'd have sustainable growth, new leaders emerging, and a church that's truly serving our changing neighborhood.\"",
     guideText: "Describe how solving this problem will address your church's specific needs. Be as concrete as possible.",
   },
 ];
+
+function BrandMark({ size = 26 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 261.9 261.9" style={{ borderRadius: 5, display: "block" }}>
+      <rect width="261.9" height="262.13" fill={color.accent} />
+      <path d="M142.85,87.3H87.3v55.55h55.55ZM127,127H103.17V103.17H127Zm31.74-14.29v30.16H174.6V112.69ZM87.3,174.6h87.3V158.73H87.3Z" fill={color.rail} />
+    </svg>
+  );
+}
 
 function Icon({ name, size = 24, color = "currentColor" }) {
   const icons = {
@@ -231,48 +238,48 @@ function Icon({ name, size = 24, color = "currentColor" }) {
   );
 }
 
-function Accordion({ title, subtitle, children, defaultOpen = false, accent = "#4361EE" }) {
+function Accordion({ title, subtitle, children, defaultOpen = false, accent = color.accent }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ borderRadius: 12, border: `1px solid ${accent}22`, marginBottom: 12, overflow: "hidden", background: "#fff" }}>
       <button onClick={() => setOpen(!open)} style={{
         width: "100%", padding: subtitle ? "14px 20px 12px" : "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between",
         background: open ? `${accent}08` : "transparent", border: "none", cursor: "pointer",
-        fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 17, fontWeight: 600, color: "#1a1a2e", transition: "background 0.2s",
+        fontFamily: font.sans, fontSize: 17, fontWeight: 600, color: color.ink, transition: "background 0.2s",
         textAlign: "left",
       }}>
         <div>
           <span>{title}</span>
-          {subtitle && <div style={{ fontSize: 13, fontWeight: 400, color: accent, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>{subtitle}</div>}
+          {subtitle && <div style={{ fontSize: 13, fontWeight: 400, color: accent, marginTop: 2, fontFamily: font.sans }}>{subtitle}</div>}
         </div>
         <span style={{ transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.3s", color: accent, flexShrink: 0, marginLeft: 12 }}>
           <Icon name="chevronDown" size={20} color={accent} />
         </span>
       </button>
-      {open && <div style={{ padding: "4px 20px 20px", lineHeight: 1.7, color: "#374151" }}>{children}</div>}
+      {open && <div style={{ padding: "4px 20px 20px", lineHeight: 1.7, color: color.body }}>{children}</div>}
     </div>
   );
 }
 
-function StepCard({ number, title, description, duration, accent = "#4361EE" }) {
+function StepCard({ number, title, description, duration, accent = color.accent }) {
   return (
     <div style={{ background: "#fff", borderRadius: 14, padding: "24px 24px 20px", border: `1px solid ${accent}18`, boxShadow: `0 2px 12px ${accent}08`, position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: accent }} />
       <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-        <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${accent}12`, color: accent, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 18, flexShrink: 0 }}>{number}</div>
+        <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${accent}12`, color: accent, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: font.sans, fontWeight: 700, fontSize: 18, flexShrink: 0 }}>{number}</div>
         <div style={{ flex: 1 }}>
-          <h4 style={{ margin: "0 0 6px", fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 17, color: "#1a1a2e" }}>{title}</h4>
+          <h4 style={{ margin: "0 0 6px", fontFamily: font.sans, fontSize: 17, color: color.ink }}>{title}</h4>
           {duration && <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 8, color: accent, fontSize: 13, fontWeight: 500 }}><Icon name="clock" size={14} color={accent} /> {duration}</div>}
-          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "#555" }}>{description}</p>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: color.body }}>{description}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function TipBox({ children, accent = "#E8890C", label = "💡 Tip" }) {
+function TipBox({ children, accent = color.accent, label = "Tip" }) {
   return (
-    <div style={{ background: `${accent}0A`, border: `1px solid ${accent}25`, borderRadius: 12, padding: "16px 20px", marginTop: 16, marginBottom: 8, fontSize: 15, lineHeight: 1.65, color: "#444" }}>
+    <div style={{ background: `${accent}0A`, border: `1px solid ${accent}25`, borderRadius: 12, padding: "16px 20px", marginTop: 16, marginBottom: 8, fontSize: 15, lineHeight: 1.65, color: color.body }}>
       <strong style={{ color: accent, fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</strong>
       <div style={{ marginTop: 6 }}>{children}</div>
     </div>
@@ -286,9 +293,9 @@ function PhaseHeader({ icon, title, subtitle, accent }) {
         <div style={{ width: 48, height: 48, borderRadius: 12, background: `${accent}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name={icon} size={26} color={accent} />
         </div>
-        <h2 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontSize: 28, fontWeight: 700, color: "#1a1a2e" }}>{title}</h2>
+        <h2 style={{ margin: 0, fontFamily: font.sans, fontSize: 28, fontWeight: 700, color: color.ink }}>{title}</h2>
       </div>
-      {subtitle && <p style={{ margin: "8px 0 0 60px", fontSize: 16, color: "#666", lineHeight: 1.6 }}>{subtitle}</p>}
+      {subtitle && <p style={{ margin: "8px 0 0 60px", fontSize: 16, color: color.muted, lineHeight: 1.6 }}>{subtitle}</p>}
     </div>
   );
 }
@@ -296,13 +303,13 @@ function PhaseHeader({ icon, title, subtitle, accent }) {
 function TemplateCard({ title, desc, items, accent, onLaunch, launchLabel = "Open interactive worksheet" }) {
   return (
     <div style={{ background: "#fff", borderRadius: 14, padding: 24, border: `1px solid ${accent}18`, boxShadow: `0 2px 12px ${accent}08`, display: "flex", flexDirection: "column" }}>
-      <h4 style={{ margin: "0 0 8px", fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 18, color: "#1a1a2e" }}>{title}</h4>
-      <p style={{ margin: "0 0 16px", fontSize: 14, color: "#666", lineHeight: 1.6 }}>{desc}</p>
+      <h4 style={{ margin: "0 0 8px", fontFamily: font.sans, fontSize: 18, color: color.ink }}>{title}</h4>
+      <p style={{ margin: "0 0 16px", fontSize: 14, color: color.muted, lineHeight: 1.6 }}>{desc}</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
         {items.map((item, i) => (
           <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: accent, marginTop: 7, flexShrink: 0 }} />
-            <span style={{ fontSize: 14, color: "#555", lineHeight: 1.5 }}>{item}</span>
+            <span style={{ fontSize: 14, color: color.body, lineHeight: 1.5 }}>{item}</span>
           </div>
         ))}
       </div>
@@ -310,7 +317,7 @@ function TemplateCard({ title, desc, items, accent, onLaunch, launchLabel = "Ope
         <button onClick={onLaunch} style={{
           marginTop: 16, background: accent, color: "#fff", border: "none",
           borderRadius: 8, padding: "10px 14px", fontSize: 14, fontWeight: 600,
-          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+          cursor: "pointer", fontFamily: font.sans,
           display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
         }}>{launchLabel} →</button>
       )}
@@ -321,18 +328,18 @@ function TemplateCard({ title, desc, items, accent, onLaunch, launchLabel = "Ope
 function FacilitatorNote({ children, title = "Facilitator Note" }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ borderRadius: 10, border: "1px dashed #7B1FA240", marginTop: 12, marginBottom: 8, overflow: "hidden", background: "#F8F0FF08" }}>
+    <div style={{ borderRadius: 10, border: `1px dashed ${color.line}`, marginTop: 12, marginBottom: 8, overflow: "hidden", background: color.rail }}>
       <button onClick={() => setOpen(!open)} style={{
         width: "100%", padding: "10px 16px", display: "flex", alignItems: "center", gap: 8,
-        background: open ? "#7B1FA208" : "transparent", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
-        color: "#7B1FA2", fontFamily: "'DM Sans', sans-serif",
+        background: open ? `${color.accent}08` : "transparent", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+        color: color.accent, fontFamily: font.sans,
       }}>
-        <span style={{ fontSize: 15 }}>🎓</span> {title}
+        {title}
         <span style={{ marginLeft: "auto", transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.3s" }}>
-          <Icon name="chevronDown" size={16} color="#7B1FA2" />
+          <Icon name="chevronDown" size={16} color={color.accent} />
         </span>
       </button>
-      {open && <div style={{ padding: "4px 16px 14px", fontSize: 14, lineHeight: 1.6, color: "#555", borderTop: "1px dashed #7B1FA215" }}>{children}</div>}
+      {open && <div style={{ padding: "4px 16px 14px", fontSize: 14, lineHeight: 1.6, color: color.body, borderTop: `1px dashed ${color.line}` }}>{children}</div>}
     </div>
   );
 }
@@ -340,10 +347,10 @@ function FacilitatorNote({ children, title = "Facilitator Note" }) {
 function VideoPlaceholder({ title, description, duration }) {
   return (
     <div style={{
-      background: "linear-gradient(135deg, #1a1a2e, #2d2b55)", borderRadius: 14, padding: "20px 22px",
+      background: color.ink, borderRadius: 14, padding: "20px 22px",
       color: "#fff", marginBottom: 12, position: "relative", overflow: "hidden",
     }}>
-      <div style={{ position: "absolute", top: 10, right: 12, background: "#E8890C", color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: 0.5, textTransform: "uppercase" }}>
+      <div style={{ position: "absolute", top: 10, right: 12, background: color.accent, color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: 0.5, textTransform: "uppercase" }}>
         Coming Soon
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -365,17 +372,17 @@ function VideoPlaceholder({ title, description, duration }) {
 
 function EmpathyMapVisual() {
   const quadrants = [
-    { title: "SAYS", color: "#4361EE", prompt: "What does the person say out loud? Direct quotes, key phrases, statements about their experience.", },
-    { title: "THINKS", color: "#2D9B3A", prompt: "What might they be thinking but not saying? Worries, aspirations, beliefs about their situation." },
-    { title: "DOES", color: "#E8890C", prompt: "What actions and behaviors do you observe? How do they interact with others?" },
-    { title: "FEELS", color: "#C2185B", prompt: "What emotions might they experience? Frustrations, joys, fears about the situation." },
+    { title: "SAYS", tint: "#A5D9E7", prompt: "What does the person say out loud? Direct quotes, key phrases, statements about their experience.", },
+    { title: "THINKS", tint: "#EFE974", prompt: "What might they be thinking but not saying? Worries, aspirations, beliefs about their situation." },
+    { title: "DOES", tint: "#CBD3EB", prompt: "What actions and behaviors do you observe? How do they interact with others?" },
+    { title: "FEELS", tint: "#B86B78", prompt: "What emotions might they experience? Frustrations, joys, fears about the situation." },
   ];
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, borderRadius: 16, overflow: "hidden", background: "#e5e7eb", maxWidth: 560, margin: "20px auto" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, borderRadius: 16, overflow: "hidden", background: color.line, maxWidth: 560, margin: "20px auto" }}>
       {quadrants.map((q) => (
-        <div key={q.title} style={{ background: `${q.color}08`, padding: "20px 18px", minHeight: 120 }}>
-          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 15, color: q.color, marginBottom: 8, letterSpacing: 1 }}>{q.title}</div>
-          <p style={{ margin: 0, fontSize: 13, color: "#666", lineHeight: 1.55 }}>{q.prompt}</p>
+        <div key={q.title} style={{ background: `${q.tint}22`, padding: "20px 18px", minHeight: 120 }}>
+          <div style={{ fontFamily: font.sans, fontWeight: 700, fontSize: 15, color: color.ink, marginBottom: 8, letterSpacing: 1 }}>{q.title}</div>
+          <p style={{ margin: 0, fontSize: 13, color: color.muted, lineHeight: 1.55 }}>{q.prompt}</p>
         </div>
       ))}
     </div>
@@ -385,10 +392,10 @@ function EmpathyMapVisual() {
 function EmpathyMapWorksheet() {
   const STORAGE_KEY = WORKSHEET_KEYS.empathy;
   const quadrants = [
-    { key: "says", title: "SAYS", color: "#4361EE", prompt: "Direct quotes, key phrases" },
-    { key: "thinks", title: "THINKS", color: "#2D9B3A", prompt: "Beliefs, worries, hopes" },
-    { key: "does", title: "DOES", color: "#E8890C", prompt: "Actions, behaviors" },
-    { key: "feels", title: "FEELS", color: "#C2185B", prompt: "Emotions, frustrations, joys" },
+    { key: "says", title: "SAYS", tint: "#A5D9E7", prompt: "Direct quotes, key phrases" },
+    { key: "thinks", title: "THINKS", tint: "#EFE974", prompt: "Beliefs, worries, hopes" },
+    { key: "does", title: "DOES", tint: "#CBD3EB", prompt: "Actions, behaviors" },
+    { key: "feels", title: "FEELS", tint: "#B86B78", prompt: "Emotions, frustrations, joys" },
   ];
 
   const empty = { subject: "", says: [], thinks: [], does: [], feels: [], insights: "" };
@@ -418,24 +425,24 @@ function EmpathyMapWorksheet() {
   const noteCount = quadrants.reduce((sum, q) => sum + data[q.key].length, 0);
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 24, marginTop: 24, marginBottom: 24 }}>
+    <div style={{ background: "#fff", border: `1px solid ${color.line}`, borderRadius: 16, padding: 24, marginTop: 24, marginBottom: 24 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
         <div>
-          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e" }}>
+          <div style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, color: color.ink }}>
             Interactive Empathy Map
           </div>
-          <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>
+          <div style={{ fontSize: 13, color: color.muted, marginTop: 2 }}>
             {noteCount} note{noteCount === 1 ? "" : "s"} · auto-saves to this browser
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => window.print()} style={btnStyleSecondary}>🖨️ Print</button>
+          <button onClick={() => window.print()} style={btnStyleSecondary}>Print</button>
           <button onClick={reset} style={btnStyleDanger}>Reset</button>
         </div>
       </div>
 
       <label style={{ display: "block", marginBottom: 16 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#555", display: "block", marginBottom: 6 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: color.body, display: "block", marginBottom: 6 }}>
           Who are we empathizing with?
         </span>
         <input
@@ -445,7 +452,7 @@ function EmpathyMapWorksheet() {
           placeholder='e.g. "Maria, 28, young professional new to the neighborhood"'
           style={{
             width: "100%", padding: "10px 14px", fontSize: 14, borderRadius: 8,
-            border: "1px solid #d1d5db", fontFamily: "inherit",
+            border: `1px solid ${color.line}`, fontFamily: "inherit",
           }}
         />
       </label>
@@ -453,21 +460,21 @@ function EmpathyMapWorksheet() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }} className="hiab-empathy-grid">
         {quadrants.map((q) => (
           <div key={q.key} style={{
-            background: `${q.color}06`, border: `1px solid ${q.color}25`,
+            background: `${q.tint}22`, border: `1px solid ${color.line}`,
             borderRadius: 12, padding: 14, minHeight: 220, display: "flex", flexDirection: "column",
           }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 14, color: q.color, letterSpacing: 1 }}>
+              <span style={{ fontFamily: font.sans, fontWeight: 700, fontSize: 14, color: color.ink, letterSpacing: 1 }}>
                 {q.title}
               </span>
-              <span style={{ fontSize: 11, color: "#999" }}>{data[q.key].length}</span>
+              <span style={{ fontSize: 11, color: color.muted }}>{data[q.key].length}</span>
             </div>
-            <div style={{ fontSize: 11, color: "#888", marginBottom: 10 }}>{q.prompt}</div>
+            <div style={{ fontSize: 11, color: color.muted, marginBottom: 10 }}>{q.prompt}</div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
               {data[q.key].map((note) => (
                 <div key={note.id} style={{
-                  background: "#FEF9C3", borderRadius: 6, padding: "6px 8px",
+                  background: color.rail, borderRadius: 6, padding: "6px 8px",
                   display: "flex", alignItems: "flex-start", gap: 6,
                   boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
                 }}>
@@ -479,13 +486,13 @@ function EmpathyMapWorksheet() {
                     rows={2}
                     style={{
                       flex: 1, border: "none", background: "transparent", resize: "none",
-                      fontFamily: "inherit", fontSize: 13, lineHeight: 1.4, color: "#1f2937",
+                      fontFamily: "inherit", fontSize: 13, lineHeight: 1.4, color: color.ink,
                       outline: "none", padding: 0,
                     }}
                   />
                   <button
                     onClick={() => deleteNote(q.key, note.id)}
-                    style={{ background: "none", border: "none", color: "#999", cursor: "pointer", fontSize: 14, lineHeight: 1, padding: 2 }}
+                    style={{ background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 14, lineHeight: 1, padding: 2 }}
                     aria-label="Delete note"
                   >×</button>
                 </div>
@@ -493,8 +500,8 @@ function EmpathyMapWorksheet() {
             </div>
 
             <button onClick={() => addNote(q.key)} style={{
-              marginTop: 10, background: "transparent", border: `1px dashed ${q.color}55`,
-              color: q.color, borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 600,
+              marginTop: 10, background: "transparent", border: `1px dashed ${color.accent}55`,
+              color: color.accent, borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 600,
               cursor: "pointer", fontFamily: "inherit",
             }}>+ Add sticky note</button>
           </div>
@@ -502,7 +509,7 @@ function EmpathyMapWorksheet() {
       </div>
 
       <label style={{ display: "block", marginTop: 16 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#555", display: "block", marginBottom: 6 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: color.body, display: "block", marginBottom: 6 }}>
           Key insights & patterns
         </span>
         <textarea
@@ -512,7 +519,7 @@ function EmpathyMapWorksheet() {
           rows={3}
           style={{
             width: "100%", padding: "10px 14px", fontSize: 14, borderRadius: 8,
-            border: "1px solid #d1d5db", fontFamily: "inherit", resize: "vertical",
+            border: `1px solid ${color.line}`, fontFamily: "inherit", resize: "vertical",
           }}
         />
       </label>
@@ -521,8 +528,8 @@ function EmpathyMapWorksheet() {
 }
 
 const btnStyleSecondary = {
-  background: "#fff", border: "1px solid #d1d5db", borderRadius: 8,
-  padding: "8px 14px", fontSize: 13, fontWeight: 500, color: "#374151",
+  background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
+  padding: "8px 14px", fontSize: 13, fontWeight: 500, color: color.body,
   cursor: "pointer", fontFamily: "inherit",
 };
 
@@ -534,12 +541,12 @@ const btnStyleDanger = {
 
 const inputStyle = {
   width: "100%", padding: "10px 14px", fontSize: 14, borderRadius: 8,
-  border: "1px solid #d1d5db", fontFamily: "inherit", outline: "none",
+  border: `1px solid ${color.line}`, fontFamily: "inherit", outline: "none",
 };
 
 const textareaStyle = { ...inputStyle, resize: "vertical", lineHeight: 1.55 };
 
-const fieldLabel = { fontSize: 13, fontWeight: 600, color: "#555", display: "block", marginBottom: 6 };
+const fieldLabel = { fontSize: 13, fontWeight: 600, color: color.body, display: "block", marginBottom: 6 };
 
 function useWorksheet(storageKey, empty) {
   const [data, setData] = useState(() => readStoredJson(storageKey, empty));
@@ -552,15 +559,15 @@ function useWorksheet(storageKey, empty) {
   return [data, setData, reset];
 }
 
-function WorksheetHeader({ title, subtitle, onReset, accent = "#1a1a2e" }) {
+function WorksheetHeader({ title, subtitle, onReset, accent = color.ink }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
       <div>
-        <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 700, color: accent }}>{title}</div>
-        {subtitle && <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>{subtitle}</div>}
+        <div style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, color: accent }}>{title}</div>
+        {subtitle && <div style={{ fontSize: 13, color: color.muted, marginTop: 2 }}>{subtitle}</div>}
       </div>
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={() => window.print()} style={btnStyleSecondary}>🖨️ Print</button>
+        <button onClick={() => window.print()} style={btnStyleSecondary}>Print</button>
         {onReset && <button onClick={onReset} style={btnStyleDanger}>Reset</button>}
       </div>
     </div>
@@ -569,7 +576,7 @@ function WorksheetHeader({ title, subtitle, onReset, accent = "#1a1a2e" }) {
 
 function WorksheetShell({ children }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 24, marginTop: 24, marginBottom: 24 }}>
+    <div style={{ background: "#fff", border: `1px solid ${color.line}`, borderRadius: 16, padding: 24, marginTop: 24, marginBottom: 24 }}>
       {children}
     </div>
   );
@@ -584,10 +591,10 @@ function PersonaCardWorksheet() {
   const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.persona, empty);
   const avatars = ["👤","👩","👨","🧑","👵","👴","👧","👦","🧕","👳","👨‍🦱","👩‍🦰"];
   const sections = [
-    { key: "goals", label: "Goals & Motivations", color: "#2D9B3A", placeholder: "What do they want? What drives them?" },
-    { key: "pains", label: "Pain Points & Frustrations", color: "#C2185B", placeholder: "What's hard, frustrating, or unmet?" },
-    { key: "faith", label: "Faith Journey", color: "#4361EE", placeholder: "Where are they on their faith journey? What's their history with church?" },
-    { key: "needs", label: "Needs from the Church", color: "#E8890C", placeholder: "What would actually help them? What do they wish existed?" },
+    { key: "goals", label: "Goals & Motivations", color: color.accent, placeholder: "What do they want? What drives them?" },
+    { key: "pains", label: "Pain Points & Frustrations", color: color.accent, placeholder: "What's hard, frustrating, or unmet?" },
+    { key: "faith", label: "Faith Journey", color: color.accent, placeholder: "Where are they on their faith journey? What's their history with church?" },
+    { key: "needs", label: "Needs from the Church", color: color.accent, placeholder: "What would actually help them? What do they wish existed?" },
   ];
 
   return (
@@ -596,18 +603,18 @@ function PersonaCardWorksheet() {
 
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, #C2185B22, #4361EE22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>{data.avatar}</div>
+          <div style={{ width: 80, height: 80, borderRadius: "50%", background: color.accentSoft, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>{data.avatar}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, maxWidth: 120, justifyContent: "center" }}>
             {avatars.map((a) => (
               <button key={a} onClick={() => setData((d) => ({ ...d, avatar: a }))} style={{
-                background: data.avatar === a ? "#E8890C20" : "transparent", border: "none",
+                background: data.avatar === a ? `${color.accent}20` : "transparent", border: "none",
                 borderRadius: 6, padding: 2, fontSize: 18, cursor: "pointer",
               }}>{a}</button>
             ))}
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column", gap: 10 }}>
-          <input value={data.name} onChange={(e) => setData((d) => ({ ...d, name: e.target.value }))} placeholder="Name (e.g. Maria Chen)" style={{ ...inputStyle, fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, fontWeight: 700 }} />
+          <input value={data.name} onChange={(e) => setData((d) => ({ ...d, name: e.target.value }))} placeholder="Name (e.g. Maria Chen)" style={{ ...inputStyle, fontFamily: font.sans, fontSize: 18, fontWeight: 700 }} />
           <div style={{ display: "flex", gap: 10 }}>
             <input value={data.age} onChange={(e) => setData((d) => ({ ...d, age: e.target.value }))} placeholder="Age" style={{ ...inputStyle, width: 80 }} />
             <input value={data.role} onChange={(e) => setData((d) => ({ ...d, role: e.target.value }))} placeholder="Role / occupation" style={inputStyle} />
@@ -652,26 +659,26 @@ function ProblemStatementWorksheet() {
 
   return (
     <WorksheetShell>
-      <WorksheetHeader title="Problem Statement Worksheet" subtitle="Capture pains → cluster → write a How Might We" onReset={reset} accent="#4361EE" />
+      <WorksheetHeader title="Problem Statement Worksheet" subtitle="Capture pains → cluster → write a How Might We" onReset={reset} accent={color.accent} />
 
       <div style={{ marginBottom: 20 }}>
         <div style={fieldLabel}>1. Capture the pains you observe (one per note)</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
           {data.pains.map((p) => (
-            <div key={p.id} style={{ display: "flex", gap: 8, alignItems: "center", background: p.starred ? "#FEF3C7" : "#F9FAFB", borderRadius: 8, padding: "6px 10px", border: p.starred ? "1px solid #FBBF24" : "1px solid #E5E7EB" }}>
-              <button onClick={() => toggleStar(p.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: p.starred ? "#F59E0B" : "#D1D5DB" }}>★</button>
+            <div key={p.id} style={{ display: "flex", gap: 8, alignItems: "center", background: p.starred ? `${color.accent}08` : color.rail, borderRadius: 8, padding: "6px 10px", border: p.starred ? `1px solid ${color.accent}` : `1px solid ${color.line}` }}>
+              <button onClick={() => toggleStar(p.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: p.starred ? color.accent : color.line }}>★</button>
               <input value={p.text} onChange={(e) => updatePain(p.id, e.target.value)} placeholder="What's the frustration or gap?" style={{ flex: 1, border: "none", background: "transparent", fontSize: 14, outline: "none", fontFamily: "inherit" }} />
-              <button onClick={() => removePain(p.id)} style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", fontSize: 16 }}>×</button>
+              <button onClick={() => removePain(p.id)} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 16 }}>×</button>
             </div>
           ))}
         </div>
-        <button onClick={addPain} style={{ background: "transparent", border: "1px dashed #4361EE55", color: "#4361EE", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>+ Add pain point</button>
-        <div style={{ fontSize: 12, color: "#999", marginTop: 6 }}>Star the most urgent and actionable ones — those drive your HMW question.</div>
+        <button onClick={addPain} style={{ background: "transparent", border: `1px dashed ${color.line}`, color: color.accent, borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>+ Add pain point</button>
+        <div style={{ fontSize: 12, color: color.muted, marginTop: 6 }}>Star the most urgent and actionable ones — those drive your HMW question.</div>
       </div>
 
-      <div style={{ background: "#F0F4FF", borderRadius: 12, padding: 16, marginBottom: 16, border: "1px solid #4361EE25" }}>
-        <div style={{ fontSize: 12, color: "#4361EE", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>2. Live HMW Preview</div>
-        <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, lineHeight: 1.5, color: "#1a1a2e", fontWeight: 600 }}>"{hmw}"</div>
+      <div style={{ background: color.rail, borderRadius: 12, padding: 16, marginBottom: 16, border: `1px solid ${color.line}` }}>
+        <div style={{ fontSize: 12, color: color.accent, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>2. Live HMW Preview</div>
+        <div style={{ fontFamily: font.sans, fontSize: 18, lineHeight: 1.5, color: color.ink, fontWeight: 600 }}>"{hmw}"</div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }} className="hiab-grid-3">
@@ -680,14 +687,14 @@ function ProblemStatementWorksheet() {
         <label><span style={fieldLabel}>So that</span><input value={data.outcome} onChange={(e) => setData((d) => ({ ...d, outcome: e.target.value }))} placeholder="they feel welcomed..." style={inputStyle} /></label>
       </div>
 
-      <button onClick={saveDraft} style={{ background: "#4361EE", color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>💾 Save this version</button>
+      <button onClick={saveDraft} style={{ background: color.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Save this version</button>
 
       {data.drafts.length > 0 && (
         <div style={{ marginTop: 16 }}>
           <div style={fieldLabel}>Saved versions</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {data.drafts.map((d) => (
-              <div key={d.id} style={{ fontSize: 14, padding: "8px 12px", background: "#F9FAFB", borderRadius: 8, color: "#374151", fontStyle: "italic" }}>"{d.text}"</div>
+              <div key={d.id} style={{ fontSize: 14, padding: "8px 12px", background: color.rail, borderRadius: 8, color: color.body, fontStyle: "italic" }}>"{d.text}"</div>
             ))}
           </div>
         </div>
@@ -746,24 +753,24 @@ function Crazy8sWorksheet() {
 
   return (
     <WorksheetShell>
-      <WorksheetHeader title="Crazy 8s" subtitle="8 ideas in 8 minutes — 1 minute per panel" onReset={reset} accent="#C6A200" />
+      <WorksheetHeader title="Crazy 8s" subtitle="8 ideas in 8 minutes — 1 minute per panel" onReset={reset} accent={color.accent} />
 
       <div style={{ marginBottom: 16 }}>
         <span style={fieldLabel}>Your How Might We question</span>
-        <input value={data.hmw} onChange={(e) => setData((d) => ({ ...d, hmw: e.target.value }))} placeholder="How might we ... ?" style={{ ...inputStyle, fontFamily: "'Fraunces', Georgia, serif", fontSize: 16 }} />
+        <input value={data.hmw} onChange={(e) => setData((d) => ({ ...d, hmw: e.target.value }))} placeholder="How might we ... ?" style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16 }} />
       </div>
 
-      <div style={{ background: "#FFFBEB", border: "1px solid #FBBF24", borderRadius: 12, padding: 16, marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+      <div style={{ background: color.rail, border: `1px solid ${color.line}`, borderRadius: 12, padding: 16, marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 32, fontWeight: 800, color: "#92400E", lineHeight: 1 }}>{mm}:{ss}</div>
-          <div style={{ fontSize: 12, color: "#92400E", marginTop: 4 }}>
+          <div style={{ fontFamily: font.sans, fontSize: 32, fontWeight: 800, color: color.accent, lineHeight: 1 }}>{mm}:{ss}</div>
+          <div style={{ fontSize: 12, color: color.accent, marginTop: 4 }}>
             {currentPanel >= 0 && timeLeft > 0 ? `Panel ${currentPanel + 1} of 8` : "Ready to start"}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          {timeLeft === 0 && <button onClick={start} style={{ ...btnStyleSecondary, background: "#C6A200", color: "#fff", border: "none" }}>▶ Start 8 min</button>}
-          {timeLeft > 0 && running && <button onClick={pause} style={btnStyleSecondary}>⏸ Pause</button>}
-          {timeLeft > 0 && !running && <button onClick={resume} style={btnStyleSecondary}>▶ Resume</button>}
+          {timeLeft === 0 && <button onClick={start} style={{ ...btnStyleSecondary, background: color.accent, color: "#fff", border: "none" }}>Start 8 min</button>}
+          {timeLeft > 0 && running && <button onClick={pause} style={btnStyleSecondary}>Pause</button>}
+          {timeLeft > 0 && !running && <button onClick={resume} style={btnStyleSecondary}>Resume</button>}
           {timeLeft > 0 && <button onClick={stop} style={btnStyleDanger}>Stop</button>}
         </div>
       </div>
@@ -771,20 +778,20 @@ function Crazy8sWorksheet() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
         {data.panels.map((p, i) => (
           <div key={i} style={{
-            border: currentPanel === i ? "2px solid #C6A200" : "1px solid #E5E7EB",
-            background: p.starred ? "#FEF3C7" : "#fff", borderRadius: 10, padding: 10, minHeight: 140,
+            border: currentPanel === i ? `2px solid ${color.accent}` : `1px solid ${color.line}`,
+            background: p.starred ? `${color.accent}08` : "#fff", borderRadius: 10, padding: 10, minHeight: 140,
             display: "flex", flexDirection: "column", gap: 6,
-            boxShadow: currentPanel === i ? "0 0 0 4px #FDE68A66" : "none",
+            boxShadow: currentPanel === i ? `0 0 0 4px ${color.accent}22` : "none",
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 11, color: "#999", fontWeight: 600 }}>#{i + 1}</span>
-              <button onClick={() => updatePanel(i, { starred: !p.starred })} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: p.starred ? "#F59E0B" : "#D1D5DB" }}>★</button>
+              <span style={{ fontSize: 11, color: color.muted, fontWeight: 600 }}>#{i + 1}</span>
+              <button onClick={() => updatePanel(i, { starred: !p.starred })} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: p.starred ? color.accent : color.line }}>★</button>
             </div>
             <textarea value={p.text} onChange={(e) => updatePanel(i, { text: e.target.value })} placeholder="Sketch or write one idea..." rows={5} style={{ ...textareaStyle, flex: 1, border: "none", padding: 0, fontSize: 13, background: "transparent" }} />
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 12, color: "#999", marginTop: 8 }}>Tip: on paper, sketch instead of typing. Star your top 2 when the timer ends.</div>
+      <div style={{ fontSize: 12, color: color.muted, marginTop: 8 }}>Tip: on paper, sketch instead of typing. Star your top 2 when the timer ends.</div>
     </WorksheetShell>
   );
 }
@@ -795,9 +802,9 @@ function FeedbackCardsWorksheet() {
   const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.feedback, empty);
 
   const cols = [
-    { key: "likes", label: "I like...", desc: "What's working?", color: "#2D9B3A", emoji: "👍" },
-    { key: "wishes", label: "I wish...", desc: "What would you change?", color: "#E8890C", emoji: "🌟" },
-    { key: "whatifs", label: "What if...", desc: "New possibilities?", color: "#4361EE", emoji: "💡" },
+    { key: "likes", label: "I like...", desc: "What's working?", color: color.accent },
+    { key: "wishes", label: "I wish...", desc: "What would you change?", color: color.accent },
+    { key: "whatifs", label: "What if...", desc: "New possibilities?", color: color.accent },
   ];
 
   const addNote = (key) => setData((d) => ({ ...d, [key]: [...d[key], { id: Date.now() + Math.random(), text: "" }] }));
@@ -806,25 +813,24 @@ function FeedbackCardsWorksheet() {
 
   return (
     <WorksheetShell>
-      <WorksheetHeader title="Feedback Cards" subtitle="Structured feedback for one prototype" onReset={reset} accent="#0097A7" />
+      <WorksheetHeader title="Feedback Cards" subtitle="Structured feedback for one prototype" onReset={reset} accent={color.accent} />
 
-      <input value={data.prototype} onChange={(e) => setData((d) => ({ ...d, prototype: e.target.value }))} placeholder="Which prototype is this feedback for?" style={{ ...inputStyle, marginBottom: 16, fontFamily: "'Fraunces', Georgia, serif", fontSize: 16 }} />
+      <input value={data.prototype} onChange={(e) => setData((d) => ({ ...d, prototype: e.target.value }))} placeholder="Which prototype is this feedback for?" style={{ ...inputStyle, marginBottom: 16, fontFamily: font.sans, fontSize: 16 }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }} className="hiab-grid-3">
         {cols.map((c) => (
           <div key={c.key} style={{ background: `${c.color}08`, border: `1px solid ${c.color}25`, borderRadius: 12, padding: 12, display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-              <span style={{ fontSize: 18 }}>{c.emoji}</span>
               <div>
                 <div style={{ fontWeight: 700, color: c.color, fontSize: 14 }}>{c.label}</div>
-                <div style={{ fontSize: 11, color: "#888" }}>{c.desc}</div>
+                <div style={{ fontSize: 11, color: color.muted }}>{c.desc}</div>
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
               {data[c.key].map((n) => (
                 <div key={n.id} style={{ background: "#fff", borderRadius: 6, padding: "6px 8px", display: "flex", gap: 4 }}>
                   <textarea value={n.text} onChange={(e) => updateNote(c.key, n.id, e.target.value)} placeholder="..." rows={2} style={{ flex: 1, border: "none", outline: "none", resize: "none", fontSize: 13, fontFamily: "inherit", padding: 0 }} />
-                  <button onClick={() => removeNote(c.key, n.id)} style={{ background: "none", border: "none", color: "#999", cursor: "pointer" }}>×</button>
+                  <button onClick={() => removeNote(c.key, n.id)} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer" }}>×</button>
                 </div>
               ))}
             </div>
@@ -849,24 +855,24 @@ function SprintSummaryWorksheet() {
 
   return (
     <WorksheetShell>
-      <WorksheetHeader title="Sprint Summary One-Pager" subtitle="Auto-pulls from your other worksheets" onReset={reset} accent="#B45309" />
+      <WorksheetHeader title="Sprint Summary One-Pager" subtitle="Auto-pulls from your other worksheets" onReset={reset} accent={color.accent} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }} className="hiab-grid-2">
         <label><span style={fieldLabel}>Sprint name</span><input value={data.sprintName} onChange={(e) => setData((d) => ({ ...d, sprintName: e.target.value }))} placeholder="e.g. Young Adults Sprint" style={inputStyle} /></label>
         <label><span style={fieldLabel}>Date</span><input type="date" value={data.date} onChange={(e) => setData((d) => ({ ...d, date: e.target.value }))} style={inputStyle} /></label>
       </div>
 
-      <div style={{ background: "#FEF3C7", borderRadius: 12, padding: 14, marginBottom: 14, border: "1px solid #FBBF24" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#92400E", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>From your Problem Statement</div>
-        <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#1a1a2e" }}>{sources.hmw || "— write a problem statement to pull in your HMW —"}</div>
+      <div style={{ background: color.rail, borderRadius: 12, padding: 14, marginBottom: 14, border: `1px solid ${color.line}` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: color.accent, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>From your Problem Statement</div>
+        <div style={{ fontFamily: font.sans, fontSize: 16, color: color.ink }}>{sources.hmw || "— write a problem statement to pull in your HMW —"}</div>
       </div>
 
-      <div style={{ background: "#FEF3C7", borderRadius: 12, padding: 14, marginBottom: 14, border: "1px solid #FBBF24" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#92400E", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>Starred ideas from Crazy 8s</div>
+      <div style={{ background: color.rail, borderRadius: 12, padding: 14, marginBottom: 14, border: `1px solid ${color.line}` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: color.accent, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>Starred ideas from Crazy 8s</div>
         {sources.topPanels.length === 0 ? (
-          <div style={{ fontSize: 14, color: "#92400E", fontStyle: "italic" }}>— star your top ideas in Crazy 8s to pull them in —</div>
+          <div style={{ fontSize: 14, color: color.accent, fontStyle: "italic" }}>— star your top ideas in Crazy 8s to pull them in —</div>
         ) : (
-          <ul style={{ margin: "4px 0 0", paddingLeft: 18, color: "#1a1a2e", fontSize: 14 }}>
+          <ul style={{ margin: "4px 0 0", paddingLeft: 18, color: color.ink, fontSize: 14 }}>
             {sources.topPanels.map((t, i) => <li key={i} style={{ marginBottom: 4 }}>{t}</li>)}
           </ul>
         )}
@@ -902,22 +908,22 @@ function LeadershipProposalWorksheet() {
   const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.proposal, empty);
 
   const sections = [
-    { key: "problem", label: "The problem", placeholder: "What real human need are we addressing?", color: "#C2185B" },
-    { key: "evidence", label: "Evidence", placeholder: "Quotes, stories, observations from your empathy work.", color: "#C2185B" },
-    { key: "solution", label: "Proposed solution", placeholder: "What are we proposing to do?", color: "#4361EE" },
-    { key: "served", label: "Who it serves", placeholder: "Which people specifically benefit?", color: "#2D9B3A" },
-    { key: "impact", label: "Expected impact", placeholder: "If this works, what changes?", color: "#2D9B3A" },
-    { key: "resources", label: "Resources needed", placeholder: "Time, money, people, space.", color: "#E8890C" },
-    { key: "timeline", label: "Timeline", placeholder: "When would this happen and over what period?", color: "#E8890C" },
-    { key: "success", label: "What success looks like", placeholder: "How will we know it's working?", color: "#0097A7" },
-    { key: "ask", label: "The specific ask", placeholder: "Be concrete. 'Approve a 6-week pilot with $200 budget.'", color: "#1D4ED8" },
+    { key: "problem", label: "The problem", placeholder: "What real human need are we addressing?", color: color.accent },
+    { key: "evidence", label: "Evidence", placeholder: "Quotes, stories, observations from your empathy work.", color: color.accent },
+    { key: "solution", label: "Proposed solution", placeholder: "What are we proposing to do?", color: color.accent },
+    { key: "served", label: "Who it serves", placeholder: "Which people specifically benefit?", color: color.accent },
+    { key: "impact", label: "Expected impact", placeholder: "If this works, what changes?", color: color.accent },
+    { key: "resources", label: "Resources needed", placeholder: "Time, money, people, space.", color: color.accent },
+    { key: "timeline", label: "Timeline", placeholder: "When would this happen and over what period?", color: color.accent },
+    { key: "success", label: "What success looks like", placeholder: "How will we know it's working?", color: color.accent },
+    { key: "ask", label: "The specific ask", placeholder: "Be concrete. 'Approve a 6-week pilot with $200 budget.'", color: color.accent },
   ];
 
   return (
     <WorksheetShell>
-      <WorksheetHeader title="Leadership Proposal" subtitle="A structured pitch for pastors and elder boards" onReset={reset} accent="#1D4ED8" />
+      <WorksheetHeader title="Leadership Proposal" subtitle="A structured pitch for pastors and elder boards" onReset={reset} accent={color.accent} />
 
-      <input value={data.title} onChange={(e) => setData((d) => ({ ...d, title: e.target.value }))} placeholder="Proposal title" style={{ ...inputStyle, marginBottom: 14, fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, fontWeight: 700 }} />
+      <input value={data.title} onChange={(e) => setData((d) => ({ ...d, title: e.target.value }))} placeholder="Proposal title" style={{ ...inputStyle, marginBottom: 14, fontFamily: font.sans, fontSize: 18, fontWeight: 700 }} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {sections.map((s) => (
@@ -940,9 +946,9 @@ function ThirtySixtyNinetyWorksheet() {
   };
   const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.plan, empty);
   const phases = [
-    { key: "30", label: "Day 1–30", subtitle: "Research, plan, assemble team", color: "#7C3AED" },
-    { key: "60", label: "Day 31–60", subtitle: "Pilot or prototype in real setting", color: "#9333EA" },
-    { key: "90", label: "Day 61–90", subtitle: "Evaluate, refine, decide next", color: "#A855F7" },
+    { key: "30", label: "Day 1–30", subtitle: "Research, plan, assemble team", color: color.accent },
+    { key: "60", label: "Day 31–60", subtitle: "Pilot or prototype in real setting", color: color.accent },
+    { key: "90", label: "Day 61–90", subtitle: "Evaluate, refine, decide next", color: color.accent },
   ];
 
   const updatePhase = (key, patch) => setData((d) => ({ ...d, [key]: { ...d[key], ...patch } }));
@@ -952,13 +958,13 @@ function ThirtySixtyNinetyWorksheet() {
 
   return (
     <WorksheetShell>
-      <WorksheetHeader title="30-60-90 Day Plan" subtitle="Break your idea into monthly milestones" onReset={reset} accent="#7C3AED" />
+      <WorksheetHeader title="30-60-90 Day Plan" subtitle="Break your idea into monthly milestones" onReset={reset} accent={color.accent} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }} className="hiab-grid-3">
         {phases.map((p) => (
           <div key={p.key} style={{ background: `${p.color}06`, border: `1px solid ${p.color}25`, borderRadius: 12, padding: 14 }}>
             <div style={{ fontWeight: 700, color: p.color, fontSize: 14 }}>{p.label}</div>
-            <div style={{ fontSize: 11, color: "#888", marginBottom: 10 }}>{p.subtitle}</div>
+            <div style={{ fontSize: 11, color: color.muted, marginBottom: 10 }}>{p.subtitle}</div>
 
             <span style={fieldLabel}>Goal</span>
             <textarea value={data[p.key].goal} onChange={(e) => updatePhase(p.key, { goal: e.target.value })} rows={2} style={{ ...textareaStyle, background: "#fff", border: "none", marginBottom: 10 }} placeholder="What does done look like?" />
@@ -969,7 +975,7 @@ function ThirtySixtyNinetyWorksheet() {
                 <div key={t.id} style={{ display: "flex", gap: 6, alignItems: "center", background: "#fff", borderRadius: 6, padding: "4px 8px", textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.6 : 1 }}>
                   <input type="checkbox" checked={t.done} onChange={(e) => updateTask(p.key, t.id, { done: e.target.checked })} />
                   <input value={t.text} onChange={(e) => updateTask(p.key, t.id, { text: e.target.value })} placeholder="Task..." style={{ flex: 1, border: "none", background: "transparent", fontSize: 13, outline: "none", fontFamily: "inherit" }} />
-                  <button onClick={() => removeTask(p.key, t.id)} style={{ background: "none", border: "none", color: "#999", cursor: "pointer" }}>×</button>
+                  <button onClick={() => removeTask(p.key, t.id)} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer" }}>×</button>
                 </div>
               ))}
             </div>
@@ -999,10 +1005,10 @@ function ImpactStoryWorksheet() {
 
   return (
     <WorksheetShell>
-      <WorksheetHeader title="Impact Story" subtitle="6-month retrospective for future inspiration" onReset={reset} accent="#059669" />
+      <WorksheetHeader title="Impact Story" subtitle="6-month retrospective for future inspiration" onReset={reset} accent={color.accent} />
 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10, marginBottom: 14 }} className="hiab-grid-2">
-        <label><span style={fieldLabel}>Story title</span><input value={data.title} onChange={(e) => setData((d) => ({ ...d, title: e.target.value }))} placeholder='e.g. "How we built community for young professionals"' style={{ ...inputStyle, fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, fontWeight: 700 }} /></label>
+        <label><span style={fieldLabel}>Story title</span><input value={data.title} onChange={(e) => setData((d) => ({ ...d, title: e.target.value }))} placeholder='e.g. "How we built community for young professionals"' style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16, fontWeight: 700 }} /></label>
         <label><span style={fieldLabel}>Date</span><input type="date" value={data.date} onChange={(e) => setData((d) => ({ ...d, date: e.target.value }))} style={inputStyle} /></label>
       </div>
 
@@ -1015,7 +1021,7 @@ function ImpactStoryWorksheet() {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {sections.map((s) => (
           <label key={s.key}>
-            <span style={{ ...fieldLabel, color: "#059669" }}>{s.label}</span>
+            <span style={{ ...fieldLabel, color: color.accent }}>{s.label}</span>
             <textarea value={data[s.key]} onChange={(e) => setData((d) => ({ ...d, [s.key]: e.target.value }))} placeholder={s.placeholder} rows={3} style={textareaStyle} />
           </label>
         ))}
@@ -1026,19 +1032,19 @@ function ImpactStoryWorksheet() {
 
 function PersonaVisual() {
   return (
-    <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 24, maxWidth: 480, margin: "20px auto", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+    <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${color.line}`, padding: 24, maxWidth: 480, margin: "20px auto", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-        <div style={{ width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg, #C2185B33, #4361EE33)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>👤</div>
+        <div style={{ width: 60, height: 60, borderRadius: "50%", background: color.accentSoft, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>👤</div>
         <div>
-          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e" }}>[Persona Name]</div>
-          <div style={{ fontSize: 14, color: "#888" }}>Age • Role • Background</div>
+          <div style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, color: color.ink }}>[Persona Name]</div>
+          <div style={{ fontSize: 14, color: color.muted }}>Age • Role • Background</div>
         </div>
       </div>
       {[
-        { label: "Goals & Motivations", color: "#2D9B3A" },
-        { label: "Pain Points & Frustrations", color: "#C2185B" },
-        { label: "Faith Journey", color: "#4361EE" },
-        { label: "Needs from the Church", color: "#E8890C" },
+        { label: "Goals & Motivations", color: color.accent },
+        { label: "Pain Points & Frustrations", color: color.accent },
+        { label: "Faith Journey", color: color.accent },
+        { label: "Needs from the Church", color: color.accent },
       ].map((field) => (
         <div key={field.label} style={{ padding: "10px 14px", marginBottom: 8, borderRadius: 8, background: `${field.color}08`, borderLeft: `3px solid ${field.color}` }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: field.color }}>{field.label}</span>
@@ -1156,9 +1162,9 @@ function SCIPABChatbot() {
         {SCIPAB_STEPS.map((step, i) => (
           <div key={i} style={{
             width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 14,
-            background: i < currentStep ? step.color : i === currentStep ? `${step.color}18` : "#f3f4f6",
-            color: i < currentStep ? "#fff" : i === currentStep ? step.color : "#ccc",
+            fontFamily: font.sans, fontWeight: 700, fontSize: 14,
+            background: i < currentStep ? step.color : i === currentStep ? `${step.color}18` : color.line,
+            color: i < currentStep ? "#fff" : i === currentStep ? step.color : color.line,
             border: i === currentStep ? `2px solid ${step.color}` : "2px solid transparent",
             transition: "all 0.3s",
           }}>
@@ -1186,19 +1192,19 @@ function SCIPABChatbot() {
           <div style={{
             width: 32, height: 32, borderRadius: "50%", background: step.color, color: "#fff",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 15,
+            fontFamily: font.sans, fontWeight: 700, fontSize: 15,
           }}>{step.letter}</div>
           <div>
-            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 17, color: step.color }}>
+            <div style={{ fontFamily: font.sans, fontWeight: 700, fontSize: 17, color: step.color }}>
               Step {currentStep + 1}: {step.label}
             </div>
-            <div style={{ fontSize: 13, color: "#888" }}>{step.guideText}</div>
+            <div style={{ fontSize: 13, color: color.muted }}>{step.guideText}</div>
           </div>
         </div>
-        <p style={{ margin: "0 0 10px", fontSize: 15, lineHeight: 1.6, color: "#444" }}>{step.prompt}</p>
+        <p style={{ margin: "0 0 10px", fontSize: 15, lineHeight: 1.6, color: color.body }}>{step.prompt}</p>
         <div style={{
           background: `${step.color}06`, borderRadius: 8, padding: "10px 14px",
-          borderLeft: `3px solid ${step.color}40`, fontSize: 13, color: "#777", lineHeight: 1.55, fontStyle: "italic",
+          borderLeft: `3px solid ${step.color}40`, fontSize: 13, color: color.muted, lineHeight: 1.55, fontStyle: "italic",
         }}>
           {step.helper}
         </div>
@@ -1211,12 +1217,12 @@ function SCIPABChatbot() {
     return (
       <div style={{ margin: "16px 0" }}>
         <div style={{
-          background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 24,
+          background: "#fff", borderRadius: 16, border: `1px solid ${color.line}`, padding: 24,
           boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <Icon name="clipboard" size={22} color="#0D7C5F" />
-            <h3 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, color: "#1a1a2e" }}>
+            <Icon name="clipboard" size={22} color={color.accent} />
+            <h3 style={{ margin: 0, fontFamily: font.sans, fontSize: 20, color: color.ink }}>
               {churchName}'s SCIPAB Submission
             </h3>
           </div>
@@ -1225,7 +1231,7 @@ function SCIPABChatbot() {
               <div style={{ fontSize: 12, fontWeight: 700, color: step.color, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
                 {step.letter} — {step.label}
               </div>
-              <p style={{ margin: 0, fontSize: 14, color: "#444", lineHeight: 1.6 }}>{responses[step.key]}</p>
+              <p style={{ margin: 0, fontSize: 14, color: color.body, lineHeight: 1.6 }}>{responses[step.key]}</p>
             </div>
           ))}
 
@@ -1235,16 +1241,16 @@ function SCIPABChatbot() {
                 const text = `${churchName}'s SCIPAB Submission\n\n` + SCIPAB_STEPS.map(s => `${s.label}: ${responses[s.key]}`).join("\n\n");
                 navigator.clipboard?.writeText(text);
               }} style={{
-                flex: 1, padding: "14px 20px", borderRadius: 10, border: "1px solid #e5e7eb",
-                background: "#fff", color: "#555", fontFamily: "'DM Sans', sans-serif", fontSize: 14,
+                flex: 1, padding: "14px 20px", borderRadius: 10, border: `1px solid ${color.line}`,
+                background: "#fff", color: color.body, fontFamily: font.sans, fontSize: 14,
                 fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
               }}>
-                📋 Copy to Clipboard
+                Copy to Clipboard
               </button>
               <button onClick={handleAIRefine} disabled={!aiConfigured} title={aiConfigured ? "" : "Configure VITE_HIAB_AI_ENDPOINT to enable AI coaching."} style={{
                 flex: 2, padding: "14px 20px", borderRadius: 10, border: "none",
-                background: aiConfigured ? "linear-gradient(135deg, #0D7C5F, #2D9B3A)" : "#d1d5db", color: "#fff",
-                fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, cursor: aiConfigured ? "pointer" : "not-allowed",
+                background: aiConfigured ? color.accent : color.line, color: "#fff",
+                fontFamily: font.sans, fontSize: 15, fontWeight: 600, cursor: aiConfigured ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 boxShadow: aiConfigured ? "0 4px 16px rgba(13,124,95,0.3)" : "none",
               }}>
@@ -1256,11 +1262,11 @@ function SCIPABChatbot() {
 
         {isLoading && (
           <div style={{
-            margin: "16px 0", padding: 20, borderRadius: 12, background: "#f0fdf4",
-            border: "1px solid #bbf7d0", textAlign: "center",
+            margin: "16px 0", padding: 20, borderRadius: 12, background: color.rail,
+            border: `1px solid ${color.line}`, textAlign: "center",
           }}>
-            <div style={{ fontSize: 28, marginBottom: 8, animation: "pulse 1.5s ease-in-out infinite" }}>✨</div>
-            <p style={{ margin: 0, fontSize: 15, color: "#555" }}>AI coach is reviewing your submission...</p>
+            <div style={{ marginBottom: 8 }}><Icon name="sparkle" size={28} color={color.accent} /></div>
+            <p style={{ margin: 0, fontSize: 15, color: color.body }}>AI coach is reviewing your submission...</p>
             <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
           </div>
         )}
@@ -1269,20 +1275,20 @@ function SCIPABChatbot() {
           <div style={{ marginTop: 16 }}>
             {/* Hackability Score */}
             <div style={{
-              background: "linear-gradient(135deg, #1a1a2e, #2d2b55)", borderRadius: 16, padding: 24,
+              background: color.ink, borderRadius: 16, padding: 24,
               color: "#fff", marginBottom: 16,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <Icon name="zap" size={22} color="#E8890C" />
-                <h4 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontSize: 18 }}>Hackability Score</h4>
+                <Icon name="zap" size={22} color={color.accent} />
+                <h4 style={{ margin: 0, fontFamily: font.sans, fontSize: 18 }}>Hackability Score</h4>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <div key={n} style={{
                     width: 40, height: 40, borderRadius: "50%",
-                    background: n <= aiSummary.hackability.score ? "#E8890C" : "rgba(255,255,255,0.12)",
+                    background: n <= aiSummary.hackability.score ? color.accent : "rgba(255,255,255,0.12)",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 16,
+                    fontFamily: font.sans, fontWeight: 700, fontSize: 16,
                     color: n <= aiSummary.hackability.score ? "#fff" : "rgba(255,255,255,0.3)",
                   }}>{n}</div>
                 ))}
@@ -1293,22 +1299,22 @@ function SCIPABChatbot() {
 
             {/* HMW Question */}
             <div style={{
-              background: "#4361EE08", border: "1px solid #4361EE20", borderRadius: 14,
+              background: `${color.accent}08`, border: `1px solid ${color.line}`, borderRadius: 14,
               padding: "20px 24px", textAlign: "center", marginBottom: 16,
             }}>
-              <div style={{ fontSize: 12, color: "#4361EE", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: color.accent, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
                 Your "How Might We" Question
               </div>
-              <p style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e", lineHeight: 1.4 }}>
+              <p style={{ margin: 0, fontFamily: font.sans, fontSize: 20, fontWeight: 700, color: color.ink, lineHeight: 1.4 }}>
                 {aiSummary.hmw}
               </p>
             </div>
 
             {/* Refined SCIPAB */}
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 20 }}>
+            <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${color.line}`, padding: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <Icon name="sparkle" size={18} color="#0D7C5F" />
-                <h4 style={{ margin: 0, fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 16, color: "#1a1a2e" }}>
+                <Icon name="sparkle" size={18} color={color.accent} />
+                <h4 style={{ margin: 0, fontFamily: font.sans, fontSize: 16, color: color.ink }}>
                   Refined SCIPAB Statement
                 </h4>
               </div>
@@ -1317,7 +1323,7 @@ function SCIPABChatbot() {
                   <span style={{ fontSize: 11, fontWeight: 700, color: step.color, textTransform: "uppercase", letterSpacing: 0.5 }}>
                     {step.label}
                   </span>
-                  <p style={{ margin: "4px 0 0", fontSize: 14, color: "#444", lineHeight: 1.6 }}>
+                  <p style={{ margin: "4px 0 0", fontSize: 14, color: color.body, lineHeight: 1.6 }}>
                     {aiSummary.refined[step.key]}
                   </p>
                 </div>
@@ -1326,11 +1332,11 @@ function SCIPABChatbot() {
 
             <button onClick={handleReset} style={{
               marginTop: 16, width: "100%", padding: "14px 20px", borderRadius: 10,
-              border: "1px solid #e5e7eb", background: "#fff", color: "#555",
-              fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer",
+              border: `1px solid ${color.line}`, background: "#fff", color: color.body,
+              fontFamily: font.sans, fontSize: 14, fontWeight: 500, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}>
-              <Icon name="refresh" size={16} color="#555" /> Submit Another Problem
+              <Icon name="refresh" size={16} color={color.body} /> Submit Another Problem
             </button>
           </div>
         )}
@@ -1344,8 +1350,8 @@ function SCIPABChatbot() {
 
       {/* Hackable Problem Reminder */}
       <div style={{
-        background: showHackableInfo ? "#0D7C5F08" : "linear-gradient(135deg, #0D7C5F08, #E8890C08)",
-        border: `1px solid ${showHackableInfo ? "#0D7C5F25" : "#0D7C5F15"}`,
+        background: showHackableInfo ? `${color.accent}08` : `${color.accent}04`,
+        border: `1px solid ${showHackableInfo ? `${color.accent}25` : `${color.accent}15`}`,
         borderRadius: 14, padding: "18px 20px", marginBottom: 24, transition: "all 0.3s",
       }}>
         <button onClick={() => setShowHackableInfo(!showHackableInfo)} style={{
@@ -1353,46 +1359,46 @@ function SCIPABChatbot() {
           gap: 10, width: "100%", padding: 0,
         }}>
           <div style={{
-            width: 36, height: 36, borderRadius: 10, background: "#E8890C15",
+            width: 36, height: 36, borderRadius: 10, background: `${color.accent}15`,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <Icon name="zap" size={20} color="#E8890C" />
+            <Icon name="zap" size={20} color={color.accent} />
           </div>
           <div style={{ flex: 1, textAlign: "left" }}>
-            <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 16, fontWeight: 600, color: "#1a1a2e" }}>
+            <div style={{ fontFamily: font.sans, fontSize: 16, fontWeight: 600, color: color.ink }}>
               What Makes a Problem "Hackable"?
             </div>
-            <div style={{ fontSize: 13, color: "#888" }}>
+            <div style={{ fontSize: 13, color: color.muted }}>
               Tap to {showHackableInfo ? "collapse" : "learn what kind of problems work best for a design sprint"}
             </div>
           </div>
           <span style={{ transform: showHackableInfo ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.3s" }}>
-            <Icon name="chevronDown" size={18} color="#0D7C5F" />
+            <Icon name="chevronDown" size={18} color={color.accent} />
           </span>
         </button>
 
         {showHackableInfo && (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #0D7C5F15" }}>
-            <p style={{ margin: "0 0 14px", fontSize: 15, lineHeight: 1.65, color: "#444" }}>
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${color.line}` }}>
+            <p style={{ margin: "0 0 14px", fontSize: 15, lineHeight: 1.65, color: color.body }}>
               Not every problem is a good fit for a Hack In A Box sprint. The best "hackable" problems have these qualities:
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[
-                { icon: "👤", title: "Human-Centered", desc: "The problem is about real people with real needs — not abstract organizational goals. Think about who is affected and what they experience." },
-                { icon: "🎯", title: "Specific & Scoped", desc: "It's narrow enough to make meaningful progress in 3–6 hours. \"Fix our church\" is too broad. \"Help newcomers feel welcome in their first month\" is hackable." },
-                { icon: "💡", title: "Open to Creative Solutions", desc: "The problem doesn't already have an obvious answer. If you already know the solution, you don't need a sprint — you need an action plan." },
-                { icon: "⚡", title: "Actionable", desc: "Your church has the ability (or could develop it) to actually implement solutions. Don't hack on things completely outside your control." },
-                { icon: "❤️", title: "Meaningful & Motivating", desc: "People care about this problem. It touches hearts. When you describe it, team members lean in rather than tune out." },
-                { icon: "🚫", title: "Not Solution-Disguised", desc: "\"We need a new app\" isn't a problem — it's a solution. Ask WHY you think you need that app. The underlying need is the real hackable problem." },
+                { icon: "users", title: "Human-Centered", desc: "The problem is about real people with real needs — not abstract organizational goals. Think about who is affected and what they experience." },
+                { icon: "target", title: "Specific & Scoped", desc: "It's narrow enough to make meaningful progress in 3–6 hours. \"Fix our church\" is too broad. \"Help newcomers feel welcome in their first month\" is hackable." },
+                { icon: "lightbulb", title: "Open to Creative Solutions", desc: "The problem doesn't already have an obvious answer. If you already know the solution, you don't need a sprint — you need an action plan." },
+                { icon: "zap", title: "Actionable", desc: "Your church has the ability (or could develop it) to actually implement solutions. Don't hack on things completely outside your control." },
+                { icon: "heart", title: "Meaningful & Motivating", desc: "People care about this problem. It touches hearts. When you describe it, team members lean in rather than tune out." },
+                { icon: "info", title: "Not Solution-Disguised", desc: "\"We need a new app\" isn't a problem — it's a solution. Ask WHY you think you need that app. The underlying need is the real hackable problem." },
               ].map((item, i) => (
                 <div key={i} style={{
                   display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 14px",
-                  borderRadius: 10, background: "#fff", border: "1px solid #e5e7eb",
+                  borderRadius: 10, background: "#fff", border: `1px solid ${color.line}`,
                 }}>
-                  <span style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>{item.icon}</span>
+                  <span style={{ flexShrink: 0, marginTop: 2 }}><Icon name={item.icon} size={22} color={color.accent} /></span>
                   <div>
-                    <strong style={{ fontSize: 14, color: "#1a1a2e" }}>{item.title}</strong>
-                    <p style={{ margin: "2px 0 0", fontSize: 13, color: "#666", lineHeight: 1.55 }}>{item.desc}</p>
+                    <strong style={{ fontSize: 14, color: color.ink }}>{item.title}</strong>
+                    <p style={{ margin: "2px 0 0", fontSize: 13, color: color.muted, lineHeight: 1.55 }}>{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -1400,9 +1406,9 @@ function SCIPABChatbot() {
 
             <div style={{
               marginTop: 14, padding: "14px 16px", borderRadius: 10,
-              background: "linear-gradient(135deg, #1a1a2e, #2d2b55)", color: "#fff",
+              background: color.ink, color: "#fff",
             }}>
-              <strong style={{ fontSize: 13, color: "#E8890C" }}>Quick Test ✦</strong>
+              <strong style={{ fontSize: 13, color: color.accent }}>Quick Test</strong>
               <p style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.55, opacity: 0.9 }}>
                 Can you finish this sentence? "If we solved this problem, <strong>[specific group of people]</strong> would be able to <strong>[specific positive outcome]</strong>." If yes, it's probably hackable!
               </p>
@@ -1415,13 +1421,13 @@ function SCIPABChatbot() {
       {currentStep === -1 && (
         <div>
           <div style={{
-            background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 24,
+            background: "#fff", borderRadius: 16, border: `1px solid ${color.line}`, padding: 24,
             marginBottom: 20, boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
           }}>
-            <h3 style={{ margin: "0 0 8px", fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, color: "#1a1a2e" }}>
+            <h3 style={{ margin: "0 0 8px", fontFamily: font.sans, fontSize: 20, color: color.ink }}>
               The SCIPAB Framework
             </h3>
-            <p style={{ margin: "0 0 16px", fontSize: 15, lineHeight: 1.65, color: "#555" }}>
+            <p style={{ margin: "0 0 16px", fontSize: 15, lineHeight: 1.65, color: color.body }}>
               SCIPAB (pronounced "sigh-pab") is a powerful six-step method for clearly communicating a problem. It helps you link ideas together in a sequence that grabs attention and connects with what matters most. We'll guide you through each step.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>
@@ -1433,11 +1439,11 @@ function SCIPABChatbot() {
                   <div style={{
                     width: 30, height: 30, borderRadius: "50%", background: step.color, color: "#fff",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 15,
+                    fontFamily: font.sans, fontWeight: 700, fontSize: 15,
                     margin: "0 auto 6px",
                   }}>{step.letter}</div>
                   <strong style={{ fontSize: 13, color: step.color }}>{step.label}</strong>
-                  <p style={{ margin: "4px 0 0", fontSize: 12, color: "#888", lineHeight: 1.4 }}>{step.guideText}</p>
+                  <p style={{ margin: "4px 0 0", fontSize: 12, color: color.muted, lineHeight: 1.4 }}>{step.guideText}</p>
                 </div>
               ))}
             </div>
@@ -1445,8 +1451,8 @@ function SCIPABChatbot() {
 
           <button onClick={handleStart} style={{
             width: "100%", padding: "16px 24px", borderRadius: 12, border: "none",
-            background: "linear-gradient(135deg, #0D7C5F, #2D9B3A)", color: "#fff",
-            fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer",
+            background: color.accent, color: "#fff",
+            fontFamily: font.sans, fontSize: 16, fontWeight: 600, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
             boxShadow: "0 4px 20px rgba(13,124,95,0.3)",
           }}>
@@ -1458,33 +1464,33 @@ function SCIPABChatbot() {
       {/* Chat area */}
       {currentStep >= 0 && (
         <div style={{
-          background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb",
+          background: "#fff", borderRadius: 16, border: `1px solid ${color.line}`,
           overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
         }}>
           {/* Chat header */}
           <div style={{
-            padding: "14px 20px", borderBottom: "1px solid #f0f0ec",
-            background: "linear-gradient(135deg, #0D7C5F08, #fff)",
+            padding: "14px 20px", borderBottom: `1px solid ${color.line}`,
+            background: color.surface,
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{
                 width: 34, height: 34, borderRadius: "50%",
-                background: "linear-gradient(135deg, #0D7C5F, #2D9B3A)",
+                background: color.accent,
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 <Icon name="sparkle" size={18} color="#fff" />
               </div>
               <div>
-                <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 600, fontSize: 15, color: "#1a1a2e" }}>
+                <div style={{ fontFamily: font.sans, fontWeight: 600, fontSize: 15, color: color.ink }}>
                   SCIPAB Problem Coach
                 </div>
-                <div style={{ fontSize: 12, color: "#0D7C5F" }}>● Online</div>
+                <div style={{ fontSize: 12, color: color.accent }}>● Online</div>
               </div>
             </div>
             <button onClick={handleReset} style={{
-              background: "none", border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 10px",
-              fontSize: 12, color: "#888", cursor: "pointer",
+              background: "none", border: `1px solid ${color.line}`, borderRadius: 6, padding: "4px 10px",
+              fontSize: 12, color: color.muted, cursor: "pointer",
             }}>Start Over</button>
           </div>
 
@@ -1499,8 +1505,8 @@ function SCIPABChatbot() {
               }}>
                 <div style={{
                   maxWidth: "85%", padding: "12px 16px", borderRadius: 14,
-                  background: msg.role === "user" ? "#0D7C5F" : "#f3f4f6",
-                  color: msg.role === "user" ? "#fff" : "#333",
+                  background: msg.role === "user" ? color.accent : color.line,
+                  color: msg.role === "user" ? "#fff" : color.body,
                   fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-line",
                   borderBottomRightRadius: msg.role === "user" ? 4 : 14,
                   borderBottomLeftRadius: msg.role === "user" ? 14 : 4,
@@ -1518,8 +1524,8 @@ function SCIPABChatbot() {
           {/* Input area */}
           {currentStep >= 0 && currentStep <= 5 && !isLoading && (
             <div style={{
-              padding: "14px 16px", borderTop: "1px solid #f0f0ec",
-              display: "flex", gap: 10, background: "#fafafa",
+              padding: "14px 16px", borderTop: `1px solid ${color.line}`,
+              display: "flex", gap: 10, background: color.rail,
             }}>
               <textarea
                 ref={inputRef}
@@ -1535,25 +1541,25 @@ function SCIPABChatbot() {
                 placeholder={!churchName ? "Enter your church or organization name..." : `Describe your ${SCIPAB_STEPS[currentStep]?.label.toLowerCase()}...`}
                 rows={3}
                 style={{
-                  flex: 1, padding: "12px 14px", borderRadius: 10, border: "1px solid #e5e7eb",
-                  fontFamily: "'DM Sans', sans-serif", fontSize: 14, lineHeight: 1.5, resize: "none",
+                  flex: 1, padding: "12px 14px", borderRadius: 10, border: `1px solid ${color.line}`,
+                  fontFamily: font.sans, fontSize: 14, lineHeight: 1.5, resize: "none",
                   outline: "none", transition: "border-color 0.2s",
                 }}
-                onFocus={(e) => (e.target.style.borderColor = "#0D7C5F")}
-                onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
+                onFocus={(e) => (e.target.style.borderColor = color.accent)}
+                onBlur={(e) => (e.target.style.borderColor = color.line)}
               />
               <button
                 onClick={() => { if (!churchName) handleChurchName(); else handleSubmitStep(); }}
                 disabled={!inputValue.trim()}
                 style={{
                   width: 44, height: 44, borderRadius: 10, border: "none",
-                  background: inputValue.trim() ? "#0D7C5F" : "#e5e7eb",
+                  background: inputValue.trim() ? color.accent : color.line,
                   cursor: inputValue.trim() ? "pointer" : "default",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   alignSelf: "flex-end", transition: "background 0.2s",
                 }}
               >
-                <Icon name="send" size={18} color={inputValue.trim() ? "#fff" : "#999"} />
+                <Icon name="send" size={18} color={inputValue.trim() ? "#fff" : color.muted} />
               </button>
             </div>
           )}
@@ -1569,7 +1575,7 @@ const PROPOSAL_STEPS = [
     key: "problem",
     label: "The Problem",
     letter: "1",
-    color: "#4361EE",
+    color: color.accent,
     prompt: "What problem did your sprint tackle? Share the 'How Might We' question and a brief description of the challenge.",
     helper: "Example: \"How might we help newcomers feel genuinely welcomed in their first month? We found that many first-time visitors never return because they don't form any personal connections on their first visit.\"",
   },
@@ -1577,7 +1583,7 @@ const PROPOSAL_STEPS = [
     key: "evidence",
     label: "Evidence & Insights",
     letter: "2",
-    color: "#C2185B",
+    color: color.accent,
     prompt: "What did you learn from your empathy mapping and research? What key insights emerged about the people you're trying to serve?",
     helper: "Example: \"From our empathy maps, we discovered that visitors feel overwhelmed by the size of our congregation, don't know how to get involved, and often feel invisible. Many said they wished someone had personally invited them to a small group.\"",
   },
@@ -1585,7 +1591,7 @@ const PROPOSAL_STEPS = [
     key: "solution",
     label: "Proposed Solution",
     letter: "3",
-    color: "#2D9B3A",
+    color: color.accent,
     prompt: "What's the idea your team developed? Describe it clearly — what is it, how does it work, and who is it for?",
     helper: "Example: \"We propose a 'Welcome Partner' program where every first-time visitor is paired with a member who contacts them within 48 hours, invites them to coffee, and personally walks them into a small group within their first month.\"",
   },
@@ -1593,7 +1599,7 @@ const PROPOSAL_STEPS = [
     key: "impact",
     label: "Expected Impact",
     letter: "4",
-    color: "#E8890C",
+    color: color.accent,
     prompt: "What would change if this idea worked? Who benefits, and how? Be as specific as you can about the expected outcomes.",
     helper: "Example: \"We expect to see our visitor return rate increase from ~20% to 50%+ within 6 months. More importantly, newcomers would form real relationships faster, leading to deeper engagement and spiritual growth.\"",
   },
@@ -1601,7 +1607,7 @@ const PROPOSAL_STEPS = [
     key: "resources",
     label: "What We Need",
     letter: "5",
-    color: "#7B1FA2",
+    color: color.accent,
     prompt: "What resources, support, or approvals do you need from leadership to move forward? Think about budget, people, time, and permissions.",
     helper: "Example: \"We need: (1) pastoral endorsement to recruit 15 Welcome Partners from existing members, (2) a $300 budget for coffee gift cards and training materials, (3) 10 minutes during a Sunday service to launch the program and recruit partners.\"",
   },
@@ -1609,7 +1615,7 @@ const PROPOSAL_STEPS = [
     key: "plan",
     label: "Action Plan",
     letter: "6",
-    color: "#0097A7",
+    color: color.accent,
     prompt: "What's your proposed timeline? What happens in the first 30, 60, and 90 days? Who is responsible for each step?",
     helper: "Example: \"Month 1: Recruit and train 15 Welcome Partners (led by Sarah). Month 2: Soft launch with Sunday visitors, gather feedback weekly (led by James). Month 3: Evaluate data, refine process, present results to elder board (led by Maria).\"",
   },
@@ -1627,35 +1633,35 @@ function ProposalAccordion() {
   };
   return (
     <div ref={ref} style={{
-      borderRadius: 14, border: "1px solid #4361EE22", marginBottom: 12,
+      borderRadius: 14, border: `1px solid ${color.line}`, marginBottom: 12,
       overflow: "hidden", background: "#fff", boxShadow: "0 2px 12px rgba(67,97,238,0.06)",
     }}>
       <button onClick={() => setOpen(!open)} style={{
         width: "100%", padding: "18px 22px 10px", display: "flex", alignItems: "flex-start",
-        justifyContent: "space-between", gap: 12, background: open ? "#4361EE06" : "transparent",
+        justifyContent: "space-between", gap: 12, background: open ? `${color.accent}06` : "transparent",
         border: "none", cursor: "pointer", textAlign: "left",
       }}>
         <div>
-          <h3 style={{ margin: 0, fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 18, fontWeight: 600, color: "#1a1a2e" }}>
-            📝 Build a Proposal for Leadership
+          <h3 style={{ margin: 0, fontFamily: font.sans, fontSize: 18, fontWeight: 600, color: color.ink }}>
+            Build a Proposal for Leadership
           </h3>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4361EE", flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: "#666", fontFamily: "'DM Sans', sans-serif" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: color.accent, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: color.muted, fontFamily: font.sans }}>
               Powered by AI — builds a leadership-ready pitch from your sprint results
             </span>
           </div>
         </div>
         <span style={{ transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.3s", flexShrink: 0, marginTop: 4 }}>
-          <Icon name="chevronDown" size={20} color="#4361EE" />
+          <Icon name="chevronDown" size={20} color={color.accent} />
         </span>
       </button>
       <div style={{ padding: "6px 22px 18px" }}>
         {!open && (
           <button onClick={handleButtonStart} style={{
             marginTop: 4, width: "100%", padding: "13px 20px", borderRadius: 10, border: "none",
-            background: "linear-gradient(135deg, #1D4ED8, #4361EE)", color: "#fff",
-            fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, cursor: "pointer",
+            background: color.accent, color: "#fff",
+            fontFamily: font.sans, fontSize: 15, fontWeight: 600, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             boxShadow: "0 4px 16px rgba(29,78,216,0.25)",
           }}>
@@ -1664,7 +1670,7 @@ function ProposalAccordion() {
         )}
       </div>
       {open && (
-        <div style={{ padding: "0 22px 22px", borderTop: "1px solid #f0f0ec" }}>
+        <div style={{ padding: "0 22px 22px", borderTop: `1px solid ${color.line}` }}>
           <ProposalChatbot autoStart={autoStart} />
         </div>
       )}
@@ -1762,9 +1768,9 @@ function ProposalChatbot({ autoStart = false }) {
         {PROPOSAL_STEPS.map((step, i) => (
           <div key={i} style={{
             width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 14,
-            background: i < currentStep ? step.color : i === currentStep ? `${step.color}18` : "#f3f4f6",
-            color: i < currentStep ? "#fff" : i === currentStep ? step.color : "#ccc",
+            fontFamily: font.sans, fontWeight: 700, fontSize: 14,
+            background: i < currentStep ? step.color : i === currentStep ? `${step.color}18` : color.line,
+            color: i < currentStep ? "#fff" : i === currentStep ? step.color : color.line,
             border: i === currentStep ? `2px solid ${step.color}` : "2px solid transparent",
             transition: "all 0.3s",
           }}>{i < currentStep ? "✓" : step.letter}</div>
@@ -1779,13 +1785,13 @@ function ProposalChatbot({ autoStart = false }) {
     return (
       <div style={{ background: `${step.color}08`, border: `1px solid ${step.color}20`, borderRadius: 14, padding: "18px 20px", margin: "12px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: "50%", background: step.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 15 }}>{step.letter}</div>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", background: step.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: font.sans, fontWeight: 700, fontSize: 15 }}>{step.letter}</div>
           <div>
-            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 17, color: step.color }}>Step {currentStep + 1}: {step.label}</div>
+            <div style={{ fontFamily: font.sans, fontWeight: 700, fontSize: 17, color: step.color }}>Step {currentStep + 1}: {step.label}</div>
           </div>
         </div>
-        <p style={{ margin: "0 0 10px", fontSize: 15, lineHeight: 1.6, color: "#444" }}>{step.prompt}</p>
-        <div style={{ background: `${step.color}06`, borderRadius: 8, padding: "10px 14px", borderLeft: `3px solid ${step.color}40`, fontSize: 13, color: "#777", lineHeight: 1.55, fontStyle: "italic" }}>{step.helper}</div>
+        <p style={{ margin: "0 0 10px", fontSize: 15, lineHeight: 1.6, color: color.body }}>{step.prompt}</p>
+        <div style={{ background: `${step.color}06`, borderRadius: 8, padding: "10px 14px", borderLeft: `3px solid ${step.color}40`, fontSize: 13, color: color.muted, lineHeight: 1.55, fontStyle: "italic" }}>{step.helper}</div>
       </div>
     );
   };
@@ -1794,14 +1800,14 @@ function ProposalChatbot({ autoStart = false }) {
     if (currentStep !== 6 && currentStep !== 7) return null;
     return (
       <div style={{ margin: "16px 0" }}>
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 24, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-          <h3 style={{ margin: "0 0 16px", fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, color: "#1a1a2e" }}>
+        <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${color.line}`, padding: 24, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+          <h3 style={{ margin: "0 0 16px", fontFamily: font.sans, fontSize: 20, color: color.ink }}>
             {teamName}'s Proposal
           </h3>
           {PROPOSAL_STEPS.map((step) => (
             <div key={step.key} style={{ marginBottom: 14, padding: "12px 16px", borderRadius: 10, background: `${step.color}06`, borderLeft: `3px solid ${step.color}` }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: step.color, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{step.letter} — {step.label}</div>
-              <p style={{ margin: 0, fontSize: 14, color: "#444", lineHeight: 1.6 }}>{responses[step.key]}</p>
+              <p style={{ margin: 0, fontSize: 14, color: color.body, lineHeight: 1.6 }}>{responses[step.key]}</p>
             </div>
           ))}
           {currentStep === 6 && !isLoading && (
@@ -1810,27 +1816,27 @@ function ProposalChatbot({ autoStart = false }) {
                 const text = `${teamName}'s Proposal\n\n` + PROPOSAL_STEPS.map(s => `${s.label}: ${responses[s.key]}`).join("\n\n");
                 navigator.clipboard?.writeText(text);
               }} style={{
-                flex: 1, padding: "14px 20px", borderRadius: 10, border: "1px solid #e5e7eb",
-                background: "#fff", color: "#555", fontFamily: "'DM Sans', sans-serif", fontSize: 14,
+                flex: 1, padding: "14px 20px", borderRadius: 10, border: `1px solid ${color.line}`,
+                background: "#fff", color: color.body, fontFamily: font.sans, fontSize: 14,
                 fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
               }}>
-                📋 Copy to Clipboard
+                Copy to Clipboard
               </button>
               <button onClick={handleAIRefine} disabled={!aiConfigured} title={aiConfigured ? "" : "Configure VITE_HIAB_AI_ENDPOINT to enable AI polishing."} style={{
                 flex: 2, padding: "14px 20px", borderRadius: 10, border: "none",
-                background: aiConfigured ? "linear-gradient(135deg, #1D4ED8, #4361EE)" : "#d1d5db", color: "#fff",
-                fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, cursor: aiConfigured ? "pointer" : "not-allowed",
+                background: aiConfigured ? color.accent : color.line, color: "#fff",
+                fontFamily: font.sans, fontSize: 15, fontWeight: 600, cursor: aiConfigured ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 boxShadow: aiConfigured ? "0 4px 16px rgba(29,78,216,0.3)" : "none",
-              }}>✨ {aiConfigured ? "Polish with AI" : "AI Not Configured"}</button>
+              }}>{aiConfigured ? "Polish with AI" : "AI Not Configured"}</button>
             </div>
           )}
         </div>
 
         {isLoading && (
-          <div style={{ margin: "16px 0", padding: 20, borderRadius: 12, background: "#EFF6FF", border: "1px solid #BFDBFE", textAlign: "center" }}>
-            <div style={{ fontSize: 28, marginBottom: 8, animation: "pulse 1.5s ease-in-out infinite" }}>✨</div>
-            <p style={{ margin: 0, fontSize: 15, color: "#555" }}>Crafting your leadership proposal...</p>
+          <div style={{ margin: "16px 0", padding: 20, borderRadius: 12, background: color.rail, border: `1px solid ${color.line}`, textAlign: "center" }}>
+            <div style={{ marginBottom: 8 }}><Icon name="sparkle" size={28} color={color.accent} /></div>
+            <p style={{ margin: 0, fontSize: 15, color: color.body }}>Crafting your leadership proposal...</p>
             <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
           </div>
         )}
@@ -1838,29 +1844,29 @@ function ProposalChatbot({ autoStart = false }) {
         {aiProposal && (
           <div style={{ marginTop: 16 }}>
             {/* Elevator Pitch */}
-            <div style={{ background: "linear-gradient(135deg, #1a1a2e, #2d2b55)", borderRadius: 16, padding: 24, color: "#fff", marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#93C5FD", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Elevator Pitch</div>
-              <h3 style={{ margin: "0 0 10px", fontFamily: "'Fraunces', Georgia, serif", fontSize: 20 }}>{aiProposal.title}</h3>
+            <div style={{ background: color.ink, borderRadius: 16, padding: 24, color: "#fff", marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: color.accent, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Elevator Pitch</div>
+              <h3 style={{ margin: "0 0 10px", fontFamily: font.sans, fontSize: 20 }}>{aiProposal.title}</h3>
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, opacity: 0.9 }}>{aiProposal.elevator_pitch}</p>
             </div>
 
             {/* Refined Proposal */}
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 20 }}>
-              <h4 style={{ margin: "0 0 14px", fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 16, color: "#1a1a2e" }}>✨ Polished Proposal</h4>
+            <div style={{ background: "#fff", borderRadius: 14, border: `1px solid ${color.line}`, padding: 20 }}>
+              <h4 style={{ margin: "0 0 14px", fontFamily: font.sans, fontSize: 16, color: color.ink }}>Polished Proposal</h4>
               {PROPOSAL_STEPS.map((step) => (
                 <div key={step.key} style={{ marginBottom: 10, padding: "10px 14px", borderRadius: 8, background: `${step.color}04`, borderLeft: `2px solid ${step.color}` }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: step.color, textTransform: "uppercase", letterSpacing: 0.5 }}>{step.label}</span>
-                  <p style={{ margin: "4px 0 0", fontSize: 14, color: "#444", lineHeight: 1.6 }}>{aiProposal.refined[step.key]}</p>
+                  <p style={{ margin: "4px 0 0", fontSize: 14, color: color.body, lineHeight: 1.6 }}>{aiProposal.refined[step.key]}</p>
                 </div>
               ))}
             </div>
 
             <button onClick={handleReset} style={{
               marginTop: 16, width: "100%", padding: "14px 20px", borderRadius: 10,
-              border: "1px solid #e5e7eb", background: "#fff", color: "#555",
-              fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer",
+              border: `1px solid ${color.line}`, background: "#fff", color: color.body,
+              fontFamily: font.sans, fontSize: 14, fontWeight: 500, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            }}>🔄 Build Another Proposal</button>
+            }}>Build Another Proposal</button>
           </div>
         )}
       </div>
@@ -1871,14 +1877,14 @@ function ProposalChatbot({ autoStart = false }) {
     <div>
       {currentStep === -1 && (
         <div>
-          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 24, marginBottom: 20, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
-            <p style={{ margin: "0 0 16px", fontSize: 15, lineHeight: 1.65, color: "#555" }}>
+          <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${color.line}`, padding: 24, marginBottom: 20, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+            <p style={{ margin: "0 0 16px", fontSize: 15, lineHeight: 1.65, color: color.body }}>
               This tool walks you through six sections that together create a compelling case for your sprint idea. It's designed for presenting to pastors, elder boards, and ministry leaders.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>
               {PROPOSAL_STEPS.map((step) => (
                 <div key={step.key} style={{ padding: "12px 14px", borderRadius: 10, background: `${step.color}06`, border: `1px solid ${step.color}12`, textAlign: "center" }}>
-                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: step.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 15, margin: "0 auto 6px" }}>{step.letter}</div>
+                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: step.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: font.sans, fontWeight: 700, fontSize: 15, margin: "0 auto 6px" }}>{step.letter}</div>
                   <strong style={{ fontSize: 13, color: step.color }}>{step.label}</strong>
                 </div>
               ))}
@@ -1886,27 +1892,27 @@ function ProposalChatbot({ autoStart = false }) {
           </div>
           <button onClick={handleStart} style={{
             width: "100%", padding: "16px 24px", borderRadius: 12, border: "none",
-            background: "linear-gradient(135deg, #1D4ED8, #4361EE)", color: "#fff",
-            fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 600, cursor: "pointer",
+            background: color.accent, color: "#fff",
+            fontFamily: font.sans, fontSize: 16, fontWeight: 600, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
             boxShadow: "0 4px 20px rgba(29,78,216,0.3)",
-          }}>📝 Start Building Your Proposal</button>
+          }}>Start Building Your Proposal</button>
         </div>
       )}
 
       {currentStep >= 0 && (
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}>
-          <div style={{ padding: "14px 20px", borderBottom: "1px solid #f0f0ec", background: "linear-gradient(135deg, #1D4ED808, #fff)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${color.line}`, overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}>
+          <div style={{ padding: "14px 20px", borderBottom: `1px solid ${color.line}`, background: color.surface, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, #1D4ED8, #4361EE)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: color.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Icon name="edit" size={18} color="#fff" />
               </div>
               <div>
-                <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 600, fontSize: 15, color: "#1a1a2e" }}>Proposal Builder</div>
-                <div style={{ fontSize: 12, color: "#1D4ED8" }}>● Ready</div>
+                <div style={{ fontFamily: font.sans, fontWeight: 600, fontSize: 15, color: color.ink }}>Proposal Builder</div>
+                <div style={{ fontSize: 12, color: color.accent }}>● Ready</div>
               </div>
             </div>
-            <button onClick={handleReset} style={{ background: "none", border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "#888", cursor: "pointer" }}>Start Over</button>
+            <button onClick={handleReset} style={{ background: "none", border: `1px solid ${color.line}`, borderRadius: 6, padding: "4px 10px", fontSize: 12, color: color.muted, cursor: "pointer" }}>Start Over</button>
           </div>
 
           {renderStepIndicator()}
@@ -1916,8 +1922,8 @@ function ProposalChatbot({ autoStart = false }) {
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", marginBottom: 12 }}>
                 <div style={{
                   maxWidth: "85%", padding: "12px 16px", borderRadius: 14,
-                  background: msg.role === "user" ? "#1D4ED8" : "#f3f4f6",
-                  color: msg.role === "user" ? "#fff" : "#333",
+                  background: msg.role === "user" ? color.accent : color.line,
+                  color: msg.role === "user" ? "#fff" : color.body,
                   fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-line",
                   borderBottomRightRadius: msg.role === "user" ? 4 : 14,
                   borderBottomLeftRadius: msg.role === "user" ? 14 : 4,
@@ -1930,7 +1936,7 @@ function ProposalChatbot({ autoStart = false }) {
           </div>
 
           {currentStep >= 0 && currentStep <= 5 && !isLoading && (
-            <div style={{ padding: "14px 16px", borderTop: "1px solid #f0f0ec", display: "flex", gap: 10, background: "#fafafa" }}>
+            <div style={{ padding: "14px 16px", borderTop: `1px solid ${color.line}`, display: "flex", gap: 10, background: color.rail }}>
               <textarea
                 ref={inputRef}
                 value={inputValue}
@@ -1938,16 +1944,16 @@ function ProposalChatbot({ autoStart = false }) {
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!teamName) handleTeamName(); else handleSubmitStep(); } }}
                 placeholder={!teamName ? "Enter your team or sprint group name..." : `Describe: ${PROPOSAL_STEPS[currentStep]?.label}...`}
                 rows={3}
-                style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontFamily: "'DM Sans', sans-serif", fontSize: 14, lineHeight: 1.5, resize: "none", outline: "none" }}
-                onFocus={(e) => (e.target.style.borderColor = "#1D4ED8")}
-                onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
+                style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: `1px solid ${color.line}`, fontFamily: font.sans, fontSize: 14, lineHeight: 1.5, resize: "none", outline: "none" }}
+                onFocus={(e) => (e.target.style.borderColor = color.accent)}
+                onBlur={(e) => (e.target.style.borderColor = color.line)}
               />
               <button
                 onClick={() => { if (!teamName) handleTeamName(); else handleSubmitStep(); }}
                 disabled={!inputValue.trim()}
-                style={{ width: 44, height: 44, borderRadius: 10, border: "none", background: inputValue.trim() ? "#1D4ED8" : "#e5e7eb", cursor: inputValue.trim() ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "flex-end" }}
+                style={{ width: 44, height: 44, borderRadius: 10, border: "none", background: inputValue.trim() ? color.accent : color.line, cursor: inputValue.trim() ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "flex-end" }}
               >
-                <Icon name="send" size={18} color={inputValue.trim() ? "#fff" : "#999"} />
+                <Icon name="send" size={18} color={inputValue.trim() ? "#fff" : color.muted} />
               </button>
             </div>
           )}
@@ -1963,13 +1969,13 @@ const GUIDED_STEPS = [
     key: "welcome",
     title: "Welcome",
     time: "1 min",
-    accent: "#E8890C",
+    accent: color.accent,
   },
   {
     key: "empathize",
     title: "Empathize",
     time: "~8 min",
-    accent: "#2D9B3A",
+    accent: color.accent,
     intro: "Before you can solve a problem, you need to understand the person living it. Pick one real person in your community and capture what they say, think, do, and feel.",
     Worksheet: EmpathyMapWorksheet,
     deeper: [
@@ -1982,7 +1988,7 @@ const GUIDED_STEPS = [
     key: "persona",
     title: "Persona",
     time: "~5 min",
-    accent: "#C2185B",
+    accent: color.accent,
     intro: "Now turn what you learned into a vivid character. A persona makes 'the people we serve' specific enough that you can ask 'would this work for them?' before every decision.",
     Worksheet: PersonaCardWorksheet,
     deeper: [
@@ -1996,7 +2002,7 @@ const GUIDED_STEPS = [
     key: "define",
     title: "Define",
     time: "~5 min",
-    accent: "#4361EE",
+    accent: color.accent,
     intro: "The most common reason innovation fails is solving the wrong problem. Capture the pains you observed, then reframe them as one 'How might we' question.",
     Worksheet: ProblemStatementWorksheet,
     deeper: [
@@ -2009,7 +2015,7 @@ const GUIDED_STEPS = [
     key: "ideate",
     title: "Ideate",
     time: "~10 min",
-    accent: "#C6A200",
+    accent: color.accent,
     intro: "Quantity over quality. Wild ideas often lead to breakthroughs. Hit the timer and sketch one idea per minute — don't go back, don't judge.",
     Worksheet: Crazy8sWorksheet,
     deeper: [
@@ -2022,7 +2028,7 @@ const GUIDED_STEPS = [
     key: "prototype",
     title: "Prototype",
     time: "~10 min",
-    accent: "#0097A7",
+    accent: color.accent,
     intro: "Pick one starred idea and make it tangible. A prototype isn't perfect — it's just real enough that someone can react to it. Then collect honest feedback in three columns.",
     Worksheet: FeedbackCardsWorksheet,
     deeper: [
@@ -2035,7 +2041,7 @@ const GUIDED_STEPS = [
     key: "pitch",
     title: "Pitch",
     time: "~5 min",
-    accent: "#1D4ED8",
+    accent: color.accent,
     intro: "Your idea needs a champion. This page pulls everything together into a one-pager you can hand to your pastor — and a structured proposal you can present.",
     Worksheet: SprintSummaryWorksheet,
     secondaryWorksheet: LeadershipProposalWorksheet,
@@ -2049,13 +2055,13 @@ const GUIDED_STEPS = [
     key: "done",
     title: "Done!",
     time: "",
-    accent: "#0D7C5F",
+    accent: color.accent,
   },
 ];
 
 function StepIntro({ accent, intro }) {
   return (
-    <p style={{ fontSize: 17, lineHeight: 1.7, color: "#444", margin: "0 0 24px", borderLeft: `3px solid ${accent}`, paddingLeft: 16 }}>
+    <p style={{ fontSize: 17, lineHeight: 1.7, color: color.body, margin: "0 0 24px", borderLeft: `3px solid ${accent}`, paddingLeft: 16 }}>
       {intro}
     </p>
   );
@@ -2158,11 +2164,11 @@ function AIHelper({ stepKey, accent }) {
   return (
     <div style={{ marginTop: 24, marginBottom: 16, borderRadius: 12, border: `1px solid ${accent}30`, background: `${accent}05`, padding: "16px 18px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 18 }}>🤖</span>
+        <Icon name="chat" size={18} color={color.accent} />
         <div style={{ fontWeight: 700, color: accent, fontSize: 14 }}>AI Thinking Partner</div>
-        {demo && <span style={{ background: "#FEF3C7", color: "#92400E", fontSize: 10, padding: "2px 6px", borderRadius: 4, fontWeight: 600 }}>DEMO</span>}
+        {demo && <span style={{ background: color.rail, color: color.accent, fontSize: 10, padding: "2px 6px", borderRadius: 4, fontWeight: 600 }}>DEMO</span>}
       </div>
-      <div style={{ fontSize: 13, color: "#666", marginBottom: 10 }}>
+      <div style={{ fontSize: 13, color: color.muted, marginBottom: 10 }}>
         Stuck or want a second perspective? Click a prompt — AI uses what you've written so far.
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -2171,14 +2177,14 @@ function AIHelper({ stepKey, accent }) {
             background: "#fff", border: `1px solid ${accent}40`, color: accent,
             borderRadius: 20, padding: "6px 14px", fontSize: 13, fontWeight: 500,
             cursor: loading ? "wait" : "pointer", fontFamily: "inherit",
-          }}>✨ {p.label}</button>
+          }}>{p.label}</button>
         ))}
       </div>
-      {loading && <div style={{ marginTop: 12, fontSize: 13, color: "#999" }}>Thinking...</div>}
+      {loading && <div style={{ marginTop: 12, fontSize: 13, color: color.muted }}>Thinking...</div>}
       {responses.map((r, i) => (
-        <div key={i} style={{ marginTop: 14, padding: "12px 14px", background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb" }}>
-          <div style={{ fontSize: 12, color: "#999", marginBottom: 6, fontStyle: "italic" }}>You asked AI to help with this step.</div>
-          <div style={{ fontSize: 14, lineHeight: 1.6, color: "#1a1a2e", whiteSpace: "pre-wrap" }}>{r.a}</div>
+        <div key={i} style={{ marginTop: 14, padding: "12px 14px", background: "#fff", borderRadius: 10, border: `1px solid ${color.line}` }}>
+          <div style={{ fontSize: 12, color: color.muted, marginBottom: 6, fontStyle: "italic" }}>You asked AI to help with this step.</div>
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: color.ink, whiteSpace: "pre-wrap" }}>{r.a}</div>
         </div>
       ))}
     </div>
@@ -2195,11 +2201,11 @@ function DeeperGuidance({ items, accent }) {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         cursor: "pointer", fontFamily: "inherit", color: accent, fontWeight: 600, fontSize: 14,
       }}>
-        <span>💡 Need more guidance?</span>
+        <span>Need more guidance?</span>
         <span style={{ transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }}>▾</span>
       </button>
       {open && (
-        <ul style={{ margin: 0, padding: "0 18px 16px 36px", color: "#444", fontSize: 14, lineHeight: 1.7 }}>
+        <ul style={{ margin: 0, padding: "0 18px 16px 36px", color: color.body, fontSize: 14, lineHeight: 1.7 }}>
           {items.map((it, i) => <li key={i} style={{ marginBottom: 6 }}>{it}</li>)}
         </ul>
       )}
@@ -2210,8 +2216,8 @@ function DeeperGuidance({ items, accent }) {
 function PrintableSection({ title, children }) {
   return (
     <section style={{ breakInside: "avoid", marginBottom: 24 }}>
-      <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, margin: "0 0 10px", color: "#1a1a2e" }}>{title}</h2>
-      <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 16, background: "#fff" }}>{children}</div>
+      <h2 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 10px", color: color.ink }}>{title}</h2>
+      <div style={{ border: `1px solid ${color.line}`, borderRadius: 10, padding: 16, background: "#fff" }}>{children}</div>
     </section>
   );
 }
@@ -2219,15 +2225,15 @@ function PrintableSection({ title, children }) {
 function PrintableValue({ label, value }) {
   return (
     <div style={{ marginBottom: 10 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontSize: 14, lineHeight: 1.6, color: "#1f2937", whiteSpace: "pre-wrap" }}>{value || "Not captured yet."}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: color.body, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 14, lineHeight: 1.6, color: color.ink, whiteSpace: "pre-wrap" }}>{value || "Not captured yet."}</div>
     </div>
   );
 }
 
 function PrintableLabel({ children }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+    <div style={{ fontSize: 11, fontWeight: 700, color: color.body, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
       {children}
     </div>
   );
@@ -2235,9 +2241,9 @@ function PrintableLabel({ children }) {
 
 function PrintableList({ items }) {
   const visible = (items || []).filter(Boolean);
-  if (visible.length === 0) return <div style={{ fontSize: 14, color: "#6b7280" }}>Not captured yet.</div>;
+  if (visible.length === 0) return <div style={{ fontSize: 14, color: color.body }}>Not captured yet.</div>;
   return (
-    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.6, color: "#1f2937" }}>
+    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.6, color: color.ink }}>
       {visible.map((item, i) => <li key={i}>{item}</li>)}
     </ul>
   );
@@ -2258,7 +2264,7 @@ function PrintPacket({ onClose }) {
   return (
     <div className="hiab-print-packet" style={{
       position: "fixed", inset: 0, zIndex: 200, overflowY: "auto",
-      background: "#f8f8f6", padding: "24px 20px 48px",
+      background: color.rail, padding: "24px 20px 48px",
     }}>
       <style>{`
         @media print {
@@ -2278,15 +2284,15 @@ function PrintPacket({ onClose }) {
       <div style={{ maxWidth: 820, margin: "0 auto" }}>
         <div className="hiab-print-actions" style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
           <button onClick={onClose} style={btnStyleSecondary}>Close</button>
-          <button onClick={() => window.print()} style={{ ...btnStyleSecondary, background: "#0D7C5F", color: "#fff", border: "none" }}>Print packet</button>
+          <button onClick={() => window.print()} style={{ ...btnStyleSecondary, background: color.accent, color: "#fff", border: "none" }}>Print packet</button>
         </div>
 
-        <header style={{ marginBottom: 24, borderBottom: "2px solid #1a1a2e", paddingBottom: 16 }}>
-          <div style={{ fontSize: 12, color: "#E8890C", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Hack In A Box Sprint Packet</div>
-          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 36, margin: "4px 0", color: "#1a1a2e" }}>
+        <header style={{ marginBottom: 24, borderBottom: `2px solid ${color.line}`, paddingBottom: 16 }}>
+          <div style={{ fontSize: 12, color: color.accent, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Hack In A Box Sprint Packet</div>
+          <h1 style={{ fontFamily: font.sans, fontSize: 36, margin: "4px 0", color: color.ink }}>
             {snapshot.summary.sprintName || "Sprint Summary"}
           </h1>
-          <div style={{ fontSize: 14, color: "#6b7280" }}>{snapshot.summary.date || "Date not captured"}</div>
+          <div style={{ fontSize: 14, color: color.body }}>{snapshot.summary.date || "Date not captured"}</div>
         </header>
 
         <PrintableSection title="Problem Definition">
@@ -2382,35 +2388,35 @@ function GuidedFlow({ setMode }) {
   const isDone = step.key === "done";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#f8f8f6" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: color.rail }}>
       {/* Header */}
       <div style={{
-        background: "#fff", borderBottom: "1px solid #e8e8e4", padding: "12px 20px",
+        background: "#fff", borderBottom: `1px solid ${color.line}`, padding: "12px 20px",
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => setMode("picker")} title="Back to mode picker" style={{
-            background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8,
+          <button onClick={() => setMode("picker")} title="Home" style={{
+            background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
             width: 36, height: 36, fontSize: 16, cursor: "pointer", fontFamily: "inherit",
           }}>←</button>
           <div>
-            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, fontWeight: 900, color: "#1a1a2e", lineHeight: 1 }}>Hack In A Box</div>
-            <div style={{ fontSize: 10, color: "#E8890C", fontWeight: 600, letterSpacing: 0.5, marginTop: 2 }}>SOLO SPRINT</div>
+            <div style={{ fontFamily: font.sans, fontSize: 16, fontWeight: 900, color: color.ink, lineHeight: 1 }}>Hack In A Box</div>
+            <div style={{ fontSize: 10, color: color.accent, fontWeight: 600, letterSpacing: 0.5, marginTop: 2 }}>SOLO SPRINT</div>
           </div>
         </div>
         <button onClick={() => setMode("reference")} style={{
-          background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8,
-          padding: "6px 12px", fontSize: 12, color: "#666", cursor: "pointer", fontFamily: "inherit",
+          background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
+          padding: "6px 12px", fontSize: 12, color: color.muted, cursor: "pointer", fontFamily: "inherit",
         }}>Switch to Reference Mode ↗</button>
       </div>
 
       {/* Stepper */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e8e8e4", padding: "16px 20px", overflowX: "auto" }}>
+      <div style={{ background: "#fff", borderBottom: `1px solid ${color.line}`, padding: "16px 20px", overflowX: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: "max-content" }}>
           {GUIDED_STEPS.map((s, i) => {
             const active = i === stepIdx;
             const done = i < stepIdx;
-            const dotColor = active ? s.accent : done ? "#9CA3AF" : "#E5E7EB";
+            const dotColor = active ? s.accent : done ? color.muted : color.line;
             return (
               <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <button onClick={() => goTo(i)} style={{
@@ -2418,20 +2424,20 @@ function GuidedFlow({ setMode }) {
                 }}>
                   <div style={{
                     width: 28, height: 28, borderRadius: "50%",
-                    background: active ? s.accent : done ? "#9CA3AF" : "#fff",
+                    background: active ? s.accent : done ? color.muted : "#fff",
                     border: `2px solid ${dotColor}`,
-                    color: active || done ? "#fff" : "#9CA3AF",
+                    color: active || done ? "#fff" : color.muted,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 12, fontWeight: 700, fontFamily: "'Fraunces', Georgia, serif",
+                    fontSize: 12, fontWeight: 700, fontFamily: font.sans,
                     transition: "all 0.2s",
                   }}>{done ? "✓" : i + 1}</div>
                   <span style={{
                     fontSize: 13, fontWeight: active ? 700 : 500,
-                    color: active ? s.accent : done ? "#6B7280" : "#9CA3AF",
+                    color: active ? s.accent : done ? color.body : color.muted,
                     whiteSpace: "nowrap",
                   }}>{s.title}</span>
                 </button>
-                {i < GUIDED_STEPS.length - 1 && <div style={{ width: 24, height: 2, background: done ? "#9CA3AF" : "#E5E7EB" }} />}
+                {i < GUIDED_STEPS.length - 1 && <div style={{ width: 24, height: 2, background: done ? color.muted : color.line }} />}
               </div>
             );
           })}
@@ -2443,52 +2449,52 @@ function GuidedFlow({ setMode }) {
         <div style={{ maxWidth: 740, margin: "0 auto" }}>
           {isWelcome && (
             <div style={{ textAlign: "center", padding: "20px 0" }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#E8890C12", padding: "6px 16px", borderRadius: 40, color: "#E8890C", fontSize: 12, fontWeight: 600, letterSpacing: 0.5, marginBottom: 20, textTransform: "uppercase" }}>
-                ✦ A 40-minute journey
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: `${color.accent}12`, padding: "6px 16px", borderRadius: 40, color: color.accent, fontSize: 12, fontWeight: 600, letterSpacing: 0.5, marginBottom: 20, textTransform: "uppercase" }}>
+                A 40-minute journey
               </div>
-              <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 900, color: "#1a1a2e", lineHeight: 1.1, margin: "0 0 16px" }}>
+              <h1 style={{ fontFamily: font.sans, fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 900, color: color.ink, lineHeight: 1.1, margin: "0 0 16px" }}>
                 Let's run your sprint, together.
               </h1>
-              <p style={{ fontSize: 17, lineHeight: 1.7, color: "#555", maxWidth: 560, margin: "0 auto 32px" }}>
+              <p style={{ fontSize: 17, lineHeight: 1.7, color: color.body, maxWidth: 560, margin: "0 auto 32px" }}>
                 We'll walk through six steps. Each one has a short intro and a worksheet you fill out as you go. Everything auto-saves — close the tab and come back anytime. By the end, you'll have a pitch ready to hand to your pastor.
               </p>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, maxWidth: 640, margin: "0 auto 32px", textAlign: "left" }}>
                 {GUIDED_STEPS.slice(1, -1).map((s, i) => (
                   <div key={s.key} style={{ padding: "12px 14px", background: "#fff", borderRadius: 10, borderLeft: `3px solid ${s.accent}` }}>
-                    <div style={{ fontSize: 11, color: "#999", fontWeight: 600 }}>STEP {i + 1}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a2e", marginTop: 2 }}>{s.title}</div>
+                    <div style={{ fontSize: 11, color: color.muted, fontWeight: 600 }}>STEP {i + 1}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: color.ink, marginTop: 2 }}>{s.title}</div>
                     <div style={{ fontSize: 12, color: s.accent, marginTop: 2 }}>{s.time}</div>
                   </div>
                 ))}
               </div>
 
               <button onClick={next} style={{
-                background: "#E8890C", color: "#fff", border: "none", borderRadius: 12,
+                background: color.accent, color: "#fff", border: "none", borderRadius: 12,
                 padding: "14px 32px", fontSize: 16, fontWeight: 600, cursor: "pointer",
                 fontFamily: "inherit", boxShadow: "0 4px 16px rgba(232, 137, 12, 0.3)",
               }}>Start with Empathize →</button>
-              <div style={{ fontSize: 12, color: "#999", marginTop: 12 }}>
-                Prefer to browse the full playbook? <button onClick={() => setMode("reference")} style={{ background: "none", border: "none", color: "#E8890C", textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0, fontFamily: "inherit" }}>Switch to Reference Mode</button>
+              <div style={{ fontSize: 12, color: color.muted, marginTop: 12 }}>
+                Prefer to browse the full playbook? <button onClick={() => setMode("reference")} style={{ background: "none", border: "none", color: color.accent, textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0, fontFamily: "inherit" }}>Switch to Reference Mode</button>
               </div>
             </div>
           )}
 
           {isDone && (
             <div style={{ textAlign: "center", padding: "40px 20px" }}>
-              <div style={{ fontSize: 64, marginBottom: 16 }}>🎉</div>
-              <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 36, fontWeight: 900, color: "#1a1a2e", margin: "0 0 12px" }}>
+              <div style={{ marginBottom: 16 }}><Icon name="check" size={56} color={color.accent} /></div>
+              <h1 style={{ fontFamily: font.sans, fontSize: 36, fontWeight: 900, color: color.ink, margin: "0 0 12px" }}>
                 You did it.
               </h1>
-              <p style={{ fontSize: 17, lineHeight: 1.7, color: "#555", maxWidth: 520, margin: "0 auto 32px" }}>
+              <p style={{ fontSize: 17, lineHeight: 1.7, color: color.body, maxWidth: 520, margin: "0 auto 32px" }}>
                 You just ran a complete design thinking sprint. Your pitch, plan, and worksheets are all saved. Print your Sprint Summary, share it with leadership, and start the real work.
               </p>
               <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
-                <button onClick={() => setPrintPacketOpen(true)} style={{ background: "#0D7C5F", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>🖨️ Print everything</button>
-                <button onClick={() => goTo(0)} style={{ background: "#fff", color: "#1a1a2e", border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Start over</button>
+                <button onClick={() => setPrintPacketOpen(true)} style={{ background: color.accent, color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Print everything</button>
+                <button onClick={() => goTo(0)} style={{ background: "#fff", color: color.ink, border: `1px solid ${color.line}`, borderRadius: 12, padding: "12px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Start over</button>
               </div>
-              <div style={{ fontSize: 14, color: "#666", marginTop: 24 }}>
-                Want to revisit a step? <button onClick={() => setMode("reference")} style={{ background: "none", border: "none", color: "#E8890C", textDecoration: "underline", cursor: "pointer", fontSize: 14, padding: 0, fontFamily: "inherit" }}>Open the full Reference</button>
+              <div style={{ fontSize: 14, color: color.muted, marginTop: 24 }}>
+                Want to revisit a step? <button onClick={() => setMode("reference")} style={{ background: "none", border: "none", color: color.accent, textDecoration: "underline", cursor: "pointer", fontSize: 14, padding: 0, fontFamily: "inherit" }}>Open the full Reference</button>
               </div>
             </div>
           )}
@@ -2500,9 +2506,9 @@ function GuidedFlow({ setMode }) {
                   <div style={{ fontSize: 12, color: step.accent, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>
                     Step {stepIdx} of {GUIDED_STEPS.length - 2}{step.optional && " · optional"}
                   </div>
-                  <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 36, fontWeight: 800, color: "#1a1a2e", margin: "4px 0 0" }}>{step.title}</h1>
+                  <h1 style={{ fontFamily: font.sans, fontSize: 36, fontWeight: 800, color: color.ink, margin: "4px 0 0" }}>{step.title}</h1>
                 </div>
-                <div style={{ fontSize: 13, color: "#999" }}>{step.time}</div>
+                <div style={{ fontSize: 13, color: color.muted }}>{step.time}</div>
               </div>
 
               <StepIntro accent={step.accent} intro={step.intro} />
@@ -2520,15 +2526,15 @@ function GuidedFlow({ setMode }) {
       {/* Bottom nav */}
       {!isWelcome && (
         <div style={{
-          background: "#fff", borderTop: "1px solid #e8e8e4", padding: "12px 20px",
+          background: "#fff", borderTop: `1px solid ${color.line}`, padding: "12px 20px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
         }}>
           <button onClick={back} style={{
-            background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10,
-            padding: "10px 18px", fontSize: 14, color: "#555", cursor: "pointer", fontFamily: "inherit",
+            background: "#fff", border: `1px solid ${color.line}`, borderRadius: 10,
+            padding: "10px 18px", fontSize: 14, color: color.body, cursor: "pointer", fontFamily: "inherit",
           }}>← Back</button>
-          <div style={{ fontSize: 12, color: "#999" }}>
-            {step.optional && <button onClick={next} style={{ background: "none", border: "none", color: "#999", textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0, fontFamily: "inherit" }}>Skip this step</button>}
+          <div style={{ fontSize: 12, color: color.muted }}>
+            {step.optional && <button onClick={next} style={{ background: "none", border: "none", color: color.muted, textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0, fontFamily: "inherit" }}>Skip this step</button>}
           </div>
           {!isDone ? (
             <button onClick={next} style={{
@@ -2568,16 +2574,16 @@ async function callAI({ system, messages, max_tokens = 800 }) {
 function ModeTopBar({ title, subtitle, accent, onHome }) {
   return (
     <div style={{
-      background: "#fff", borderBottom: "1px solid #e8e8e4", padding: "12px 20px",
+      background: "#fff", borderBottom: `1px solid ${color.line}`, padding: "12px 20px",
       display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={onHome} title="Back to mode picker" style={{
-          background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8,
+          background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
           width: 36, height: 36, fontSize: 16, cursor: "pointer", fontFamily: "inherit",
         }}>←</button>
         <div>
-          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, fontWeight: 900, color: "#1a1a2e", lineHeight: 1 }}>{title}</div>
+          <div style={{ fontFamily: font.sans, fontSize: 16, fontWeight: 900, color: color.ink, lineHeight: 1 }}>{title}</div>
           {subtitle && <div style={{ fontSize: 10, color: accent, fontWeight: 600, letterSpacing: 0.5, marginTop: 2 }}>{subtitle}</div>}
         </div>
       </div>
@@ -2585,208 +2591,24 @@ function ModeTopBar({ title, subtitle, accent, onHome }) {
   );
 }
 
-// ========== MODE PICKER LANDING ==========
-function ModePicker({ setMode }) {
-  const cards = [
-    {
-      key: "solo",
-      label: "Solo Sprint",
-      time: "~40 min · structured",
-      accent: "#E8890C",
-      desc: "Walk through all 6 steps for your specific challenge. Save multiple challenges. AI thinking-partner nudges at each step.",
-      bestFor: "I want the full design thinking experience for one focused challenge.",
-      icon: "🧭",
-    },
-    {
-      key: "mini",
-      label: "Mini-Modules",
-      time: "10–20 min each",
-      accent: "#0097A7",
-      desc: "Pick the one tool you need today. Sharpen a problem statement, brainstorm ideas, or write a pitch — independent of the full sprint.",
-      bestFor: "I have 15 minutes and want to work on one specific thing.",
-      icon: "🧩",
-    },
-    {
-      key: "partner",
-      label: "AI Thinking Partner",
-      time: "~15 min · chat",
-      accent: "#7C3AED",
-      desc: "Skip the worksheets. A conversational AI coach interviews you, asks follow-up questions, and synthesizes everything into a ready-to-use brief.",
-      bestFor: "I want to talk it out and have AI organize my thinking.",
-      icon: "💬",
-    },
-    {
-      key: "reference",
-      label: "Playbook & Resource Kit for Facilitators",
-      time: "browse anytime",
-      accent: "#1a1a2e",
-      desc: "The full playbook with every section, accordion, and facilitator note. Best for people running a HIAB with a group.",
-      bestFor: "I'm facilitating a sprint and need the complete guide.",
-      icon: "📚",
-    },
-  ];
-
+// ========== HOME ==========
+function Home({ onStartSprint, onBrowse }) {
   return (
-    <div style={{ minHeight: "100vh", background: "#f8f8f6", fontFamily: "'DM Sans', sans-serif", overflowY: "auto" }}>
-      <div style={{ maxWidth: 920, margin: "0 auto", padding: "48px 24px 80px" }}>
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#E8890C12", padding: "8px 18px", borderRadius: 40, color: "#E8890C", fontSize: 13, fontWeight: 600, letterSpacing: 0.5, marginBottom: 20, textTransform: "uppercase" }}>
-            ✦ By Indigitous US
-          </div>
-          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 900, color: "#1a1a2e", lineHeight: 1.05, margin: "0 0 12px" }}>Hack In A Box</h1>
-          <p style={{ fontSize: 18, lineHeight: 1.6, color: "#555", maxWidth: 560, margin: "0 auto 8px" }}>
-            Design thinking sprints for churches and faith-based organizations.
-          </p>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: "#888", maxWidth: 560, margin: "0 auto" }}>
-            Choose how you want to work — alone or with a team, in 15 minutes or 40.
-          </p>
+    <div style={{ minHeight: "100vh", background: color.bg, fontFamily: font.sans, overflowY: "auto" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "64px 24px 80px", textAlign: "center" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+          <BrandMark size={30} /><span style={{ fontWeight: 700, fontSize: 16, color: color.ink }}>Hack In A Box</span>
         </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-          {cards.map((c) => (
-            <button key={c.key} onClick={() => setMode(c.key)} style={{
-              background: "#fff", border: `1px solid ${c.accent}25`,
-              borderRadius: 16, padding: "24px 22px", textAlign: "left",
-              cursor: "pointer", fontFamily: "inherit",
-              boxShadow: `0 2px 12px ${c.accent}10`, transition: "all 0.2s",
-              display: "flex", flexDirection: "column", gap: 10,
-            }} onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${c.accent}25`; }} onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 2px 12px ${c.accent}10`; }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${c.accent}12`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>{c.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e" }}>{c.label}</div>
-                  <div style={{ fontSize: 12, color: c.accent, fontWeight: 600, marginTop: 2 }}>{c.time}</div>
-                </div>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#555" }}>{c.desc}</p>
-              <div style={{ fontSize: 13, color: c.accent, fontStyle: "italic", marginTop: "auto", paddingTop: 8 }}>
-                "{c.bestFor}"
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, color: c.accent, fontWeight: 600, fontSize: 14, marginTop: 4 }}>
-                Start {c.label} →
-              </div>
-            </button>
-          ))}
+        <div style={{ fontSize: 11, letterSpacing: 2.5, textTransform: "uppercase", color: color.accent, fontWeight: 700, marginBottom: 18 }}>For hack champions</div>
+        <h1 style={{ fontSize: "clamp(34px, 6vw, 52px)", fontWeight: 800, letterSpacing: -1.5, lineHeight: 1.04, color: color.ink, margin: "0 0 18px" }}>Run your own design sprint.</h1>
+        <p style={{ fontSize: 17, lineHeight: 1.6, color: color.muted, maxWidth: 520, margin: "0 auto 36px" }}>
+          A packaged playbook for leading a 2–6 hour mini-hackathon at your church or organization — even if you've never facilitated one.
+        </p>
+        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <button onClick={onStartSprint} style={pill("primary")}>Start a Solo Sprint →</button>
+          <button onClick={onBrowse} style={pill("secondary")}>Browse the playbook</button>
         </div>
-
-        <div style={{ textAlign: "center", marginTop: 40, fontSize: 13, color: "#999" }}>
-          Auto-saves to this browser · Switch modes anytime
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ========== MODE: MINI-MODULES ==========
-const MINI_MODULES = [
-  {
-    key: "problem",
-    title: "Sharpen Your Problem",
-    time: "10 min",
-    accent: "#4361EE",
-    icon: "🎯",
-    desc: "Turn a vague frustration into a clear 'How might we' question your team can act on.",
-    Worksheet: ProblemStatementWorksheet,
-    intro: "The most common reason innovation fails is solving the wrong problem. Capture the pains you observe, star the most urgent, then reframe them as one focused question.",
-  },
-  {
-    key: "empathy",
-    title: "Build Empathy",
-    time: "15 min",
-    accent: "#2D9B3A",
-    icon: "❤️",
-    desc: "Walk in someone's shoes. Capture what they say, think, do, and feel — then surface insights.",
-    Worksheet: EmpathyMapWorksheet,
-    intro: "Pick one specific person in your community. Listen to them, read what they've written, or recall what you know. Then map their world.",
-  },
-  {
-    key: "persona",
-    title: "Build a Persona",
-    time: "10 min",
-    accent: "#C2185B",
-    icon: "👤",
-    desc: "Make 'the people we serve' specific enough that you can ask 'would this work for them?'",
-    Worksheet: PersonaCardWorksheet,
-    intro: "Give them a name, age, and one detail that makes them real. Pull goals and pains from your empathy work. Keep this card visible.",
-  },
-  {
-    key: "ideate",
-    title: "Brainstorm Ideas",
-    time: "15 min",
-    accent: "#C6A200",
-    icon: "💡",
-    desc: "Quantity over quality. Run a timed 8-minute sprint with one idea per minute.",
-    Worksheet: Crazy8sWorksheet,
-    intro: "Wild ideas often lead to breakthroughs. The timer auto-advances every minute. Don't go back, don't judge. Star your top 2 at the end.",
-  },
-  {
-    key: "pitch",
-    title: "Pitch to Leadership",
-    time: "20 min",
-    accent: "#1D4ED8",
-    icon: "📝",
-    desc: "Turn your idea into a structured proposal pastors and elder boards can say yes to.",
-    Worksheet: LeadershipProposalWorksheet,
-    intro: "Lead with the problem and a human story. Ask for something small and concrete — 'a 6-week pilot,' '$200 to test,' '5 minutes on Sunday.'",
-  },
-];
-
-function MiniModules({ setMode }) {
-  const [active, setActive] = useState(null);
-  const mod = MINI_MODULES.find((m) => m.key === active);
-
-  if (mod) {
-    const W = mod.Worksheet;
-    return (
-      <div style={{ minHeight: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column" }}>
-        <ModeTopBar title="Mini-Modules" subtitle={mod.title.toUpperCase()} accent={mod.accent} onHome={() => setMode("picker")} />
-        <div style={{ flex: 1, overflowY: "auto", padding: "24px 20px 80px" }}>
-          <div style={{ maxWidth: 740, margin: "0 auto" }}>
-            <button onClick={() => setActive(null)} style={{ background: "none", border: "none", color: mod.accent, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600, padding: 0, marginBottom: 16 }}>← All modules</button>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, gap: 8, flexWrap: "wrap" }}>
-              <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 32, fontWeight: 800, color: "#1a1a2e", margin: 0 }}>{mod.icon} {mod.title}</h1>
-              <div style={{ fontSize: 13, color: "#999" }}>{mod.time}</div>
-            </div>
-            <p style={{ fontSize: 16, lineHeight: 1.7, color: "#555", margin: "12px 0 0", borderLeft: `3px solid ${mod.accent}`, paddingLeft: 16 }}>{mod.intro}</p>
-            <W />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ minHeight: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column" }}>
-      <ModeTopBar title="Mini-Modules" subtitle="PICK A TOOL" accent="#0097A7" onHome={() => setMode("picker")} />
-      <div style={{ flex: 1, overflowY: "auto", padding: "32px 20px 80px" }}>
-        <div style={{ maxWidth: 740, margin: "0 auto" }}>
-          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 36, fontWeight: 800, color: "#1a1a2e", margin: "0 0 8px" }}>What do you need today?</h1>
-          <p style={{ fontSize: 16, color: "#666", marginBottom: 28 }}>Pick one standalone tool. Each one is self-contained and saves automatically. Mix and match across visits.</p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {MINI_MODULES.map((m) => (
-              <button key={m.key} onClick={() => setActive(m.key)} style={{
-                background: "#fff", border: `1px solid ${m.accent}22`, borderRadius: 14,
-                padding: "18px 20px", cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-                display: "flex", alignItems: "center", gap: 16, boxShadow: `0 1px 6px ${m.accent}08`,
-              }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: `${m.accent}10`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>{m.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-                    <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, fontWeight: 700, color: "#1a1a2e" }}>{m.title}</span>
-                    <span style={{ fontSize: 12, color: m.accent, fontWeight: 600 }}>{m.time}</span>
-                  </div>
-                  <p style={{ margin: "4px 0 0", fontSize: 14, color: "#666", lineHeight: 1.55 }}>{m.desc}</p>
-                </div>
-                <div style={{ color: m.accent, fontSize: 20 }}>→</div>
-              </button>
-            ))}
-          </div>
-
-          <div style={{ marginTop: 28, padding: "16px 20px", background: "#fff", border: "1px dashed #d1d5db", borderRadius: 12, fontSize: 14, color: "#666" }}>
-            Want the full structured experience instead? <button onClick={() => setMode("solo")} style={{ background: "none", border: "none", color: "#E8890C", textDecoration: "underline", cursor: "pointer", fontFamily: "inherit", fontSize: 14, padding: 0 }}>Try Solo Sprint →</button>
-          </div>
-        </div>
+        <p style={{ fontSize: 13, color: color.faint, marginTop: 40 }}>Auto-saves to this browser · come back anytime</p>
       </div>
     </div>
   );
@@ -2891,7 +2713,7 @@ function ThinkingPartner({ setMode }) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : [
-        { role: "assistant", content: "Hi — I'm here to help you think through a challenge your church is facing. No worksheets, no formal process. Just tell me what's on your mind.\n\nWant to talk it out in the car? Tap 🎤 to speak, or turn on 🚗 Hands-free mode to have a real conversation.\n\nWhat's a ministry situation you've been turning over in your head lately?" },
+        { role: "assistant", content: "Hi — I'm here to help you think through a challenge your church is facing. No worksheets, no formal process. Just tell me what's on your mind.\n\nWant to talk it out in the car? Tap the mic to speak, or turn on Hands-free mode to have a real conversation.\n\nWhat's a ministry situation you've been turning over in your head lately?" },
       ];
     } catch {
       return [];
@@ -2984,12 +2806,12 @@ function ThinkingPartner({ setMode }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", height: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", height: "100vh", background: color.rail, display: "flex", flexDirection: "column" }}>
       <style>{`@keyframes hiab-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }`}</style>
-      <ModeTopBar title="AI Thinking Partner" subtitle="CHAT-BASED COACH" accent="#7C3AED" onHome={() => setMode("picker")} />
+      <ModeTopBar title="AI Thinking Partner" subtitle="CHAT-BASED COACH" accent={color.accent} onHome={() => setMode("picker")} />
 
       {demo && (
-        <div style={{ background: "#FEF3C7", borderBottom: "1px solid #FBBF24", padding: "8px 20px", fontSize: 12, color: "#92400E", textAlign: "center" }}>
+        <div style={{ background: color.rail, borderBottom: `1px solid ${color.line}`, padding: "8px 20px", fontSize: 12, color: color.accent, textAlign: "center" }}>
           Running in <strong>demo mode</strong> — responses are canned examples. Deploy to Vercel with <code>GEMINI_API_KEY</code> for live AI.
         </div>
       )}
@@ -3000,45 +2822,45 @@ function ThinkingPartner({ setMode }) {
             <div key={i} style={{
               alignSelf: m.role === "user" ? "flex-end" : "flex-start",
               maxWidth: "85%",
-              background: m.role === "user" ? "#7C3AED" : "#fff",
-              color: m.role === "user" ? "#fff" : "#1a1a2e",
+              background: m.role === "user" ? color.accent : "#fff",
+              color: m.role === "user" ? "#fff" : color.ink,
               padding: "12px 16px", borderRadius: 14,
-              border: m.role === "assistant" ? "1px solid #e5e7eb" : "none",
+              border: m.role === "assistant" ? `1px solid ${color.line}` : "none",
               fontSize: 15, lineHeight: 1.6, whiteSpace: "pre-wrap",
               boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
             }}>{m.content}</div>
           ))}
           {loading && (
-            <div style={{ alignSelf: "flex-start", padding: "12px 16px", background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", color: "#999", fontSize: 14 }}>
+            <div style={{ alignSelf: "flex-start", padding: "12px 16px", background: "#fff", borderRadius: 14, border: `1px solid ${color.line}`, color: color.muted, fontSize: 14 }}>
               Thinking<span className="hiab-dots">...</span>
             </div>
           )}
         </div>
       </div>
 
-      <div style={{ background: "#fff", borderTop: "1px solid #e8e8e4", padding: "12px 20px" }}>
+      <div style={{ background: "#fff", borderTop: `1px solid ${color.line}`, padding: "12px 20px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
 
           {/* Voice control row */}
           {(voice.supported.recog || voice.supported.synth) && (
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, flexWrap: "wrap", fontSize: 12, color: "#666" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, flexWrap: "wrap", fontSize: 12, color: color.muted }}>
               {voice.supported.synth && (
                 <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
                   <input type="checkbox" checked={autoSpeak} onChange={(e) => setAutoSpeak(e.target.checked)} />
-                  🔊 Auto-speak replies
+                  Auto-speak replies
                 </label>
               )}
               {voice.supported.recog && voice.supported.synth && (
                 <button onClick={toggleHandsFree} style={{
-                  background: handsFree ? "#7C3AED" : "#fff",
-                  color: handsFree ? "#fff" : "#7C3AED",
-                  border: "1px solid #7C3AED", borderRadius: 20,
+                  background: handsFree ? color.accent : "#fff",
+                  color: handsFree ? "#fff" : color.accent,
+                  border: `1px solid ${color.accent}`, borderRadius: 20,
                   padding: "4px 12px", fontSize: 12, fontWeight: 600,
                   cursor: "pointer", fontFamily: "inherit",
-                }}>{handsFree ? "🚗 Hands-free ON" : "🚗 Hands-free mode"}</button>
+                }}>{handsFree ? "Hands-free ON" : "Hands-free mode"}</button>
               )}
               {voice.speaking && (
-                <button onClick={voice.stopSpeaking} style={{ background: "none", border: "none", color: "#7C3AED", cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>⏹ Stop speaking</button>
+                <button onClick={voice.stopSpeaking} style={{ background: "none", border: "none", color: color.accent, cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>Stop speaking</button>
               )}
               {voice.listening && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#DC2626", fontWeight: 600 }}>
@@ -3053,35 +2875,36 @@ function ThinkingPartner({ setMode }) {
             {voice.supported.recog && (
               <button onClick={micPress} title={voice.listening ? "Stop listening" : "Speak instead of type"} style={{
                 background: voice.listening ? "#DC2626" : "#fff",
-                color: voice.listening ? "#fff" : "#7C3AED",
-                border: `1px solid ${voice.listening ? "#DC2626" : "#7C3AED"}`,
+                color: voice.listening ? "#fff" : color.accent,
+                border: `1px solid ${voice.listening ? "#DC2626" : color.accent}`,
                 borderRadius: 12, width: 48, height: 48, fontSize: 20,
                 cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
-              }}>{voice.listening ? "⏺" : "🎤"}</button>
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>{voice.listening ? <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#fff", display: "block" }} /> : <Icon name="chat" size={20} color={color.accent} />}</button>
             )}
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder={voice.listening ? "Listening..." : "Type or tap 🎤 to speak (Enter to send)"}
+              placeholder={voice.listening ? "Listening..." : "Type or tap the mic to speak (Enter to send)"}
               rows={2}
               disabled={loading}
               style={{
                 flex: 1, padding: "10px 14px", fontSize: 15, borderRadius: 12,
-                border: "1px solid #d1d5db", fontFamily: "inherit", resize: "none",
+                border: `1px solid ${color.line}`, fontFamily: "inherit", resize: "none",
                 outline: "none", lineHeight: 1.5,
               }}
             />
             <button onClick={() => send()} disabled={loading || !input.trim()} style={{
-              background: loading || !input.trim() ? "#d1d5db" : "#7C3AED",
+              background: loading || !input.trim() ? color.line : color.accent,
               color: "#fff", border: "none", borderRadius: 12,
               padding: "12px 20px", fontSize: 15, fontWeight: 600,
               cursor: loading || !input.trim() ? "not-allowed" : "pointer", fontFamily: "inherit",
             }}>Send</button>
           </div>
         </div>
-        <div style={{ maxWidth: 720, margin: "8px auto 0", display: "flex", justifyContent: "space-between", fontSize: 12, color: "#999" }}>
-          <button onClick={reset} style={{ background: "none", border: "none", color: "#999", cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>Start over</button>
+        <div style={{ maxWidth: 720, margin: "8px auto 0", display: "flex", justifyContent: "space-between", fontSize: 12, color: color.muted }}>
+          <button onClick={reset} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>Start over</button>
           <span>{messages.length - 1} exchanges</span>
         </div>
       </div>
@@ -3089,21 +2912,58 @@ function ThinkingPartner({ setMode }) {
   );
 }
 
-export default function HackInABox() {
-  const [mode, setMode] = useState(() => {
-    const stored = readStoredString("hiab-mode", "picker");
-    if (stored === "guided") return "solo"; // migrate legacy key
-    if (["picker", "solo", "mini", "partner", "reference"].includes(stored)) return stored;
-    return "picker";
-  });
-  useEffect(() => {
-    writeStoredString("hiab-mode", mode);
-  }, [mode]);
+function Sidebar({ activePhase, onNavigate }) {
+  return (
+    <nav style={{ background: color.rail, borderRight: `1px solid ${color.lineSoft}`, padding: "22px 0", minWidth: 188 }}>
+      <button onClick={() => onNavigate("home")} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 20px 20px", background: "none", border: "none", cursor: "pointer" }}>
+        <BrandMark size={26} />
+        <span style={{ fontFamily: font.sans, fontWeight: 700, fontSize: 14, color: color.ink }}>Hack In A Box</span>
+      </button>
+      {PHASES.map((p) => (
+        <button key={p.id} onClick={() => onNavigate(p.sections[0])} style={{
+          display: "block", width: "100%", textAlign: "left", padding: "9px 20px",
+          fontFamily: font.sans, fontSize: 13.5, fontWeight: activePhase === p.id ? 700 : 500,
+          color: activePhase === p.id ? color.accent : color.body,
+          background: "none", border: "none", cursor: "pointer",
+        }}>{p.label}</button>
+      ))}
+    </nav>
+  );
+}
 
-  const [activeSection, setActiveSection] = useState("home");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+function StepBar({ activeSection, onNavigate }) {
+  const idx = STEPS.findIndex((s) => s.id === activeSection);
+  return (
+    <div style={{ display: "flex", alignItems: "center", padding: "18px 28px", borderBottom: `1px solid ${color.lineSoft}`, background: color.surface, overflowX: "auto" }}>
+      {STEPS.map((s, i) => {
+        const state = i < idx ? "done" : i === idx ? "on" : "todo";
+        return (
+          <div key={s.id} style={{ display: "flex", alignItems: "center" }}>
+            <button onClick={() => onNavigate(s.id)} style={{ display: "flex", alignItems: "center", gap: 9, background: "none", border: "none", cursor: "pointer", fontFamily: font.sans, fontSize: 12.5, fontWeight: state === "on" ? 700 : 500, color: state === "on" ? color.ink : color.faint }}>
+              <span style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700,
+                background: state === "on" ? color.accent : state === "done" ? color.ink : "transparent",
+                border: state === "todo" ? `1.5px solid ${color.line}` : "none",
+                color: state === "todo" ? color.faint : "#fff" }}>
+                {state === "done" ? "✓" : s.n}
+              </span>
+              {s.label}
+            </button>
+            {i < STEPS.length - 1 && <span style={{ width: 34, height: 1.5, background: color.line, margin: "0 6px" }} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function HackInABox() {
   const [isMobile, setIsMobile] = useState(false);
   const contentRef = useRef(null);
+
+  const [view, setView] = useState(() => readStoredString("hiab-view", "home")); // "home" | "solo" | <sectionId>
+  useEffect(() => { writeStoredString("hiab-view", view); }, [view]);
+  const [navOpen, setNavOpen] = useState(false);
+  const navigate = (id) => { setView(id); if (contentRef.current) contentRef.current.scrollTop = 0; };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -3112,128 +2972,150 @@ export default function HackInABox() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const navigate = (id) => {
-    setActiveSection(id);
-    setMobileMenuOpen(false);
-    if (contentRef.current) contentRef.current.scrollTop = 0;
-  };
-
   useEffect(() => {
     const link = document.createElement("link");
-    link.href = "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap";
     link.rel = "stylesheet";
     document.head.appendChild(link);
     return () => document.head.removeChild(link);
   }, []);
 
-  if (mode === "picker") return <ModePicker setMode={setMode} />;
-  if (mode === "solo") return <GuidedFlow setMode={setMode} />;
-  if (mode === "mini") return <MiniModules setMode={setMode} />;
-  if (mode === "partner") return <ThinkingPartner setMode={setMode} />;
+  // GuidedFlow internally calls setMode("picker") and setMode("reference"). Map them:
+  const fromGuided = (m) => setView(m === "picker" ? "home" : m === "reference" ? "overview" : m);
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case "home":
+  if (view === "home") return <Home onStartSprint={() => setView("solo")} onBrowse={() => navigate("overview")} />;
+  if (view === "solo") return <GuidedFlow setMode={fromGuided} />;
+
+  const activePhase = phaseOf(view);
+  const inRun = activePhase === "run";
+
+  const renderContent = (active) => {
+    switch (active) {
+      case "ai": {
+        const ai = phaseColors.ai;
+        const prompts = [
+          {
+            title: "Empathy gathering",
+            subtitle: "Turn an interview or testimony into an empathy map",
+            body: "Paste a transcript of a conversation with the people you serve, then ask AI to sort it into the four quadrants. It surfaces patterns you might miss.",
+            prompt: "Here is a transcript of an interview with someone in our community. Sort what you hear into an empathy map with four columns — SAYS, THINKS, DOES, FEELS. Use direct quotes where you can, and flag any tensions between what they say and what they seem to feel.\n\n[paste transcript]",
+          },
+          {
+            title: "Sharper problem statements",
+            subtitle: "Go from a vague pain to a focused How Might We",
+            body: "Give AI your raw observations and have it draft several How Might We statements at different scopes, so you can pick the one that's hackable in a few hours.",
+            prompt: "Based on these observations about our community, draft 5 \"How Might We…\" problem statements. Make them specific and human-centered, not solution-disguised. Range from narrow to broad so we can choose the right scope for a 3-hour sprint.\n\n[paste observations]",
+          },
+          {
+            title: "More ideas, faster",
+            subtitle: "Push past the obvious during ideation",
+            body: "After your team's first round of Crazy 8s, ask AI to stretch the thinking with angles you haven't tried — then bring the best back to the group.",
+            prompt: "We're solving this problem: [problem statement]. We already have these ideas: [list]. Give us 10 more ideas from angles we haven't tried — including a few unconventional ones. Keep each to one sentence.",
+          },
+          {
+            title: "Draft the pitch",
+            subtitle: "Shape a prototype and leadership one-pager",
+            body: "Hand AI your winning idea and have it draft a clear pitch and a one-page proposal you can hand to your pastor or leadership.",
+            prompt: "Turn this idea into (1) a 60-second pitch and (2) a one-page proposal for church leadership with: the problem, who it serves, the proposed solution, what we'd build first, and what we need to start.\n\nIdea: [describe]",
+          },
+        ];
         return (
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#E8890C12", padding: "8px 18px", borderRadius: 40, color: "#E8890C", fontSize: 13, fontWeight: 600, letterSpacing: 0.5, marginBottom: 24, textTransform: "uppercase" }}>
-              ✦ By Indigitous US
-            </div>
-            <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 900, color: "#1a1a2e", lineHeight: 1.1, margin: "0 0 8px" }}>Hack In A Box</h1>
-            <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(18px, 3vw, 24px)", fontWeight: 300, color: "#E8890C", margin: "0 0 24px", fontStyle: "italic" }}>Playbook &amp; Resource Kit</p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#555", maxWidth: 580, margin: "0 auto 40px" }}>
-              Everything your church needs to run a Design Thinking Brainstorm Sprint. Discover fresh, faith-driven strategies to foster unity, engage your community, and create lasting kingdom impact.
+          <div>
+            <PhaseHeader icon="sparkle" title="AI in Your Sprint" subtitle="Using AI to prep faster and run a better Hack In A Box" accent={ai.accent} />
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>
+              You don't need to be technical to put AI to work in a sprint. Used well, it's a tireless thinking partner — it helps you prepare faster, hear your community more clearly, and turn rough ideas into plans you can act on. Think of it as a tool that <strong>amplifies</strong> your team's discernment, never replaces it.
             </p>
 
-            {/* Submit CTA */}
+            <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${ai.accent}20`, marginBottom: 28 }}>
+              <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>Why use AI in a Hack In A Box?</h3>
+              {[
+                { title: "Prep in a fraction of the time", desc: "Draft agendas, prompts, and participant invites in minutes so you can focus on the people in the room." },
+                { title: "Hear your community more clearly", desc: "Synthesize interviews and survey notes into themes and empathy maps — without losing the human details." },
+                { title: "Get unstuck during ideation", desc: "When the room goes quiet, AI can offer fresh angles to react to and build on." },
+                { title: "Lower the barrier to building", desc: "Teams can prototype something tangible — a flyer, a page, a script — within the workshop itself." },
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", gap: 12, marginBottom: i < 3 ? 14 : 0 }}>
+                  <div style={{ marginTop: 1 }}><Icon name="sparkle" size={16} color={ai.accent} /></div>
+                  <div><strong style={{ color: color.ink, fontSize: 15 }}>{item.title}:</strong> <span style={{ color: color.body, fontSize: 15, lineHeight: 1.6 }}>{item.desc}</span></div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA to the live AI Thinking Partner */}
             <div style={{
-              background: "linear-gradient(135deg, #0D7C5F, #2D9B3A)", borderRadius: 16, padding: "24px 28px",
-              color: "#fff", maxWidth: 580, margin: "0 auto 32px", textAlign: "left",
+              background: color.accent, borderRadius: 16, padding: "24px 28px",
+              color: "#fff", margin: "0 0 32px", textAlign: "left",
               display: "flex", alignItems: "center", gap: 20, cursor: "pointer",
-              boxShadow: "0 4px 20px rgba(13,124,95,0.25)",
-            }} onClick={() => navigate("submit")}>
-              <div style={{
-                width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,0.15)",
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              }}>
+              boxShadow: "0 4px 20px rgba(124,58,237,0.25)",
+            }} onClick={() => setView("partner")}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name="chat" size={28} color="#fff" />
               </div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ margin: "0 0 4px", fontFamily: "'Fraunces', Georgia, serif", fontSize: 19 }}>
-                  Ready to Submit a Problem?
-                </h3>
-                <p style={{ margin: 0, fontSize: 14, opacity: 0.85 }}>
-                  Use our AI-guided SCIPAB tool to articulate your church's challenge and get instant feedback on whether it's ready for a design sprint.
+                <h3 style={{ margin: "0 0 4px", fontFamily: font.sans, fontSize: 19 }}>Try it now — the AI Thinking Partner</h3>
+                <p style={{ margin: 0, fontSize: 14, opacity: 0.9 }}>
+                  A conversational coach built into this kit. It interviews you about your challenge and organizes your thinking into a ready-to-use brief.
                 </p>
               </div>
               <Icon name="arrow" size={22} color="#fff" />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, maxWidth: 720, margin: "0 auto 48px", textAlign: "left" }}>
+            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>Tools you can use</h3>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>
+              Any general AI assistant works. Most have a free tier that's plenty for a sprint — start with one you already have access to.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 32 }}>
               {[
-                { icon: "target", title: "Define Real Problems", desc: "Learn to identify and articulate the challenges your church and community truly face.", color: "#4361EE" },
-                { icon: "heart", title: "Build Deep Empathy", desc: "Understand the people you serve through empathy maps and persona creation.", color: "#C2185B" },
-                { icon: "lightbulb", title: "Generate Bold Ideas", desc: "Use structured brainstorming to unlock creative, God-inspired solutions.", color: "#E8890C" },
-                { icon: "cube", title: "Prototype & Test", desc: "Turn ideas into tangible plans your church can implement immediately.", color: "#0097A7" },
-              ].map((card) => (
-                <div key={card.title} style={{ background: "#fff", borderRadius: 14, padding: "22px 20px", border: `1px solid ${card.color}15`, boxShadow: `0 2px 16px ${card.color}08` }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: `${card.color}12`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                    <Icon name={card.icon} size={22} color={card.color} />
-                  </div>
-                  <h3 style={{ margin: "0 0 6px", fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 16, color: "#1a1a2e" }}>{card.title}</h3>
-                  <p style={{ margin: 0, fontSize: 14, color: "#777", lineHeight: 1.55 }}>{card.desc}</p>
+                { name: "ChatGPT", note: "Great all-rounder for drafting, summarizing, and brainstorming." },
+                { name: "Claude", note: "Strong at working through long transcripts and nuanced writing." },
+                { name: "Gemini", note: "Built into Google Workspace — handy for Docs, Gmail, and notes." },
+              ].map((t) => (
+                <div key={t.name} style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", border: `1px solid ${ai.accent}18`, boxShadow: `0 2px 12px ${ai.accent}0a` }}>
+                  <div style={{ fontFamily: font.sans, fontSize: 16, fontWeight: 700, color: color.ink, marginBottom: 6 }}>{t.name}</div>
+                  <p style={{ margin: 0, fontSize: 13.5, color: color.muted, lineHeight: 1.55 }}>{t.note}</p>
                 </div>
               ))}
             </div>
 
-            <div style={{ background: "linear-gradient(135deg, #1a1a2e, #2d2b55)", borderRadius: 20, padding: "36px 32px", color: "#fff", maxWidth: 640, margin: "0 auto 32px" }}>
-              <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, margin: "0 0 12px", fontWeight: 700 }}>How to Use This Playbook</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, textAlign: "left" }}>
-                {[
-                  "Start with \"What is HIAB?\" to understand the heart behind Design Thinking Sprints",
-                  "Explore \"Heart of Innovation\" for the values and vision behind the process",
-                  "Work through \"Prepare\" to plan logistics, recruit participants, and choose your sprint format",
-                  "Learn each tool — Problem Statements, Empathy Maps, Personas, Ideation, and Prototyping",
-                  "Use \"After the Sprint\" to keep momentum alive and share results with leadership",
-                ].map((step, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                    <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces', Georgia, serif", fontSize: 14, fontWeight: 700, flexShrink: 0, color: "#E8890C" }}>{i + 1}</div>
-                    <span style={{ fontSize: 15, lineHeight: 1.55, opacity: 0.9 }}>{step}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 20, padding: "14px 18px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px dashed rgba(123,31,162,0.4)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontSize: 16 }}>🎓</span>
-                  <strong style={{ fontSize: 14, color: "#C4B5FD" }}>About Facilitator Notes</strong>
+            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>How to use AI at each step</h3>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>
+              Copy a prompt below, swap in your own details, and paste it into your AI tool. Always read the output with your team and keep what rings true.
+            </p>
+            {prompts.map((p) => (
+              <Accordion key={p.title} title={p.title} subtitle={p.subtitle} accent={ai.accent}>
+                <p style={{ margin: "0 0 12px", fontSize: 15, lineHeight: 1.7, color: color.body }}>{p.body}</p>
+                <div style={{ background: color.ink, color: color.accent, borderRadius: 10, padding: "14px 16px", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                  {p.prompt}
                 </div>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, opacity: 0.75 }}>
-                  Throughout this playbook, you'll see collapsible <strong style={{ color: "#C4B5FD" }}>Facilitator Notes</strong> with a 🎓 icon. These contain extra guidance for the person leading the sprint — discussion prompts, timing tips, presentation advice, and things to watch for. If you're a participant just working through the exercises, you can skip these. If you're facilitating, they're gold.
-                </p>
-              </div>
-            </div>
+                <div style={{ fontSize: 12, color: ai.accent, marginTop: 8, fontWeight: 600 }}>↑ Copy, edit the [brackets], and paste into your AI tool</div>
+              </Accordion>
+            ))}
 
-            <button onClick={() => navigate("overview")} style={{ background: "#E8890C", color: "#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "0 4px 16px rgba(232, 137, 12, 0.3)" }}>
-              Get Started <Icon name="arrow" size={18} color="#fff" />
-            </button>
+            <div style={{ marginTop: 24, padding: "18px 22px", borderRadius: 12, background: color.rail, border: `1px dashed ${color.line}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                
+                <strong style={{ fontSize: 14, color: color.accent }}>Keep it human (and prayerful)</strong>
+              </div>
+              <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: color.body }}>
+                AI is fast, but it doesn't know your people or the Spirit's leading. Use it to get to a first draft quickly — then slow down, pray, and let your team shape the final direction. Don't paste anyone's private or sensitive details into a public AI tool.
+              </p>
+            </div>
           </div>
         );
-
-      case "submit":
-        return <SCIPABChatbot />;
+      }
 
       case "overview":
         return (
           <div>
-            <PhaseHeader icon="book" title="What is HIAB?" subtitle="Understanding Design Thinking Brainstorm Sprints for faith-based organizations" accent="#E8890C" />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 20 }}>
+            <PhaseHeader icon="book" title="What is HIAB?" subtitle="Understanding Design Thinking Brainstorm Sprints for faith-based organizations" accent={color.accent} />
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>
               A <strong>Hack In A Box (HIAB)</strong> is a Design Thinking Brainstorm Sprint created by <strong>Indigitous US</strong>, specifically tailored for churches and faith-based organizations. Think of it as a focused retreat where your church's leaders and members come together to pray, brainstorm, and collaborate on solutions to real challenges your ministry faces.
             </p>
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 24 }}>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               This isn't about technology or complicated tools. It's about guiding your team through creative discussions and hands-on activities to produce clear, actionable plans that work for your unique church family.
             </p>
-            <div style={{ background: "linear-gradient(135deg, #FEF3E2, #fff)", borderRadius: 16, padding: 28, border: "1px solid #E8890C20", marginBottom: 28 }}>
-              <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, margin: "0 0 16px", color: "#1a1a2e" }}>What Makes HIAB Different?</h3>
+            <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${color.line}`, marginBottom: 28 }}>
+              <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>What Makes HIAB Different?</h3>
               {[
                 { title: "Faith at the Center", desc: "Every idea explored is rooted in your church's mission and values. We begin and end with prayer." },
                 { title: "Custom for Your Church", desc: "Every sprint is designed to reflect your congregation's unique strengths, challenges, and context." },
@@ -3241,23 +3123,23 @@ export default function HackInABox() {
                 { title: "Ongoing Support", desc: "The playbook gives you everything to run sprints repeatedly, building an innovation culture." },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", gap: 12, marginBottom: i < 3 ? 14 : 0 }}>
-                  <div style={{ color: "#E8890C", fontSize: 18, marginTop: 1 }}>✦</div>
-                  <div><strong style={{ color: "#1a1a2e", fontSize: 15 }}>{item.title}:</strong> <span style={{ color: "#555", fontSize: 15, lineHeight: 1.6 }}>{item.desc}</span></div>
+                  <div style={{ marginTop: 1 }}><Icon name="sparkle" size={16} color={color.accent} /></div>
+                  <div><strong style={{ color: color.ink, fontSize: 15 }}>{item.title}:</strong> <span style={{ color: color.body, fontSize: 15, lineHeight: 1.6 }}>{item.desc}</span></div>
                 </div>
               ))}
             </div>
-            <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, margin: "0 0 16px", color: "#1a1a2e" }}>The Design Thinking Process</h3>
+            <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>The Design Thinking Process</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
               {[
-                { phase: "Empathize", desc: "Understand the people and communities you're trying to serve", color: "#2D9B3A" },
-                { phase: "Define", desc: "Clearly articulate the problem you're solving", color: "#4361EE" },
-                { phase: "Ideate", desc: "Brainstorm many creative solutions without judgment", color: "#C6A200" },
-                { phase: "Prototype", desc: "Build a simple, tangible version of your best idea", color: "#0097A7" },
-                { phase: "Test", desc: "Share your prototype, get feedback, and refine", color: "#C2185B" },
+                { phase: "Empathize", desc: "Understand the people and communities you're trying to serve", color: color.accent },
+                { phase: "Define", desc: "Clearly articulate the problem you're solving", color: color.accent },
+                { phase: "Ideate", desc: "Brainstorm many creative solutions without judgment", color: color.accent },
+                { phase: "Prototype", desc: "Build a simple, tangible version of your best idea", color: color.accent },
+                { phase: "Test", desc: "Share your prototype, get feedback, and refine", color: color.accent },
               ].map((p, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", background: `${p.color}08`, borderRadius: 12, border: `1px solid ${p.color}15` }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${p.color}18`, color: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 16, flexShrink: 0 }}>{i + 1}</div>
-                  <div><strong style={{ color: p.color, fontSize: 15 }}>{p.phase}:</strong> <span style={{ color: "#555", fontSize: 15 }}>{p.desc}</span></div>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${p.color}18`, color: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: font.sans, fontWeight: 700, fontSize: 16, flexShrink: 0 }}>{i + 1}</div>
+                  <div><strong style={{ color: p.color, fontSize: 15 }}>{p.phase}:</strong> <span style={{ color: color.body, fontSize: 15 }}>{p.desc}</span></div>
                 </div>
               ))}
             </div>
@@ -3269,7 +3151,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="heart" title="Heart of Innovation" subtitle="Why creativity matters in ministry — and the values that guide our approach" accent={phaseColors.foundation.accent} />
 
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 24 }}>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               Before we dive into tools and techniques, it's worth pausing to reflect on <em>why</em> we do this. Innovation in the church isn't about chasing trends or copying Silicon Valley. It's rooted in something much deeper — the belief that the God who created the universe invites us to be creative partners in His work.
             </p>
 
@@ -3308,20 +3190,19 @@ export default function HackInABox() {
             <Accordion title="Our Guiding Values" accent={phaseColors.foundation.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
                 {[
-                  { value: "People First", desc: "Every idea must serve real people with real needs. We never innovate for innovation's sake.", icon: "❤️" },
-                  { value: "Rooted in Prayer", desc: "We invite God into the process from start to finish. The best ideas come from listening — to people and to the Spirit.", icon: "🙏" },
-                  { value: "Radical Hospitality", desc: "Every voice matters. We make space for the quiet, the young, the new, and the skeptical.", icon: "🤝" },
-                  { value: "Courage Over Comfort", desc: "We'd rather try something imperfect than stay stuck in something that isn't working.", icon: "💪" },
-                  { value: "Faithful Stewardship", desc: "We respect the resources, traditions, and trust our church has built — and we build on them wisely.", icon: "🌱" },
-                  { value: "Joy in the Process", desc: "Collaboration should be energizing and fun. If we're not enjoying this, we're doing it wrong.", icon: "✨" },
+                  { value: "People First", desc: "Every idea must serve real people with real needs. We never innovate for innovation's sake." },
+                  { value: "Rooted in Prayer", desc: "We invite God into the process from start to finish. The best ideas come from listening — to people and to the Spirit." },
+                  { value: "Radical Hospitality", desc: "Every voice matters. We make space for the quiet, the young, the new, and the skeptical." },
+                  { value: "Courage Over Comfort", desc: "We'd rather try something imperfect than stay stuck in something that isn't working." },
+                  { value: "Faithful Stewardship", desc: "We respect the resources, traditions, and trust our church has built — and we build on them wisely." },
+                  { value: "Joy in the Process", desc: "Collaboration should be energizing and fun. If we're not enjoying this, we're doing it wrong." },
                 ].map((item) => (
                   <div key={item.value} style={{
                     padding: "16px", borderRadius: 12, background: `${phaseColors.foundation.accent}06`,
                     border: `1px solid ${phaseColors.foundation.accent}12`,
                   }}>
-                    <div style={{ fontSize: 24, marginBottom: 6 }}>{item.icon}</div>
-                    <strong style={{ fontSize: 14, color: "#1a1a2e", display: "block", marginBottom: 4 }}>{item.value}</strong>
-                    <p style={{ margin: 0, fontSize: 13, color: "#666", lineHeight: 1.5 }}>{item.desc}</p>
+                    <strong style={{ fontSize: 14, color: color.ink, display: "block", marginBottom: 4 }}>{item.value}</strong>
+                    <p style={{ margin: 0, fontSize: 13, color: color.muted, lineHeight: 1.5 }}>{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -3351,7 +3232,7 @@ export default function HackInABox() {
               <p>If this is your first HIAB, start with the <strong>Express Sprint (2 hours)</strong> or <strong>Standard Sprint (3 hours)</strong>. You can always run a longer format next time.</p>
             </FacilitatorNote>
 
-            <Accordion title="🙏 Prayer & Spiritual Preparation" defaultOpen accent={phaseColors.prepare.accent}>
+            <Accordion title="Prayer & Spiritual Preparation" defaultOpen accent={phaseColors.prepare.accent}>
               <p>Before any logistics, lay a spiritual foundation. Invite your leadership team and participants into a season of intentional prayer.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
                 {["Pray for God to reveal the right challenge to focus on", "Ask for open hearts and minds among participants", "Pray for creative, Spirit-led ideas to come forward", "Commission the event during a Sunday service to build support"].map((item, i) => (
@@ -3361,7 +3242,7 @@ export default function HackInABox() {
               <VideoPlaceholder title="Prayer Guide for Innovation Sprints" description="A guided prayer exercise you can use with your team before the event." duration="5 min" />
             </Accordion>
 
-            <Accordion title="💬 How to Pitch HIAB to Your Pastor or Leadership" accent={phaseColors.prepare.accent}>
+            <Accordion title="How to Pitch HIAB to Your Pastor or Leadership" accent={phaseColors.prepare.accent}>
               <p>Getting leadership support is the most important first step. Here's a practical approach:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Start with the Why" accent={phaseColors.prepare.accent}
@@ -3380,7 +3261,7 @@ export default function HackInABox() {
               </FacilitatorNote>
             </Accordion>
 
-            <Accordion title="📣 How to Market and Recruit Participants" accent={phaseColors.prepare.accent}>
+            <Accordion title="How to Market and Recruit Participants" accent={phaseColors.prepare.accent}>
               <p>Getting the right people in the room matters. Here's how to spread the word effectively:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -3390,16 +3271,16 @@ export default function HackInABox() {
                   { title: "Highlight What They'll Get", desc: "People want to know: 'What's in it for me?' Emphasize that they'll be heard, that their ideas matter, and that they'll leave with concrete plans — not just talk." },
                   { title: "Set Clear Expectations", desc: "Share the exact time commitment (start and end time), what to bring (just themselves!), and that food will be provided. Remove every possible barrier to showing up." },
                 ].map((item, i) => (
-                  <div key={i} style={{ padding: "14px 18px", borderRadius: 10, background: "#fff", border: "1px solid #e5e7eb" }}>
-                    <strong style={{ fontSize: 15, color: "#1a1a2e" }}>{item.title}</strong>
-                    <p style={{ margin: "4px 0 0", fontSize: 14, color: "#666", lineHeight: 1.6 }}>{item.desc}</p>
+                  <div key={i} style={{ padding: "14px 18px", borderRadius: 10, background: "#fff", border: `1px solid ${color.line}` }}>
+                    <strong style={{ fontSize: 15, color: color.ink }}>{item.title}</strong>
+                    <p style={{ margin: "4px 0 0", fontSize: 14, color: color.muted, lineHeight: 1.6 }}>{item.desc}</p>
                   </div>
                 ))}
               </div>
               <VideoPlaceholder title="Sample Recruitment Video" description="A customizable promo video template you can adapt for your church." duration="2 min" />
             </Accordion>
 
-            <Accordion title="📅 Week-by-Week Planning Timeline" accent={phaseColors.prepare.accent}>
+            <Accordion title="Week-by-Week Planning Timeline" accent={phaseColors.prepare.accent}>
               <p>Use this countdown to stay on track. Adjust dates based on when your sprint is scheduled.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {[
@@ -3415,10 +3296,10 @@ export default function HackInABox() {
                     background: i % 2 === 0 ? `${phaseColors.prepare.accent}05` : "transparent",
                     border: `1px solid ${i % 2 === 0 ? phaseColors.prepare.accent + "10" : "transparent"}`,
                   }}>
-                    <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 13, fontWeight: 700, color: phaseColors.prepare.accent, minWidth: 90, paddingTop: 2 }}>{item.week}</div>
+                    <div style={{ fontFamily: font.sans, fontSize: 13, fontWeight: 700, color: phaseColors.prepare.accent, minWidth: 90, paddingTop: 2 }}>{item.week}</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       {item.tasks.map((task, j) => (
-                        <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 14, color: "#555" }}>
+                        <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 14, color: color.body }}>
                           <div style={{ width: 5, height: 5, borderRadius: "50%", background: phaseColors.prepare.accent, marginTop: 7, flexShrink: 0 }} />
                           {task}
                         </div>
@@ -3429,7 +3310,7 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <Accordion title="🌍 Adapting for Multi-Church or Multi-Org Collaboration" accent={phaseColors.prepare.accent}>
+            <Accordion title="Adapting for Multi-Church or Multi-Org Collaboration" accent={phaseColors.prepare.accent}>
               <p>HIAB is especially powerful when multiple churches or organizations come together around a shared challenge — like serving a neighborhood, reaching a people group, or tackling a community issue. Here's how to adapt:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -3441,7 +3322,7 @@ export default function HackInABox() {
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                     <Icon name="check" size={16} color={phaseColors.prepare.accent} />
-                    <div><strong style={{ fontSize: 14, color: "#1a1a2e" }}>{item.title}:</strong> <span style={{ fontSize: 14, color: "#666" }}>{item.desc}</span></div>
+                    <div><strong style={{ fontSize: 14, color: color.ink }}>{item.title}:</strong> <span style={{ fontSize: 14, color: color.muted }}>{item.desc}</span></div>
                   </div>
                 ))}
               </div>
@@ -3450,31 +3331,31 @@ export default function HackInABox() {
               </FacilitatorNote>
             </Accordion>
 
-            <Accordion title="👥 Team Assembly" accent={phaseColors.prepare.accent}>
+            <Accordion title="Team Assembly" accent={phaseColors.prepare.accent}>
               <p><strong>Ideal group size:</strong> 15–30 people, broken into tables of 4–6.</p>
               <p>Aim for diversity — different ages, roles, backgrounds, and time at your church. Consider inviting people who don't normally attend planning meetings.</p>
               <p><strong>Key roles:</strong> Lead Facilitator, Table Coaches (one per table), Timekeeper, and Notetaker/Photographer.</p>
             </Accordion>
 
-            <Accordion title="📋 Materials Checklist" accent={phaseColors.prepare.accent}>
+            <Accordion title="Materials Checklist" accent={phaseColors.prepare.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
                 <div>
                   <strong style={{ color: phaseColors.prepare.accent, fontSize: 14 }}>Must-Haves</strong>
                   {["Large poster paper or butcher paper", "Sticky notes (multiple colors)", "Markers and pens", "Dot stickers for voting", "Timer (phone works)", "Printed templates"].map((item, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 14 }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: "#999", flexShrink: 0 }} /> {item}</div>
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 14 }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: color.muted, flexShrink: 0 }} /> {item}</div>
                   ))}
                 </div>
                 <div>
                   <strong style={{ color: phaseColors.prepare.accent, fontSize: 14 }}>Nice-to-Haves</strong>
                   {["Laptops/tablets for digital whiteboard", "Projector/screen", "Zoom setup for remote guests", "Shared Google Doc for notes", "Background worship music speaker"].map((item, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 14 }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: "#999", flexShrink: 0 }} /> {item}</div>
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 14 }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: color.muted, flexShrink: 0 }} /> {item}</div>
                   ))}
                 </div>
               </div>
             </Accordion>
 
-            <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, margin: "28px 0 8px", color: "#1a1a2e" }}>Sprint Formats & Agendas</h3>
-            <p style={{ fontSize: 15, lineHeight: 1.65, color: "#555", marginBottom: 16 }}>
+            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "28px 0 8px", color: color.ink }}>Sprint Formats & Agendas</h3>
+            <p style={{ fontSize: 15, lineHeight: 1.65, color: color.body, marginBottom: 16 }}>
               Choose the format that fits your group's time and energy. Each agenda below is ready to print and follow. All use an "Empathy First" flow by default — to swap to "Problem First," just switch those two time blocks.
             </p>
 
@@ -3495,8 +3376,8 @@ export default function HackInABox() {
                   { time: "1:20–1:30", title: "Wrap-Up & Next Steps", desc: "Capture top ideas. Ask: who wants to keep exploring this? Set one follow-up action. Close in prayer." },
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", gap: 14, padding: "10px 14px", borderRadius: 10, background: i % 2 === 0 ? `${phaseColors.prepare.accent}05` : "transparent" }}>
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, color: phaseColors.prepare.accent, minWidth: 72, paddingTop: 2 }}>{item.time}</div>
-                    <div><strong style={{ fontSize: 14, color: "#1a1a2e" }}>{item.title}</strong><p style={{ margin: "3px 0 0", fontSize: 13, color: "#666", lineHeight: 1.5 }}>{item.desc}</p></div>
+                    <div style={{ fontFamily: font.sans, fontSize: 12, fontWeight: 600, color: phaseColors.prepare.accent, minWidth: 72, paddingTop: 2 }}>{item.time}</div>
+                    <div><strong style={{ fontSize: 14, color: color.ink }}>{item.title}</strong><p style={{ margin: "3px 0 0", fontSize: 13, color: color.muted, lineHeight: 1.5 }}>{item.desc}</p></div>
                   </div>
                 ))}
               </div>
@@ -3514,8 +3395,8 @@ export default function HackInABox() {
                   { time: "1:50–2:00", title: "Next Steps & Closing Prayer", desc: "Identify 2–3 concrete actions. Assign owners. Close in prayer." },
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", gap: 14, padding: "10px 14px", borderRadius: 10, background: i % 2 === 0 ? `${phaseColors.prepare.accent}05` : "transparent" }}>
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, color: phaseColors.prepare.accent, minWidth: 72, paddingTop: 2 }}>{item.time}</div>
-                    <div><strong style={{ fontSize: 14, color: "#1a1a2e" }}>{item.title}</strong><p style={{ margin: "3px 0 0", fontSize: 13, color: "#666", lineHeight: 1.5 }}>{item.desc}</p></div>
+                    <div style={{ fontFamily: font.sans, fontSize: 12, fontWeight: 600, color: phaseColors.prepare.accent, minWidth: 72, paddingTop: 2 }}>{item.time}</div>
+                    <div><strong style={{ fontSize: 14, color: color.ink }}>{item.title}</strong><p style={{ margin: "3px 0 0", fontSize: 13, color: color.muted, lineHeight: 1.5 }}>{item.desc}</p></div>
                   </div>
                 ))}
               </div>
@@ -3534,8 +3415,8 @@ export default function HackInABox() {
                   { time: "2:45–3:00", title: "Next Steps & Closing Prayer", desc: "Identify concrete actions. Assign owners. Set follow-up date. Close in prayer." },
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", gap: 14, padding: "10px 14px", borderRadius: 10, background: i % 2 === 0 ? `${phaseColors.prepare.accent}05` : "transparent" }}>
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, color: phaseColors.prepare.accent, minWidth: 72, paddingTop: 2 }}>{item.time}</div>
-                    <div><strong style={{ fontSize: 14, color: "#1a1a2e" }}>{item.title}</strong><p style={{ margin: "3px 0 0", fontSize: 13, color: "#666", lineHeight: 1.5 }}>{item.desc}</p></div>
+                    <div style={{ fontFamily: font.sans, fontSize: 12, fontWeight: 600, color: phaseColors.prepare.accent, minWidth: 72, paddingTop: 2 }}>{item.time}</div>
+                    <div><strong style={{ fontSize: 14, color: color.ink }}>{item.title}</strong><p style={{ margin: "3px 0 0", fontSize: 13, color: color.muted, lineHeight: 1.5 }}>{item.desc}</p></div>
                   </div>
                 ))}
               </div>
@@ -3557,8 +3438,8 @@ export default function HackInABox() {
                   { time: "4:05–4:20", title: "Next Steps & Closing Prayer", desc: "Identify 2–3 next steps. Assign owners. Set follow-up date. Close in prayer." },
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", gap: 14, padding: "10px 14px", borderRadius: 10, background: i % 2 === 0 ? `${phaseColors.prepare.accent}05` : "transparent" }}>
-                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, color: phaseColors.prepare.accent, minWidth: 72, paddingTop: 2 }}>{item.time}</div>
-                    <div><strong style={{ fontSize: 14, color: "#1a1a2e" }}>{item.title}</strong><p style={{ margin: "3px 0 0", fontSize: 13, color: "#666", lineHeight: 1.5 }}>{item.desc}</p></div>
+                    <div style={{ fontFamily: font.sans, fontSize: 12, fontWeight: 600, color: phaseColors.prepare.accent, minWidth: 72, paddingTop: 2 }}>{item.time}</div>
+                    <div><strong style={{ fontSize: 14, color: color.ink }}>{item.title}</strong><p style={{ margin: "3px 0 0", fontSize: 13, color: color.muted, lineHeight: 1.5 }}>{item.desc}</p></div>
                   </div>
                 ))}
               </div>
@@ -3575,7 +3456,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="target" title="Writing Problem Statements" subtitle="Clearly define the challenge before you start solving it" accent={phaseColors.problem.accent} />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 24 }}>The most common reason innovation efforts fail is that teams solve the <em>wrong problem</em>. A well-crafted problem statement focuses your sprint and makes sure solutions address a real need.</p>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>The most common reason innovation efforts fail is that teams solve the <em>wrong problem</em>. A well-crafted problem statement focuses your sprint and makes sure solutions address a real need.</p>
             <VideoPlaceholder title="How to Write a Great Problem Statement" description="A walkthrough of the HMW framework with real church examples." duration="8 min" />
             <FacilitatorNote>
               <p><strong>Process order flexibility:</strong> Some facilitators prefer to do empathy mapping <em>before</em> writing problem statements, so the team understands the people involved before defining the challenge. Others prefer to start with a rough problem statement and then refine it after empathy work. Both approaches work — see the Facilitation Guide for detailed agendas for each path.</p>
@@ -3584,13 +3465,13 @@ export default function HackInABox() {
               <p>The gold standard for problem statements in design thinking is the <strong>"How Might We" (HMW)</strong> question.</p>
               <div style={{ background: `${phaseColors.problem.accent}08`, borderRadius: 12, padding: "20px 24px", border: `1px solid ${phaseColors.problem.accent}20`, margin: "16px 0", textAlign: "center" }}>
                 <div style={{ fontSize: 14, color: phaseColors.problem.accent, fontWeight: 600, marginBottom: 8, letterSpacing: 0.5, textTransform: "uppercase" }}>Formula</div>
-                <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, color: "#1a1a2e", fontWeight: 700 }}>
-                  "How might we <span style={{ color: phaseColors.problem.accent }}>[action]</span> for <span style={{ color: "#C2185B" }}>[who]</span> so that <span style={{ color: "#2D9B3A" }}>[desired outcome]</span>?"
+                <div style={{ fontFamily: font.sans, fontSize: 20, color: color.ink, fontWeight: 700 }}>
+                  "How might we <span style={{ color: phaseColors.problem.accent }}>[action]</span> for <span style={{ color: color.accent }}>[who]</span> so that <span style={{ color: color.accent }}>[desired outcome]</span>?"
                 </div>
               </div>
               <p><strong>Examples:</strong></p>
               {["How might we create meaningful intergenerational connections so that youth feel mentored and seniors feel valued?", "How might we support working professionals so that they feel spiritually nourished despite busy schedules?"].map((ex, i) => (
-                <div key={i} style={{ padding: "10px 14px", borderRadius: 8, background: "#f9fafb", border: "1px solid #e5e7eb", fontSize: 14, lineHeight: 1.6, color: "#444", fontStyle: "italic", marginBottom: 8 }}>"{ex}"</div>
+                <div key={i} style={{ padding: "10px 14px", borderRadius: 8, background: color.rail, border: `1px solid ${color.line}`, fontSize: 14, lineHeight: 1.6, color: color.body, fontStyle: "italic", marginBottom: 8 }}>"{ex}"</div>
               ))}
             </Accordion>
             <Accordion title="Step-by-Step: Crafting Your Problem Statement" accent={phaseColors.problem.accent}>
@@ -3613,10 +3494,14 @@ export default function HackInABox() {
                     <span style={{ color: "#DC2626", fontWeight: 700, fontSize: 18 }}>✗</span>
                     <span style={{ fontWeight: 600, fontSize: 15 }}>"{pitfall.bad}"</span>
                   </div>
-                  <p style={{ margin: "4px 0 0 26px", fontSize: 14, color: "#666" }}>{pitfall.why}</p>
+                  <p style={{ margin: "4px 0 0 26px", fontSize: 14, color: color.muted }}>{pitfall.why}</p>
                 </div>
               ))}
             </Accordion>
+
+            <hr style={{ border: "none", borderTop: `1px solid ${color.line}`, margin: "32px 0" }} />
+            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>Submit your problem (AI-guided)</h3>
+            <SCIPABChatbot />
           </div>
         );
 
@@ -3624,7 +3509,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
             <VideoPlaceholder title="Empathy Mapping in Action" description="Watch a team run through a full empathy map exercise with a real missionary story." duration="10 min" />
             <EmpathyMapVisual />
             <EmpathyMapWorksheet />
@@ -3636,17 +3521,12 @@ export default function HackInABox() {
                 <StepCard number={4} title="Identify Insights" duration="10 min" accent={phaseColors.empathy.accent} description="Look for tensions, surprises, patterns, and unmet needs. Circle the most important insights." />
               </div>
             </Accordion>
-            <TipBox accent={phaseColors.empathy.accent} label="🙏 Ministry connection">
+            <TipBox accent={phaseColors.empathy.accent} label="Ministry connection">
               Empathy mapping is a spiritual exercise. It's about genuinely understanding another person's reality — the heart of loving your neighbor. Open with prayer, asking God to help your team see through others' eyes.
             </TipBox>
-          </div>
-        );
 
-      case "personas":
-        return (
-          <div>
-            <PhaseHeader icon="users" title="Creating Personas" subtitle="Build a vivid picture of who you're designing for" accent={phaseColors.personas.accent} />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 20 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable.</p>
+            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "32px 0 8px", color: color.ink }}>Personas</h3>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable.</p>
             <PersonaVisual />
             <PersonaCardWorksheet />
             <Accordion title="How to Create Personas" defaultOpen accent={phaseColors.personas.accent}>
@@ -3665,7 +3545,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="lightbulb" title="Ideation & Brainstorming" subtitle="Generate wild, creative, God-inspired ideas — then refine them" accent={phaseColors.ideate.accent} />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 24 }}>Now it's time to generate as many ideas as possible. The goal is <strong>quantity over quality</strong> — wild ideas often lead to breakthroughs.</p>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Now it's time to generate as many ideas as possible. The goal is <strong>quantity over quality</strong> — wild ideas often lead to breakthroughs.</p>
             <VideoPlaceholder title="How to Run Crazy 8s" description="A quick demo of the Crazy 8s exercise so you know exactly what to expect." duration="4 min" />
             <Accordion title="Ground Rules for Brainstorming" defaultOpen accent={phaseColors.ideate.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
@@ -3679,7 +3559,7 @@ export default function HackInABox() {
                 ].map((item) => (
                   <div key={item.rule} style={{ padding: "14px 16px", borderRadius: 10, background: `${phaseColors.ideate.accent}06`, border: `1px solid ${phaseColors.ideate.accent}12` }}>
                     <strong style={{ fontSize: 14, color: phaseColors.ideate.accent }}>{item.rule}</strong>
-                    <p style={{ margin: "4px 0 0", fontSize: 13, color: "#666" }}>{item.desc}</p>
+                    <p style={{ margin: "4px 0 0", fontSize: 13, color: color.muted }}>{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -3700,34 +3580,33 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="cube" title="Prototyping" subtitle="Make your best ideas tangible so you can test them" accent={phaseColors.prototype.accent} />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 24 }}>A prototype is a quick, rough version of your idea. It doesn't have to be perfect — the goal is to make it concrete enough for feedback.</p>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>A prototype is a quick, rough version of your idea. It doesn't have to be perfect — the goal is to make it concrete enough for feedback.</p>
             <Accordion title="What Can a Prototype Look Like?" defaultOpen accent={phaseColors.prototype.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, marginTop: 12 }}>
                 {[
-                  { type: "Storyboard", desc: "Draw 6–8 panels showing someone's experience", emoji: "🎬" },
-                  { type: "Flyer / Poster", desc: "Mock flyer announcing your idea as if it already exists", emoji: "📄" },
-                  { type: "Role Play", desc: "Act out a scenario where someone experiences your solution", emoji: "🎭" },
-                  { type: "Landing Page", desc: "Sketch a webpage that describes your idea", emoji: "💻" },
-                  { type: "Schedule / Plan", desc: "Detailed implementation timeline", emoji: "📅" },
-                  { type: "Physical Model", desc: "Paper/cardboard 3D model of a space or experience", emoji: "🏗️" },
+                  { type: "Storyboard", desc: "Draw 6–8 panels showing someone's experience", icon: "film" },
+                  { type: "Flyer / Poster", desc: "Mock flyer announcing your idea as if it already exists", icon: "edit" },
+                  { type: "Role Play", desc: "Act out a scenario where someone experiences your solution", icon: "users" },
+                  { type: "Landing Page", desc: "Sketch a webpage that describes your idea", icon: "cube" },
+                  { type: "Schedule / Plan", desc: "Detailed implementation timeline", icon: "clock" },
+                  { type: "Physical Model", desc: "Paper/cardboard 3D model of a space or experience", icon: "cube" },
                 ].map((item) => (
                   <div key={item.type} style={{ padding: "16px", borderRadius: 10, background: `${phaseColors.prototype.accent}06`, border: `1px solid ${phaseColors.prototype.accent}12`, textAlign: "center" }}>
-                    <div style={{ fontSize: 28, marginBottom: 6 }}>{item.emoji}</div>
-                    <strong style={{ fontSize: 14, color: "#1a1a2e", display: "block", marginBottom: 4 }}>{item.type}</strong>
-                    <p style={{ margin: 0, fontSize: 13, color: "#666", lineHeight: 1.5 }}>{item.desc}</p>
+                    <div style={{ marginBottom: 6 }}><Icon name={item.icon} size={26} color={color.accent} /></div>
+                    <strong style={{ fontSize: 14, color: color.ink, display: "block", marginBottom: 4 }}>{item.type}</strong>
+                    <p style={{ margin: 0, fontSize: 13, color: color.muted, lineHeight: 1.5 }}>{item.desc}</p>
                   </div>
                 ))}
               </div>
             </Accordion>
             <Accordion title="The Feedback Framework" accent={phaseColors.prototype.accent}>
               {[
-                { prompt: "I like...", desc: "What's working well?", color: "#2D9B3A", emoji: "👍" },
-                { prompt: "I wish...", desc: "What would you change?", color: "#E8890C", emoji: "🌟" },
-                { prompt: "What if...", desc: "What new possibilities does this spark?", color: "#4361EE", emoji: "💡" },
+                { prompt: "I like...", desc: "What's working well?", color: color.accent },
+                { prompt: "I wish...", desc: "What would you change?", color: color.accent },
+                { prompt: "What if...", desc: "What new possibilities does this spark?", color: color.accent },
               ].map((item) => (
                 <div key={item.prompt} style={{ padding: "16px 20px", borderRadius: 12, background: `${item.color}08`, border: `1px solid ${item.color}18`, display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 10 }}>
-                  <span style={{ fontSize: 24 }}>{item.emoji}</span>
-                  <div><strong style={{ color: item.color, fontSize: 16 }}>{item.prompt}</strong><p style={{ margin: "4px 0 0", fontSize: 14, color: "#555" }}>{item.desc}</p></div>
+                  <div><strong style={{ color: item.color, fontSize: 16 }}>{item.prompt}</strong><p style={{ margin: "4px 0 0", fontSize: 14, color: color.body }}>{item.desc}</p></div>
                 </div>
               ))}
             </Accordion>
@@ -3741,25 +3620,25 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="download" title="Templates & Resources" subtitle="Printable templates and quick-reference cards for your sprint" accent={phaseColors.templates.accent} />
-            <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, margin: "0 0 14px", color: "#1a1a2e" }}>Sprint Templates</h3>
+            <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
-              <TemplateCard title="Empathy Map Template" accent="#2D9B3A" desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
-              <TemplateCard title="Persona Card Template" accent="#C2185B" desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("personas")} />
-              <TemplateCard title="Problem Statement Worksheet" accent="#4361EE" desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
-              <TemplateCard title="SCIPAB Submission Template" accent="#0D7C5F" desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("submit")} launchLabel="Open AI-guided chatbot" />
-              <TemplateCard title="Crazy 8s Sheet" accent="#C6A200" desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("ideate")} />
-              <TemplateCard title="Feedback Cards" accent="#0097A7" desc="Structured feedback for prototyping." items={["I like...", "I wish...", "What if...", "Overall notes"]} onLaunch={() => navigate("prototype")} />
+              <TemplateCard title="Empathy Map Template" accent={color.accent} desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
+              <TemplateCard title="Persona Card Template" accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("empathy")} />
+              <TemplateCard title="Problem Statement Worksheet" accent={color.accent} desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
+              <TemplateCard title="SCIPAB Submission Template" accent={color.accent} desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("problem")} launchLabel="Open AI-guided chatbot" />
+              <TemplateCard title="Crazy 8s Sheet" accent={color.accent} desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("ideate")} />
+              <TemplateCard title="Feedback Cards" accent={color.accent} desc="Structured feedback for prototyping." items={["I like...", "I wish...", "What if...", "Overall notes"]} onLaunch={() => navigate("prototype")} />
             </div>
 
-            <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, margin: "0 0 14px", color: "#1a1a2e" }}>Post-Sprint Templates</h3>
+            <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Post-Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
-              <TemplateCard title="Sprint Summary One-Pager" accent="#B45309" desc="Auto-pulls from your other worksheets so the summary writes itself." items={["HMW problem statement", "Starred ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
-              <TemplateCard title="Leadership Proposal Card" accent="#1D4ED8" desc="A structured pitch card for presenting ideas to pastors and elder boards." items={["The problem (with evidence)", "The proposed solution", "Who it serves and expected impact", "Resources needed and timeline", "What success looks like"]} onLaunch={() => navigate("after")} />
-              <TemplateCard title="30-60-90 Day Action Plan" accent="#7C3AED" desc="Break your idea into achievable monthly milestones." items={["Day 1–30: Research, plan, and assemble team", "Day 31–60: Pilot or prototype in real setting", "Day 61–90: Evaluate, refine, and expand", "Key metrics and check-in dates"]} onLaunch={() => navigate("after")} />
-              <TemplateCard title="Impact Story Template" accent="#059669" desc="Document what happened 6 months after your sprint for future inspiration." items={["The original challenge", "What the team built/launched", "Measurable outcomes and stories", "Lessons learned and what's next"]} onLaunch={() => navigate("after")} />
+              <TemplateCard title="Sprint Summary One-Pager" accent={color.accent} desc="Auto-pulls from your other worksheets so the summary writes itself." items={["HMW problem statement", "Starred ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
+              <TemplateCard title="Leadership Proposal Card" accent={color.accent} desc="A structured pitch card for presenting ideas to pastors and elder boards." items={["The problem (with evidence)", "The proposed solution", "Who it serves and expected impact", "Resources needed and timeline", "What success looks like"]} onLaunch={() => navigate("after")} />
+              <TemplateCard title="30-60-90 Day Action Plan" accent={color.accent} desc="Break your idea into achievable monthly milestones." items={["Day 1–30: Research, plan, and assemble team", "Day 31–60: Pilot or prototype in real setting", "Day 61–90: Evaluate, refine, and expand", "Key metrics and check-in dates"]} onLaunch={() => navigate("after")} />
+              <TemplateCard title="Impact Story Template" accent={color.accent} desc="Document what happened 6 months after your sprint for future inspiration." items={["The original challenge", "What the team built/launched", "Measurable outcomes and stories", "Lessons learned and what's next"]} onLaunch={() => navigate("after")} />
             </div>
 
-            <TipBox accent={phaseColors.templates.accent} label="📣 From Indigitous US">
+            <TipBox accent={phaseColors.templates.accent} label="From Indigitous US">
               Want help running your first HIAB? Reach out at <strong>nick@indigitous.org</strong> to schedule yours!
             </TipBox>
           </div>
@@ -3770,11 +3649,11 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="star" title="After the Sprint" subtitle="How to capture momentum, share results, and keep your ideas alive" accent={phaseColors.after.accent} />
 
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: "#444", marginBottom: 24 }}>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               The sprint is over — but the real work is just beginning. The energy, ideas, and connections from your HIAB are incredibly valuable, but they fade fast without intentional follow-through. This section walks you through three critical phases: capturing what happened, sharing it with leadership, and building a sustainable plan to keep going.
             </p>
 
-            <Accordion title="📸 Phase 1: Capture & Document (Same Day)" defaultOpen accent={phaseColors.after.accent}>
+            <Accordion title="Phase 1: Capture & Document (Same Day)" defaultOpen accent={phaseColors.after.accent}>
               <p>Do these things <strong>before everyone leaves the room</strong> if possible, or within 24 hours at most:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Photo Everything" duration="10 min" accent={phaseColors.after.accent}
@@ -3789,7 +3668,7 @@ export default function HackInABox() {
             </Accordion>
 
             <SprintSummaryWorksheet />
-            <Accordion title="📢 Phase 2: Share with Leadership (Week 1–2)" accent={phaseColors.after.accent}>
+            <Accordion title="Phase 2: Share with Leadership (Week 1–2)" accent={phaseColors.after.accent}>
               <p>Your ideas need champions and buy-in from church leadership to move forward. Here's how to make a compelling case:</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
@@ -3800,20 +3679,20 @@ export default function HackInABox() {
                   { title: "Ask for a Specific Next Step", desc: "Don't ask for blanket approval. Ask for something concrete: 'Can we pilot this with one small group for 6 weeks?' or 'Can we get $200 to test this idea?' Small asks get faster yeses." },
                   { title: "Offer a Demo Sunday", desc: "Ask for 5 minutes during a Sunday service or town hall for sprint teams to share their ideas with the congregation. Public momentum creates accountability and excitement." },
                 ].map((item, i) => (
-                  <div key={i} style={{ padding: "14px 18px", borderRadius: 10, background: "#fff", border: "1px solid #e5e7eb" }}>
-                    <strong style={{ fontSize: 15, color: "#1a1a2e" }}>{item.title}</strong>
-                    <p style={{ margin: "4px 0 0", fontSize: 14, color: "#666", lineHeight: 1.6 }}>{item.desc}</p>
+                  <div key={i} style={{ padding: "14px 18px", borderRadius: 10, background: "#fff", border: `1px solid ${color.line}` }}>
+                    <strong style={{ fontSize: 15, color: color.ink }}>{item.title}</strong>
+                    <p style={{ margin: "4px 0 0", fontSize: 14, color: color.muted, lineHeight: 1.6 }}>{item.desc}</p>
                   </div>
                 ))}
               </div>
 
-              <TipBox accent={phaseColors.after.accent} label="💡 Pro tip">
+              <TipBox accent={phaseColors.after.accent} label="Pro tip">
                 Use the <strong onClick={() => navigate("prototype")} style={{ color: phaseColors.after.accent, cursor: "pointer", textDecoration: "underline" }}>Proposal Generator tool</strong> (inside the Prototyping section) to create a polished, AI-refined proposal you can present to leadership.
               </TipBox>
             </Accordion>
 
             <LeadershipProposalWorksheet />
-            <Accordion title="🚀 Phase 3: Keep It Alive (Month 1–3)" accent={phaseColors.after.accent}>
+            <Accordion title="Phase 3: Keep It Alive (Month 1–3)" accent={phaseColors.after.accent}>
               <p>The biggest risk after any sprint is losing momentum. Here's how to build a sustainable path forward:</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -3832,7 +3711,7 @@ export default function HackInABox() {
 
             <ThirtySixtyNinetyWorksheet />
             <ImpactStoryWorksheet />
-            <Accordion title="🌱 Building a Culture of Innovation" accent={phaseColors.after.accent}>
+            <Accordion title="Building a Culture of Innovation" accent={phaseColors.after.accent}>
               <p>One sprint is a great start. But the real power of HIAB comes from making innovation a regular practice in your church:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -3844,22 +3723,22 @@ export default function HackInABox() {
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                     <Icon name="check" size={16} color={phaseColors.after.accent} />
-                    <div><strong style={{ fontSize: 14, color: "#1a1a2e" }}>{item.title}:</strong> <span style={{ fontSize: 14, color: "#666", lineHeight: 1.6 }}>{item.desc}</span></div>
+                    <div><strong style={{ fontSize: 14, color: color.ink }}>{item.title}:</strong> <span style={{ fontSize: 14, color: color.muted, lineHeight: 1.6 }}>{item.desc}</span></div>
                   </div>
                 ))}
               </div>
             </Accordion>
 
             <div style={{
-              background: "linear-gradient(135deg, #1a1a2e, #2d2b55)", borderRadius: 16, padding: "24px 24px",
+              background: color.ink, borderRadius: 16, padding: "24px 24px",
               color: "#fff", marginTop: 20, display: "flex", alignItems: "center", gap: 20,
               cursor: "pointer",
             }} onClick={() => navigate("prototype")}>
               <div style={{ width: 50, height: 50, borderRadius: 14, background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="edit" size={24} color="#93C5FD" />
+                <Icon name="edit" size={24} color={color.accent} />
               </div>
               <div style={{ flex: 1 }}>
-                <h3 style={{ margin: "0 0 4px", fontFamily: "'Fraunces', Georgia, serif", fontSize: 18 }}>Ready to Pitch Your Idea?</h3>
+                <h3 style={{ margin: "0 0 4px", fontFamily: font.sans, fontSize: 18 }}>Ready to Pitch Your Idea?</h3>
                 <p style={{ margin: 0, fontSize: 14, opacity: 0.7 }}>Use the Proposal Generator in the Prototyping section to build a polished leadership proposal from your sprint results.</p>
               </div>
               <Icon name="chevronRight" size={20} color="rgba(255,255,255,0.5)" />
@@ -3867,14 +3746,25 @@ export default function HackInABox() {
           </div>
         );
 
+      case "pitch":
+        return (
+          <div>
+            <PhaseHeader icon="send" title="Pitch to leadership" subtitle="Turn your prototype into a one-page proposal you can hand to your pastor or leadership" accent={phaseColors.proposal.accent} />
+            <LeadershipProposalWorksheet />
+          </div>
+        );
+
+      case "partner":
+        return <ThinkingPartner setMode={(m) => (m === "picker" ? setView("home") : navigate(m))} />;
+
       default: return null;
     }
   };
 
-  return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", display: "flex", height: "100vh", background: "#f8f8f6", color: "#333", overflow: "hidden" }}>
+  const goNav = (id) => { setNavOpen(false); id === "home" ? setView("home") : navigate(id); };
 
-      {/* Mobile-responsive styles */}
+  return (
+    <div style={{ display: "flex", minHeight: "100vh", background: color.bg, fontFamily: font.sans }}>
       <style>{`
         @media (max-width: 767px) {
           .hiab-grid-2 { grid-template-columns: 1fr !important; }
@@ -3883,114 +3773,29 @@ export default function HackInABox() {
         }
         html { -webkit-text-size-adjust: 100%; }
       `}</style>
-
-      {/* Mobile menu button */}
-      {isMobile && (
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{
-          position: "fixed", top: 12, left: 12, zIndex: 100, width: 44, height: 44,
-          borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff",
-          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        }}>
-          <Icon name={mobileMenuOpen ? "x" : "menu"} size={22} color="#1a1a2e" />
-        </button>
+      {!isMobile && <Sidebar activePhase={activePhase} onNavigate={goNav} />}
+      {isMobile && navOpen && (
+        <div onClick={() => setNavOpen(false)} style={{ position: "fixed", inset: 0, background: `${color.ink}55`, zIndex: 40 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 41 }}>
+            <Sidebar activePhase={activePhase} onNavigate={goNav} />
+          </div>
+        </div>
       )}
-
-      {/* Mobile overlay */}
-      {isMobile && mobileMenuOpen && (
-        <div onClick={() => setMobileMenuOpen(false)} style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 98,
-        }} />
-      )}
-
-      {/* Sidebar */}
-      <nav style={{
-        width: 260, background: "#fff", borderRight: "1px solid #e8e8e4", padding: "24px 0",
-        display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto",
-        ...(isMobile ? {
-          position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 99,
-          transform: mobileMenuOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.3s ease",
-          boxShadow: mobileMenuOpen ? "4px 0 24px rgba(0,0,0,0.12)" : "none",
-        } : {}),
-      }}>
-        <div style={{ padding: "0 20px 20px", borderBottom: "1px solid #f0f0ec" }}>
-          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 900, color: "#1a1a2e", lineHeight: 1.2 }}>Hack In<br />A Box</div>
-          <div style={{ fontSize: 12, color: "#E8890C", fontWeight: 600, marginTop: 4, letterSpacing: 0.5 }}>REFERENCE MODE</div>
-          <button onClick={() => setMode("picker")} style={{
-            marginTop: 10, background: "#0D7C5F", color: "#fff", border: "none",
-            borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 600,
-            cursor: "pointer", fontFamily: "inherit", width: "100%",
-          }}>↩ Back to Mode Picker</button>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        {isMobile && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: `1px solid ${color.lineSoft}`, background: color.rail }}>
+            <button onClick={() => setNavOpen(true)} aria-label="Open menu" style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+              <Icon name="menu" size={22} color={color.ink} />
+            </button>
+            <BrandMark size={24} />
+            <span style={{ fontWeight: 700, fontSize: 14, color: color.ink }}>Hack In A Box</span>
+          </div>
+        )}
+        {inRun && <StepBar activeSection={view} onNavigate={navigate} />}
+        <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: isMobile ? "22px 18px" : "34px 38px" }}>
+          <div style={{ maxWidth: 860, margin: "0 auto" }}>{renderContent(view)}</div>
         </div>
-        <div style={{ padding: "16px 12px", flex: 1 }}>
-          {sections.map((section) => {
-            const isActive = activeSection === section.id;
-            const isSubmit = section.id === "submit";
-            return (
-              <button key={section.id} onClick={() => navigate(section.id)} style={{
-                width: "100%", padding: "10px 14px", borderRadius: 8, border: "none",
-                background: isSubmit && !isActive ? "#0D7C5F08" : isActive ? (isSubmit ? "#0D7C5F12" : "#E8890C10") : "transparent",
-                color: isSubmit ? "#0D7C5F" : isActive ? "#E8890C" : "#555",
-                fontWeight: isActive || isSubmit ? 600 : 400, fontSize: 14,
-                fontFamily: "'DM Sans', sans-serif", cursor: "pointer", textAlign: "left",
-                display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s", marginBottom: 2,
-              }}>
-                {isActive && <div style={{ width: 3, height: 18, borderRadius: 2, background: isSubmit ? "#0D7C5F" : "#E8890C" }} />}
-                {section.label}
-              </button>
-            );
-          })}
-        </div>
-        <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f0ec", fontSize: 12, color: "#999" }}>
-          By Indigitous US<br /><span style={{ fontSize: 11, color: "#bbb" }}>indigitous.org</span>
-        </div>
-      </nav>
-
-      {/* Main content */}
-      <main ref={contentRef} style={{
-        flex: 1, overflowY: "auto",
-        padding: isMobile ? "60px 16px 32px" : "32px clamp(20px, 4vw, 48px)",
-      }}>
-        <div style={{ maxWidth: 740, margin: "0 auto" }}>
-          {renderContent()}
-          {activeSection !== "home" && (
-            <div style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "24px 0", marginTop: 32, borderTop: "1px solid #e8e8e4",
-              gap: 12, flexWrap: "wrap",
-            }}>
-              {(() => {
-                const idx = sections.findIndex((s) => s.id === activeSection);
-                const prev = idx > 0 ? sections[idx - 1] : null;
-                const next = idx < sections.length - 1 ? sections[idx + 1] : null;
-                return (
-                  <>
-                    {prev ? (
-                      <button onClick={() => navigate(prev.id)} style={{
-                        background: "none", border: "1px solid #e5e7eb", borderRadius: 8,
-                        padding: isMobile ? "10px 14px" : "10px 18px", cursor: "pointer",
-                        fontSize: isMobile ? 13 : 14, color: "#555", fontFamily: "'DM Sans', sans-serif",
-                        flex: isMobile ? 1 : "none", minWidth: 0,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      }}>← {prev.label}</button>
-                    ) : <div style={{ flex: isMobile ? 1 : "none" }} />}
-                    {next ? (
-                      <button onClick={() => navigate(next.id)} style={{
-                        background: "#E8890C", color: "#fff", border: "none", borderRadius: 8,
-                        padding: isMobile ? "10px 14px" : "10px 18px", cursor: "pointer",
-                        fontSize: isMobile ? 13 : 14, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
-                        flex: isMobile ? 1 : "none", minWidth: 0,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      }}>{next.label} →</button>
-                    ) : <div style={{ flex: isMobile ? 1 : "none" }} />}
-                  </>
-                );
-              })()}
-            </div>
-          )}
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
