@@ -116,6 +116,48 @@ function loadSprintSummarySources() {
   };
 }
 
+function loadFeedbackSources() {
+  const problem = readStoredJson(WORKSHEET_KEYS.problem);
+  const crazy8s = readStoredJson(WORKSHEET_KEYS.crazy8s, { panels: [] });
+  return {
+    hmw: buildHmw(problem),
+    starredIdeas: (crazy8s.panels || []).filter((x) => x.starred && x.text).map((x) => x.text),
+    allIdeas: (crazy8s.panels || []).filter((x) => x.text).map((x) => x.text),
+  };
+}
+
+const PROTOTYPE_FORMATS = [
+  { key: "storyboard",   label: "Storyboard",            instructions: "Produce 6 frames. For each: a one-sentence caption describing what's on screen and how the user feels. End with the moment they realize the value." },
+  { key: "landing",      label: "Sketched landing page", instructions: "Produce a headline, a one-sentence subhead, 3 benefit bullets, a primary call-to-action button label, and a short FAQ of 3 questions with answers." },
+  { key: "flyer",        label: "Mock flyer",            instructions: "Produce a flyer that's readable in 5 seconds: headline, a two-sentence pitch, the what / when / where, and a clear call to action. Plain words." },
+  { key: "roleplay",     label: "Role-play script",      instructions: "Produce a 60-second dialogue between a volunteer leader and a hesitant church member. Show the objection, the human response, and a concrete next step." },
+  { key: "schedule",     label: "Schedule / run-of-show",instructions: "Produce an hour-by-hour run-of-show for a 2-hour pilot. For each block: who does what, what the participants experience, and what to watch for." },
+  { key: "paper",        label: "Paper model",           instructions: "Describe step-by-step how to build the prototype on paper with one sharpie. Include labels, key interactions to mime, and what the facilitator says at each step." },
+];
+
+function buildPrototypePrompt({ hmw, idea, formatKey, audience }) {
+  const fmt = PROTOTYPE_FORMATS.find((f) => f.key === formatKey) || PROTOTYPE_FORMATS[0];
+  const hmwLine = hmw && hmw.trim() ? hmw.trim() : "(not captured yet — fill out the Problem Statement worksheet)";
+  const ideaLine = idea && idea.trim() ? idea.trim() : "(not captured yet — star a Crazy 8s idea, or write one in below)";
+  const audienceLine = audience && audience.trim() ? audience.trim() : "lay leaders and members of a local church";
+  return `You are helping me prototype an idea from a church design-thinking sprint. Produce a draft I can show to 5 people for honest, 60-second reactions.
+
+Context:
+- How Might We: ${hmwLine}
+- The idea I want to prototype: ${ideaLine}
+- Audience: ${audienceLine}
+- Desired prototype format: ${fmt.label}
+
+Instructions:
+${fmt.instructions}
+
+Constraints:
+- Plain English. No church jargon, no buzzwords.
+- Concrete enough that someone can react in 60 seconds.
+- Honest about the rough edges — this is a sketch, not a finished product.
+- End with 3 specific questions I should ask my testers to draw out useful feedback.`;
+}
+
 function loadWorksheetSnapshot() {
   return {
     empathy: readStoredJson(WORKSHEET_KEYS.empathy, { says: [], thinks: [], does: [], feels: [] }),
@@ -288,14 +330,12 @@ function TipBox({ children, accent = color.accent, label = "Tip" }) {
 
 function PhaseHeader({ icon, title, subtitle, accent }) {
   return (
-    <div style={{ marginBottom: 32 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 12, background: `${accent}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon name={icon} size={26} color={accent} />
-        </div>
-        <h2 style={{ margin: 0, fontFamily: font.sans, fontSize: 28, fontWeight: 700, color: color.ink }}>{title}</h2>
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: subtitle ? 4 : 0 }}>
+        <Icon name={icon} size={22} color={accent} />
+        <h2 style={{ margin: 0, fontFamily: font.sans, fontSize: 26, fontWeight: 800, color: color.ink, letterSpacing: -0.3 }}>{title}</h2>
       </div>
-      {subtitle && <p style={{ margin: "8px 0 0 60px", fontSize: 16, color: color.muted, lineHeight: 1.6 }}>{subtitle}</p>}
+      {subtitle && <p style={{ margin: "0 0 0 32px", fontSize: 14, color: color.muted, lineHeight: 1.5 }}>{subtitle}</p>}
     </div>
   );
 }
@@ -325,6 +365,27 @@ function TemplateCard({ title, desc, items, accent, onLaunch, launchLabel = "Ope
   );
 }
 
+function OpenInSprint({ stepLabel, description, onOpen, accent = color.accent }) {
+  return (
+    <div style={{
+      background: "#fff", borderRadius: 14, padding: "20px 22px",
+      border: `1px solid ${accent}25`, boxShadow: `0 2px 12px ${accent}08`,
+      display: "flex", alignItems: "center", gap: 18, marginTop: 24, marginBottom: 24, flexWrap: "wrap",
+    }}>
+      <div style={{ flex: 1, minWidth: 220 }}>
+        <div style={{ fontSize: 11, color: accent, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 4 }}>Solo Sprint</div>
+        <div style={{ fontFamily: font.sans, fontSize: 17, fontWeight: 700, color: color.ink, marginBottom: 4 }}>Ready to fill this in?</div>
+        <div style={{ fontSize: 14, color: color.muted, lineHeight: 1.55 }}>{description}</div>
+      </div>
+      <button onClick={onOpen} style={{
+        background: accent, color: "#fff", border: "none", borderRadius: 8,
+        padding: "10px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer",
+        fontFamily: font.sans, display: "flex", alignItems: "center", gap: 6,
+      }}>Open {stepLabel} in Solo Sprint →</button>
+    </div>
+  );
+}
+
 function FacilitatorNote({ children, title = "Facilitator Note" }) {
   const [open, setOpen] = useState(false);
   return (
@@ -344,47 +405,17 @@ function FacilitatorNote({ children, title = "Facilitator Note" }) {
   );
 }
 
-function VideoPlaceholder({ title, description, duration }) {
+function VideoPlaceholder({ title, duration }) {
   return (
     <div style={{
-      background: color.ink, borderRadius: 14, padding: "20px 22px",
-      color: "#fff", marginBottom: 12, position: "relative", overflow: "hidden",
+      display: "inline-flex", alignItems: "center", gap: 8,
+      background: "transparent", border: `1px dashed ${color.line}`,
+      borderRadius: 20, padding: "4px 12px", marginBottom: 20,
+      fontSize: 12, color: color.muted, fontFamily: "inherit",
     }}>
-      <div style={{ position: "absolute", top: 10, right: 12, background: color.accent, color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: 0.5, textTransform: "uppercase" }}>
-        Coming Soon
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <div style={{
-          width: 48, height: 48, borderRadius: 12, background: "rgba(255,255,255,0.08)",
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-        }}>
-          <Icon name="film" size={22} color="rgba(255,255,255,0.5)" />
-        </div>
-        <div>
-          <h4 style={{ margin: "0 0 2px", fontSize: 15, fontWeight: 600 }}>{title}</h4>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.6, lineHeight: 1.4 }}>{description}</p>
-          {duration && <div style={{ fontSize: 12, opacity: 0.4, marginTop: 4 }}>Estimated: {duration}</div>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EmpathyMapVisual() {
-  const quadrants = [
-    { title: "SAYS", tint: "#A5D9E7", prompt: "What does the person say out loud? Direct quotes, key phrases, statements about their experience.", },
-    { title: "THINKS", tint: "#EFE974", prompt: "What might they be thinking but not saying? Worries, aspirations, beliefs about their situation." },
-    { title: "DOES", tint: "#CBD3EB", prompt: "What actions and behaviors do you observe? How do they interact with others?" },
-    { title: "FEELS", tint: "#B86B78", prompt: "What emotions might they experience? Frustrations, joys, fears about the situation." },
-  ];
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, borderRadius: 16, overflow: "hidden", background: color.line, maxWidth: 560, margin: "20px auto" }}>
-      {quadrants.map((q) => (
-        <div key={q.title} style={{ background: `${q.tint}22`, padding: "20px 18px", minHeight: 120 }}>
-          <div style={{ fontFamily: font.sans, fontWeight: 700, fontSize: 15, color: color.ink, marginBottom: 8, letterSpacing: 1 }}>{q.title}</div>
-          <p style={{ margin: 0, fontSize: 13, color: color.muted, lineHeight: 1.55 }}>{q.prompt}</p>
-        </div>
-      ))}
+      <Icon name="film" size={12} color={color.muted} />
+      <span>Video: {title}{duration ? ` · ${duration}` : ""}</span>
+      <span style={{ color: color.accent, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", fontSize: 10 }}>Coming soon</span>
     </div>
   );
 }
@@ -796,10 +827,110 @@ function Crazy8sWorksheet() {
   );
 }
 
+// ========== PROTOTYPE PROMPT BUILDER ==========
+function PrototypePromptBuilder({ hmw, idea }) {
+  const [open, setOpen] = useState(false);
+  const [formatKey, setFormatKey] = useState(PROTOTYPE_FORMATS[0].key);
+  const [audience, setAudience] = useState("");
+  const [copied, setCopied] = useState(false);
+  const prompt = buildPrototypePrompt({ hmw, idea, formatKey, audience });
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // clipboard blocked — user can still copy manually from the textarea
+    }
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          display: "flex", alignItems: "center", gap: 14, width: "100%",
+          background: `linear-gradient(135deg, ${color.accent}10, ${color.accent}05)`,
+          border: `1.5px solid ${color.accent}40`, borderRadius: 14,
+          padding: "16px 18px", marginBottom: 16, cursor: "pointer",
+          fontFamily: "inherit", textAlign: "left",
+        }}
+      >
+        <div style={{
+          flexShrink: 0, width: 42, height: 42, borderRadius: 12,
+          background: color.accent, display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <Icon name="chat" size={20} color="#fff" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
+            <div style={{ fontWeight: 700, color: color.ink, fontSize: 15 }}>Build your prototype with AI</div>
+            <span style={{ background: color.accent, color: "#fff", fontSize: 10, fontWeight: 700, letterSpacing: 0.5, padding: "2px 7px", borderRadius: 4, textTransform: "uppercase" }}>New</span>
+          </div>
+          <div style={{ fontSize: 13, color: color.body, lineHeight: 1.45 }}>
+            We'll bundle your HMW and starred Crazy 8s idea into a ready-to-paste prompt for ChatGPT, Claude, or any AI — so you can get a real draft to show people in minutes.
+          </div>
+        </div>
+        <div style={{ flexShrink: 0, color: color.accent, fontWeight: 700, fontSize: 13 }}>Open →</div>
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: 16, borderRadius: 14, border: `1.5px solid ${color.accent}40`, background: `linear-gradient(135deg, ${color.accent}10, ${color.accent}05)`, padding: "16px 18px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+        <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 10, background: color.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon name="chat" size={18} color="#fff" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, color: color.ink, fontSize: 15 }}>Build your prototype with AI</div>
+          <div style={{ fontSize: 12, color: color.body, marginTop: 2 }}>Pick a format, then copy the prompt into ChatGPT or Claude.</div>
+        </div>
+        <button onClick={() => setOpen(false)} aria-label="Close" style={{ background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 18, lineHeight: 1, fontFamily: "inherit" }}>×</button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }} className="hiab-grid-2">
+        <label>
+          <span style={fieldLabel}>Prototype format</span>
+          <select value={formatKey} onChange={(e) => setFormatKey(e.target.value)} style={{ ...inputStyle, fontFamily: font.sans, fontSize: 14 }}>
+            {PROTOTYPE_FORMATS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span style={fieldLabel}>Audience (optional)</span>
+          <input value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. young adults at a suburban church" style={inputStyle} />
+        </label>
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${color.line}`, borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
+        <textarea
+          value={prompt}
+          readOnly
+          rows={12}
+          style={{ width: "100%", border: "none", outline: "none", resize: "vertical", fontSize: 13, lineHeight: 1.55, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", color: color.ink, background: "transparent" }}
+        />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <button onClick={copy} style={{
+          background: color.accent, color: "#fff", border: "none",
+          borderRadius: 20, padding: "6px 14px", fontSize: 13, fontWeight: 600,
+          cursor: "pointer", fontFamily: "inherit",
+        }}>{copied ? "Copied!" : "Copy prompt"}</button>
+        <span style={{ fontSize: 12, color: color.muted }}>Paste into ChatGPT, Claude, or any AI assistant to draft your prototype.</span>
+      </div>
+    </div>
+  );
+}
+
 // ========== FEEDBACK CARDS WORKSHEET ==========
 function FeedbackCardsWorksheet() {
   const empty = { prototype: "", likes: [], wishes: [], whatifs: [], notes: "" };
   const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.feedback, empty);
+  const [sources] = useState(loadFeedbackSources);
+  const ideaOptions = sources.starredIdeas.length ? sources.starredIdeas : sources.allIdeas;
+  const isCustom = !ideaOptions.includes(data.prototype);
 
   const cols = [
     { key: "likes", label: "I like...", desc: "What's working?", color: color.accent },
@@ -815,7 +946,48 @@ function FeedbackCardsWorksheet() {
     <WorksheetShell>
       <WorksheetHeader title="Feedback Cards" subtitle="Structured feedback for one prototype" onReset={reset} accent={color.accent} />
 
-      <input value={data.prototype} onChange={(e) => setData((d) => ({ ...d, prototype: e.target.value }))} placeholder="Which prototype is this feedback for?" style={{ ...inputStyle, marginBottom: 16, fontFamily: font.sans, fontSize: 16 }} />
+      <div style={{ marginBottom: 16 }}>
+        <div style={fieldLabel}>Which prototype is this feedback for?</div>
+        {ideaOptions.length > 0 ? (
+          <>
+            <select
+              value={isCustom ? "__custom" : data.prototype}
+              onChange={(e) => {
+                const v = e.target.value;
+                setData((d) => ({ ...d, prototype: v === "__custom" ? "" : v }));
+              }}
+              style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16, marginBottom: isCustom ? 8 : 0 }}
+            >
+              <option value="">— pick a starred idea from Crazy 8s —</option>
+              {ideaOptions.map((idea, i) => (
+                <option key={i} value={idea}>{idea.length > 80 ? `${idea.slice(0, 80)}…` : idea}</option>
+              ))}
+              <option value="__custom">Other (type your own)</option>
+            </select>
+            {isCustom && (
+              <input
+                value={data.prototype}
+                onChange={(e) => setData((d) => ({ ...d, prototype: e.target.value }))}
+                placeholder="Describe the prototype"
+                style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16 }}
+              />
+            )}
+            {sources.starredIdeas.length === 0 && (
+              <div style={{ fontSize: 12, color: color.muted, marginTop: 6 }}>Tip: star your top ideas in Crazy 8s to highlight them here.</div>
+            )}
+          </>
+        ) : (
+          <input
+            value={data.prototype}
+            onChange={(e) => setData((d) => ({ ...d, prototype: e.target.value }))}
+            placeholder="Which prototype is this feedback for?"
+            style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16 }}
+          />
+        )}
+      </div>
+
+      <PrototypePromptBuilder hmw={sources.hmw} idea={data.prototype} />
+
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }} className="hiab-grid-3">
         {cols.map((c) => (
@@ -1027,30 +1199,6 @@ function ImpactStoryWorksheet() {
         ))}
       </div>
     </WorksheetShell>
-  );
-}
-
-function PersonaVisual() {
-  return (
-    <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${color.line}`, padding: 24, maxWidth: 480, margin: "20px auto", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-        <div style={{ width: 60, height: 60, borderRadius: "50%", background: color.accentSoft, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>👤</div>
-        <div>
-          <div style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, color: color.ink }}>[Persona Name]</div>
-          <div style={{ fontSize: 14, color: color.muted }}>Age • Role • Background</div>
-        </div>
-      </div>
-      {[
-        { label: "Goals & Motivations", color: color.accent },
-        { label: "Pain Points & Frustrations", color: color.accent },
-        { label: "Faith Journey", color: color.accent },
-        { label: "Needs from the Church", color: color.accent },
-      ].map((field) => (
-        <div key={field.label} style={{ padding: "10px 14px", marginBottom: 8, borderRadius: 8, background: `${field.color}08`, borderLeft: `3px solid ${field.color}` }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: field.color }}>{field.label}</span>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -2042,9 +2190,11 @@ const GUIDED_STEPS = [
     title: "Pitch",
     time: "~5 min",
     accent: color.accent,
-    intro: "Your idea needs a champion. This page pulls everything together into a one-pager you can hand to your pastor — and a structured proposal you can present.",
-    Worksheet: SprintSummaryWorksheet,
-    secondaryWorksheet: LeadershipProposalWorksheet,
+    intro: "Your idea needs a champion. Pull everything together into a one-pager for your pastor — then refine it into a structured proposal you can present.",
+    tabs: [
+      { label: "Sprint Summary", Worksheet: SprintSummaryWorksheet },
+      { label: "Leadership Proposal", Worksheet: LeadershipProposalWorksheet },
+    ],
     deeper: [
       "Lead with the problem and a human story, not the solution.",
       "Ask for something small and concrete: 'a 6-week pilot,' '$200 to test this,' '5 minutes on Sunday.'",
@@ -2061,7 +2211,7 @@ const GUIDED_STEPS = [
 
 function StepIntro({ accent, intro }) {
   return (
-    <p style={{ fontSize: 17, lineHeight: 1.7, color: color.body, margin: "0 0 24px", borderLeft: `3px solid ${accent}`, paddingLeft: 16 }}>
+    <p style={{ fontSize: 15, lineHeight: 1.6, color: color.muted, margin: "0 0 20px", paddingLeft: 12, borderLeft: `2px solid ${accent}55` }}>
       {intro}
     </p>
   );
@@ -2075,6 +2225,7 @@ function AIHelper({ stepKey, accent }) {
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [demo, setDemo] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const presets = {
     empathize: [
@@ -2148,6 +2299,9 @@ function AIHelper({ stepKey, accent }) {
   const stepPresets = presets[stepKey] || [];
   if (stepPresets.length === 0) return null;
 
+  const hasResponses = responses.length > 0;
+  const expanded = open || hasResponses;
+
   const ask = async (build) => {
     const userMessage = build();
     setLoading(true);
@@ -2161,15 +2315,31 @@ function AIHelper({ stepKey, accent }) {
     setLoading(false);
   };
 
-  return (
-    <div style={{ marginTop: 24, marginBottom: 16, borderRadius: 12, border: `1px solid ${accent}30`, background: `${accent}05`, padding: "16px 18px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <Icon name="chat" size={18} color={color.accent} />
-        <div style={{ fontWeight: 700, color: accent, fontSize: 14 }}>AI Thinking Partner</div>
-        {demo && <span style={{ background: color.rail, color: color.accent, fontSize: 10, padding: "2px 6px", borderRadius: 4, fontWeight: 600 }}>DEMO</span>}
+  if (!expanded) {
+    return (
+      <div style={{ marginTop: 20, marginBottom: 8 }}>
+        <button onClick={() => setOpen(true)} style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          background: "transparent", border: `1px dashed ${accent}55`, color: accent,
+          borderRadius: 20, padding: "6px 14px", fontSize: 13, fontWeight: 500,
+          cursor: "pointer", fontFamily: "inherit",
+        }}>
+          <Icon name="chat" size={14} color={accent} />
+          Ask AI for help with this step
+        </button>
       </div>
-      <div style={{ fontSize: 13, color: color.muted, marginBottom: 10 }}>
-        Stuck or want a second perspective? Click a prompt — AI uses what you've written so far.
+    );
+  }
+
+  return (
+    <div style={{ marginTop: 20, marginBottom: 12, borderRadius: 12, border: `1px solid ${accent}30`, background: `${accent}05`, padding: "14px 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <Icon name="chat" size={16} color={color.accent} />
+        <div style={{ fontWeight: 700, color: accent, fontSize: 13 }}>AI Thinking Partner</div>
+        {demo && <span style={{ background: color.rail, color: color.accent, fontSize: 10, padding: "2px 6px", borderRadius: 4, fontWeight: 600 }}>DEMO</span>}
+        {!hasResponses && (
+          <button onClick={() => setOpen(false)} aria-label="Close" style={{ marginLeft: "auto", background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 16, lineHeight: 1, fontFamily: "inherit" }}>×</button>
+        )}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {stepPresets.map((p, i) => (
@@ -2183,7 +2353,6 @@ function AIHelper({ stepKey, accent }) {
       {loading && <div style={{ marginTop: 12, fontSize: 13, color: color.muted }}>Thinking...</div>}
       {responses.map((r, i) => (
         <div key={i} style={{ marginTop: 14, padding: "12px 14px", background: "#fff", borderRadius: 10, border: `1px solid ${color.line}` }}>
-          <div style={{ fontSize: 12, color: color.muted, marginBottom: 6, fontStyle: "italic" }}>You asked AI to help with this step.</div>
           <div style={{ fontSize: 14, lineHeight: 1.6, color: color.ink, whiteSpace: "pre-wrap" }}>{r.a}</div>
         </div>
       ))}
@@ -2195,18 +2364,18 @@ function DeeperGuidance({ items, accent }) {
   const [open, setOpen] = useState(false);
   if (!items || items.length === 0) return null;
   return (
-    <div style={{ marginTop: 24, marginBottom: 16, borderRadius: 12, border: `1px dashed ${accent}55`, background: `${accent}06`, overflow: "hidden" }}>
+    <div style={{ marginTop: 12, marginBottom: 8 }}>
       <button onClick={() => setOpen(!open)} style={{
-        width: "100%", padding: "12px 18px", background: "transparent", border: "none",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        cursor: "pointer", fontFamily: "inherit", color: accent, fontWeight: 600, fontSize: 14,
+        background: "none", border: "none", padding: 0,
+        cursor: "pointer", fontFamily: "inherit",
+        color: color.muted, fontWeight: 500, fontSize: 13,
+        textDecoration: "underline", textUnderlineOffset: 3,
       }}>
-        <span>Need more guidance?</span>
-        <span style={{ transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }}>▾</span>
+        {open ? "Hide tips" : "More tips"}
       </button>
       {open && (
-        <ul style={{ margin: 0, padding: "0 18px 16px 36px", color: color.body, fontSize: 14, lineHeight: 1.7 }}>
-          {items.map((it, i) => <li key={i} style={{ marginBottom: 6 }}>{it}</li>)}
+        <ul style={{ margin: "10px 0 0", padding: "0 0 0 20px", color: color.muted, fontSize: 13, lineHeight: 1.65 }}>
+          {items.map((it, i) => <li key={i} style={{ marginBottom: 4 }}>{it}</li>)}
         </ul>
       )}
     </div>
@@ -2254,7 +2423,6 @@ function PrintPacket({ onClose }) {
   const hmw = buildHmw(snapshot.problem);
   const starredIdeas = (snapshot.crazy8s.panels || []).filter((p) => p.starred && p.text).map((p) => p.text);
   const painPoints = (snapshot.problem.pains || []).filter((p) => p.text).map((p) => `${p.starred ? "★ " : ""}${p.text}`);
-  const planPhases = ["30", "60", "90"];
 
   useEffect(() => {
     document.body.classList.add("hiab-printing");
@@ -2295,12 +2463,6 @@ function PrintPacket({ onClose }) {
           <div style={{ fontSize: 14, color: color.body }}>{snapshot.summary.date || "Date not captured"}</div>
         </header>
 
-        <PrintableSection title="Problem Definition">
-          <PrintableValue label="How Might We" value={hmw} />
-          <PrintableLabel>Pain Points</PrintableLabel>
-          <PrintableList items={painPoints} />
-        </PrintableSection>
-
         <PrintableSection title="Empathy Map">
           <PrintableValue label="Subject" value={snapshot.empathy.subject} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -2318,14 +2480,25 @@ function PrintPacket({ onClose }) {
           <PrintableValue label="Name" value={snapshot.persona.name} />
           <PrintableValue label="Role / Age" value={[snapshot.persona.role, snapshot.persona.age].filter(Boolean).join(" · ")} />
           <PrintableValue label="Backstory" value={snapshot.persona.backstory} />
-          <PrintableValue label="Goals" value={snapshot.persona.goals} />
-          <PrintableValue label="Pain Points" value={snapshot.persona.pains} />
+          <PrintableValue label="Goals & Motivations" value={snapshot.persona.goals} />
+          <PrintableValue label="Pain Points & Frustrations" value={snapshot.persona.pains} />
+          <PrintableValue label="Faith Journey" value={snapshot.persona.faith} />
           <PrintableValue label="Needs from the Church" value={snapshot.persona.needs} />
+          <PrintableValue label="A Day in Their Life" value={snapshot.persona.dayInLife} />
         </PrintableSection>
 
-        <PrintableSection title="Ideas & Feedback">
-          <PrintableLabel>Starred Crazy 8s Ideas</PrintableLabel>
+        <PrintableSection title="Problem Statement">
+          <PrintableLabel>Pain Points</PrintableLabel>
+          <PrintableList items={painPoints} />
+          <PrintableValue label="How Might We" value={hmw} />
+        </PrintableSection>
+
+        <PrintableSection title="Crazy 8s — Ideas">
+          <PrintableLabel>Starred Ideas</PrintableLabel>
           <PrintableList items={starredIdeas} />
+        </PrintableSection>
+
+        <PrintableSection title="Prototype Feedback">
           <PrintableValue label="Prototype" value={snapshot.feedback.prototype} />
           <PrintableLabel>I Like</PrintableLabel>
           <PrintableList items={(snapshot.feedback.likes || []).map((n) => n.text).filter(Boolean)} />
@@ -2333,34 +2506,62 @@ function PrintPacket({ onClose }) {
           <PrintableList items={(snapshot.feedback.wishes || []).map((n) => n.text).filter(Boolean)} />
           <PrintableLabel>What If</PrintableLabel>
           <PrintableList items={(snapshot.feedback.whatifs || []).map((n) => n.text).filter(Boolean)} />
+          <PrintableValue label="Overall Notes" value={snapshot.feedback.notes} />
         </PrintableSection>
 
-        <PrintableSection title="Pitch & Next Steps">
+        <PrintableSection title="Sprint Summary">
           <PrintableValue label="Top Idea" value={snapshot.summary.topIdea} />
-          <PrintableValue label="Key Insights" value={snapshot.summary.insights || snapshot.empathy.insights} />
+          <PrintableValue label="Three Key Insights" value={snapshot.summary.insights || snapshot.empathy.insights} />
           <PrintableValue label="Immediate Next Steps" value={snapshot.summary.nextSteps} />
           <PrintableValue label="Owner" value={snapshot.summary.owner} />
-          <PrintableValue label="Leadership Ask" value={snapshot.proposal.ask} />
         </PrintableSection>
 
-        <PrintableSection title="30-60-90 Day Plan">
-          {planPhases.map((phase) => (
-            <div key={phase} style={{ marginBottom: 14 }}>
-              <PrintableValue label={`Day ${phase}`} value={snapshot.plan[phase]?.goal} />
-              <PrintableList items={(snapshot.plan[phase]?.tasks || []).map((task) => `${task.done ? "[x]" : "[ ]"} ${task.text}`).filter((text) => text.trim() !== "[ ]" && text.trim() !== "[x]")} />
-            </div>
-          ))}
+        <PrintableSection title="Leadership Proposal">
+          <PrintableValue label="Title" value={snapshot.proposal.title} />
+          <PrintableValue label="The Problem" value={snapshot.proposal.problem} />
+          <PrintableValue label="Evidence" value={snapshot.proposal.evidence} />
+          <PrintableValue label="Proposed Solution" value={snapshot.proposal.solution} />
+          <PrintableValue label="Who It Serves" value={snapshot.proposal.served} />
+          <PrintableValue label="Expected Impact" value={snapshot.proposal.impact} />
+          <PrintableValue label="Resources Needed" value={snapshot.proposal.resources} />
+          <PrintableValue label="Timeline" value={snapshot.proposal.timeline} />
+          <PrintableValue label="What Success Looks Like" value={snapshot.proposal.success} />
+          <PrintableValue label="The Specific Ask" value={snapshot.proposal.ask} />
         </PrintableSection>
 
-        <PrintableSection title="Impact Story">
-          <PrintableValue label="Title" value={snapshot.impact.title} />
-          <PrintableValue label="Challenge" value={snapshot.impact.challenge} />
-          <PrintableValue label="What We Built" value={snapshot.impact.built} />
-          <PrintableValue label="Outcomes" value={snapshot.impact.outcomes} />
-          <PrintableValue label="Lessons" value={snapshot.impact.lessons} />
-          <PrintableValue label="What's Next" value={snapshot.impact.whatNext} />
-        </PrintableSection>
       </div>
+    </div>
+  );
+}
+
+function StepTabs({ tabs, accent, stepKey }) {
+  const storageKey = `hiab-step-tab-${stepKey}`;
+  const [active, setActive] = useState(() => {
+    const saved = parseInt(readStoredString(storageKey, "0"), 10);
+    return Number.isNaN(saved) ? 0 : Math.min(saved, tabs.length - 1);
+  });
+  useEffect(() => { writeStoredString(storageKey, String(active)); }, [storageKey, active]);
+  const ActiveWorksheet = tabs[active].Worksheet;
+  return (
+    <div>
+      <div role="tablist" style={{
+        display: "inline-flex", background: "#fff", border: `1px solid ${color.line}`,
+        borderRadius: 10, padding: 4, marginBottom: 8, gap: 2,
+      }}>
+        {tabs.map((t, i) => {
+          const isActive = i === active;
+          return (
+            <button key={i} role="tab" aria-selected={isActive} onClick={() => setActive(i)} style={{
+              background: isActive ? accent : "transparent",
+              color: isActive ? "#fff" : color.body,
+              border: "none", borderRadius: 7, padding: "7px 14px",
+              fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              transition: "background 0.15s",
+            }}>{t.label}</button>
+          );
+        })}
+      </div>
+      <ActiveWorksheet />
     </div>
   );
 }
@@ -2411,33 +2612,33 @@ function GuidedFlow({ setMode }) {
       </div>
 
       {/* Stepper */}
-      <div style={{ background: "#fff", borderBottom: `1px solid ${color.line}`, padding: "16px 20px", overflowX: "auto" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: "max-content" }}>
+      <div style={{ background: "#fff", borderBottom: `1px solid ${color.line}`, padding: "10px 20px", overflowX: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: "max-content" }}>
           {GUIDED_STEPS.map((s, i) => {
             const active = i === stepIdx;
             const done = i < stepIdx;
             const dotColor = active ? s.accent : done ? color.muted : color.line;
             return (
-              <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button onClick={() => goTo(i)} style={{
-                  display: "flex", alignItems: "center", gap: 8, background: "transparent", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit",
+              <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <button onClick={() => goTo(i)} title={s.title} style={{
+                  display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", padding: "2px 4px", fontFamily: "inherit",
                 }}>
                   <div style={{
-                    width: 28, height: 28, borderRadius: "50%",
+                    width: 20, height: 20, borderRadius: "50%",
                     background: active ? s.accent : done ? color.muted : "#fff",
                     border: `2px solid ${dotColor}`,
                     color: active || done ? "#fff" : color.muted,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 12, fontWeight: 700, fontFamily: font.sans,
+                    fontSize: 10, fontWeight: 700, fontFamily: font.sans,
                     transition: "all 0.2s",
                   }}>{done ? "✓" : i + 1}</div>
-                  <span style={{
-                    fontSize: 13, fontWeight: active ? 700 : 500,
-                    color: active ? s.accent : done ? color.body : color.muted,
-                    whiteSpace: "nowrap",
-                  }}>{s.title}</span>
+                  {active && (
+                    <span style={{
+                      fontSize: 12, fontWeight: 700, color: s.accent, whiteSpace: "nowrap",
+                    }}>{s.title}</span>
+                  )}
                 </button>
-                {i < GUIDED_STEPS.length - 1 && <div style={{ width: 24, height: 2, background: done ? color.muted : color.line }} />}
+                {i < GUIDED_STEPS.length - 1 && <div style={{ width: 16, height: 2, background: done ? color.muted : color.line }} />}
               </div>
             );
           })}
@@ -2502,19 +2703,16 @@ function GuidedFlow({ setMode }) {
           {!isWelcome && !isDone && (
             <div>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
-                <div>
-                  <div style={{ fontSize: 12, color: step.accent, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>
-                    Step {stepIdx} of {GUIDED_STEPS.length - 2}{step.optional && " · optional"}
-                  </div>
-                  <h1 style={{ fontFamily: font.sans, fontSize: 36, fontWeight: 800, color: color.ink, margin: "4px 0 0" }}>{step.title}</h1>
-                </div>
+                <h1 style={{ fontFamily: font.sans, fontSize: 32, fontWeight: 800, color: color.ink, margin: 0 }}>
+                  {step.title}
+                  {step.optional && <span style={{ fontSize: 12, color: color.muted, fontWeight: 500, marginLeft: 10, letterSpacing: 0.5 }}>OPTIONAL</span>}
+                </h1>
                 <div style={{ fontSize: 13, color: color.muted }}>{step.time}</div>
               </div>
 
               <StepIntro accent={step.accent} intro={step.intro} />
 
-              {step.Worksheet && <step.Worksheet />}
-              {step.secondaryWorksheet && <step.secondaryWorksheet />}
+              {step.tabs ? <StepTabs tabs={step.tabs} accent={step.accent} stepKey={step.key} /> : step.Worksheet && <step.Worksheet />}
 
               <AIHelper stepKey={step.key} accent={step.accent} />
               <DeeperGuidance items={step.deeper} accent={step.accent} />
@@ -2605,8 +2803,8 @@ function Home({ onStartSprint, onBrowse }) {
           A packaged playbook for leading a 2–6 hour mini-hackathon at your church or organization — even if you've never facilitated one.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={onStartSprint} style={pill("primary")}>Start a Solo Sprint →</button>
-          <button onClick={onBrowse} style={pill("secondary")}>Browse the playbook</button>
+          <button onClick={onBrowse} style={pill("primary")}>Browse the playbook →</button>
+          <button onClick={onStartSprint} style={pill("secondary")}>Start a Solo Sprint</button>
         </div>
         <p style={{ fontSize: 13, color: color.faint, marginTop: 40 }}>Auto-saves to this browser · come back anytime</p>
       </div>
@@ -2934,21 +3132,28 @@ function Sidebar({ activePhase, onNavigate }) {
 function StepBar({ activeSection, onNavigate }) {
   const idx = STEPS.findIndex((s) => s.id === activeSection);
   return (
-    <div style={{ display: "flex", alignItems: "center", padding: "18px 28px", borderBottom: `1px solid ${color.lineSoft}`, background: color.surface, overflowX: "auto" }}>
+    <div style={{ display: "flex", alignItems: "center", padding: "10px 28px", borderBottom: `1px solid ${color.lineSoft}`, background: color.surface, overflowX: "auto" }}>
       {STEPS.map((s, i) => {
         const state = i < idx ? "done" : i === idx ? "on" : "todo";
         return (
           <div key={s.id} style={{ display: "flex", alignItems: "center" }}>
-            <button onClick={() => onNavigate(s.id)} style={{ display: "flex", alignItems: "center", gap: 9, background: "none", border: "none", cursor: "pointer", fontFamily: font.sans, fontSize: 12.5, fontWeight: state === "on" ? 700 : 500, color: state === "on" ? color.ink : color.faint }}>
-              <span style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700,
+            <button onClick={() => onNavigate(s.id)} title={s.label} style={{
+              display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer",
+              fontFamily: font.sans, fontSize: 12, fontWeight: 700,
+              color: state === "on" ? color.accent : color.faint, padding: "2px 4px",
+            }}>
+              <span style={{
+                width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 10, fontWeight: 700,
                 background: state === "on" ? color.accent : state === "done" ? color.ink : "transparent",
                 border: state === "todo" ? `1.5px solid ${color.line}` : "none",
-                color: state === "todo" ? color.faint : "#fff" }}>
+                color: state === "todo" ? color.faint : "#fff",
+              }}>
                 {state === "done" ? "✓" : s.n}
               </span>
-              {s.label}
+              {state === "on" && s.label}
             </button>
-            {i < STEPS.length - 1 && <span style={{ width: 34, height: 1.5, background: color.line, margin: "0 6px" }} />}
+            {i < STEPS.length - 1 && <span style={{ width: 18, height: 1.5, background: color.line, margin: "0 4px" }} />}
           </div>
         );
       })}
@@ -2988,6 +3193,11 @@ export default function HackInABox() {
 
   const activePhase = phaseOf(view);
   const inRun = activePhase === "run";
+
+  const openSoloAt = (stepIdx) => {
+    writeStoredString("hiab-guided-step", String(stepIdx));
+    setView("solo");
+  };
 
   const renderContent = (active) => {
     switch (active) {
@@ -3482,7 +3692,12 @@ export default function HackInABox() {
                 <StepCard number={4} title='Reframe as "How Might We..."' duration="10 min" accent={phaseColors.problem.accent} description='Craft a "How might we..." question that captures the problem. Write several versions and refine until it feels both inspiring and specific.' />
               </div>
             </Accordion>
-            <ProblemStatementWorksheet />
+            <OpenInSprint
+              stepLabel="Define"
+              description="Capture the pains you observed and reframe them as a How Might We question — inside the guided Solo Sprint flow."
+              accent={phaseColors.problem.accent}
+              onOpen={() => openSoloAt(3)}
+            />
             <Accordion title="Common Pitfalls to Avoid" accent={phaseColors.problem.accent}>
               {[
                 { bad: "We need a new website.", why: "This jumps to a solution. What's the underlying problem?" },
@@ -3511,9 +3726,13 @@ export default function HackInABox() {
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
             <VideoPlaceholder title="Empathy Mapping in Action" description="Watch a team run through a full empathy map exercise with a real missionary story." duration="10 min" />
-            <EmpathyMapVisual />
-            <EmpathyMapWorksheet />
-            <Accordion title="How to Run an Empathy Map Exercise" defaultOpen accent={phaseColors.empathy.accent}>
+            <OpenInSprint
+              stepLabel="Empathize"
+              description="Capture what your subject says, thinks, does, and feels — inside the guided Solo Sprint flow."
+              accent={phaseColors.empathy.accent}
+              onOpen={() => openSoloAt(1)}
+            />
+            <Accordion title="How to Run an Empathy Map Exercise" accent={phaseColors.empathy.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Choose Your Subject" duration="5 min" accent={phaseColors.empathy.accent} description="Decide who you're empathizing with — a real person, a type of person, or a community member affected by your challenge." />
                 <StepCard number={2} title="Gather Context" duration="15 min" accent={phaseColors.empathy.accent} description="Read a letter or testimony. Watch a video. Or have the person share their story directly. Listen actively." />
@@ -3527,9 +3746,13 @@ export default function HackInABox() {
 
             <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "32px 0 8px", color: color.ink }}>Personas</h3>
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable.</p>
-            <PersonaVisual />
-            <PersonaCardWorksheet />
-            <Accordion title="How to Create Personas" defaultOpen accent={phaseColors.personas.accent}>
+            <OpenInSprint
+              stepLabel="Persona"
+              description="Build a vivid character from your empathy work — inside the guided Solo Sprint flow."
+              accent={phaseColors.personas.accent}
+              onOpen={() => openSoloAt(2)}
+            />
+            <Accordion title="How to Create Personas" accent={phaseColors.personas.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Review Your Empathy Map" duration="5 min" accent={phaseColors.personas.accent} description="Look at patterns from empathy mapping. Who are the distinct types of people that emerged? You'll typically identify 2–3 key personas." />
                 <StepCard number={2} title="Give Them a Name and Story" duration="10 min" accent={phaseColors.personas.accent} description="Give each persona a name, age, occupation, and brief backstory. Think about people you actually know who fit this profile." />
@@ -3564,7 +3787,12 @@ export default function HackInABox() {
                 ))}
               </div>
             </Accordion>
-            <Crazy8sWorksheet />
+            <OpenInSprint
+              stepLabel="Ideate"
+              description="Run the 8-minute Crazy 8s timer and star your top ideas — inside the guided Solo Sprint flow."
+              accent={phaseColors.ideate.accent}
+              onOpen={() => openSoloAt(4)}
+            />
             <Accordion title="Exercise: Crazy 8s (Recommended!)" accent={phaseColors.ideate.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
                 <StepCard number={1} title="Fold your paper into 8 panels" duration="1 min" accent={phaseColors.ideate.accent} description="Fold a blank sheet into 8 equal rectangles." />
@@ -3611,7 +3839,12 @@ export default function HackInABox() {
               ))}
             </Accordion>
 
-            <FeedbackCardsWorksheet />
+            <OpenInSprint
+              stepLabel="Prototype"
+              description="Pick a starred idea, make it tangible, and collect like / wish / what-if feedback — inside the guided Solo Sprint flow."
+              accent={phaseColors.prototype.accent}
+              onOpen={() => openSoloAt(5)}
+            />
             <ProposalAccordion />
           </div>
         );
@@ -3667,7 +3900,12 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <SprintSummaryWorksheet />
+            <OpenInSprint
+              stepLabel="Pitch"
+              description="The Sprint Summary one-pager lives in the Solo Sprint Pitch step — fill it in there."
+              accent={phaseColors.after.accent}
+              onOpen={() => openSoloAt(6)}
+            />
             <Accordion title="Phase 2: Share with Leadership (Week 1–2)" accent={phaseColors.after.accent}>
               <p>Your ideas need champions and buy-in from church leadership to move forward. Here's how to make a compelling case:</p>
 
@@ -3691,7 +3929,12 @@ export default function HackInABox() {
               </TipBox>
             </Accordion>
 
-            <LeadershipProposalWorksheet />
+            <OpenInSprint
+              stepLabel="Pitch"
+              description="The Leadership Proposal lives in the Solo Sprint Pitch step — fill it in there."
+              accent={phaseColors.after.accent}
+              onOpen={() => openSoloAt(6)}
+            />
             <Accordion title="Phase 3: Keep It Alive (Month 1–3)" accent={phaseColors.after.accent}>
               <p>The biggest risk after any sprint is losing momentum. Here's how to build a sustainable path forward:</p>
 
@@ -3750,7 +3993,12 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="send" title="Pitch to leadership" subtitle="Turn your prototype into a one-page proposal you can hand to your pastor or leadership" accent={phaseColors.proposal.accent} />
-            <LeadershipProposalWorksheet />
+            <OpenInSprint
+              stepLabel="Pitch"
+              description="Build your Sprint Summary one-pager and Leadership Proposal — inside the guided Solo Sprint flow."
+              accent={phaseColors.proposal.accent}
+              onOpen={() => openSoloAt(6)}
+            />
           </div>
         );
 
