@@ -38,7 +38,6 @@ const WORKSHEET_KEYS = {
   feedback: "hiab-feedback-v1",
   summary: "hiab-summary-v1",
   proposal: "hiab-proposal-v1",
-  plan: "hiab-30-60-90-v1",
   impact: "hiab-impact-v1",
 };
 
@@ -167,11 +166,6 @@ function loadWorksheetSnapshot() {
     feedback: readStoredJson(WORKSHEET_KEYS.feedback, { likes: [], wishes: [], whatifs: [] }),
     summary: readStoredJson(WORKSHEET_KEYS.summary),
     proposal: readStoredJson(WORKSHEET_KEYS.proposal),
-    plan: readStoredJson(WORKSHEET_KEYS.plan, {
-      "30": { tasks: [] },
-      "60": { tasks: [] },
-      "90": { tasks: [] },
-    }),
     impact: readStoredJson(WORKSHEET_KEYS.impact),
   };
 }
@@ -416,6 +410,43 @@ function VideoPlaceholder({ title, duration }) {
       <Icon name="film" size={12} color={color.muted} />
       <span>Video: {title}{duration ? ` · ${duration}` : ""}</span>
       <span style={{ color: color.accent, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", fontSize: 10 }}>Coming soon</span>
+    </div>
+  );
+}
+
+// Lazy click-to-play YouTube embed — loads the iframe only on click to keep the page light.
+function VideoEmbed({ videoId, title, duration }) {
+  const [playing, setPlaying] = useState(false);
+  const thumb = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  return (
+    <div style={{ marginBottom: 20, maxWidth: 560 }}>
+      <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 12, overflow: "hidden", background: "#000", border: `1px solid ${color.line}` }}>
+        {playing ? (
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            loading="lazy"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+          />
+        ) : (
+          <button
+            onClick={() => setPlaying(true)}
+            aria-label={`Play video: ${title}`}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none", padding: 0, cursor: "pointer", backgroundImage: `url(${thumb})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          >
+            <span style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.28)" }} />
+            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 56, height: 56, borderRadius: "50%", background: color.accent, display: "grid", placeItems: "center", boxShadow: "0 4px 14px rgba(0,0,0,0.35)" }}>
+              <span style={{ width: 0, height: 0, borderTop: "10px solid transparent", borderBottom: "10px solid transparent", borderLeft: "16px solid #fff", marginLeft: 4 }} />
+            </span>
+          </button>
+        )}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 12, color: color.muted }}>
+        <Icon name="film" size={12} color={color.muted} />
+        <span>{title}{duration ? ` · ${duration}` : ""}</span>
+      </div>
     </div>
   );
 }
@@ -1103,59 +1134,6 @@ function LeadershipProposalWorksheet() {
             <span style={{ ...fieldLabel, color: s.color }}>{s.label}</span>
             <textarea value={data[s.key]} onChange={(e) => setData((d) => ({ ...d, [s.key]: e.target.value }))} placeholder={s.placeholder} rows={2} style={textareaStyle} />
           </label>
-        ))}
-      </div>
-    </WorksheetShell>
-  );
-}
-
-// ========== 30-60-90 DAY PLAN WORKSHEET ==========
-function ThirtySixtyNinetyWorksheet() {
-  const empty = {
-    "30": { goal: "", tasks: [], checkIn: "" },
-    "60": { goal: "", tasks: [], checkIn: "" },
-    "90": { goal: "", tasks: [], checkIn: "" },
-  };
-  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.plan, empty);
-  const phases = [
-    { key: "30", label: "Day 1–30", subtitle: "Research, plan, assemble team", color: color.accent },
-    { key: "60", label: "Day 31–60", subtitle: "Pilot or prototype in real setting", color: color.accent },
-    { key: "90", label: "Day 61–90", subtitle: "Evaluate, refine, decide next", color: color.accent },
-  ];
-
-  const updatePhase = (key, patch) => setData((d) => ({ ...d, [key]: { ...d[key], ...patch } }));
-  const addTask = (key) => updatePhase(key, { tasks: [...data[key].tasks, { id: Date.now() + Math.random(), text: "", done: false }] });
-  const updateTask = (key, id, patch) => updatePhase(key, { tasks: data[key].tasks.map((t) => t.id === id ? { ...t, ...patch } : t) });
-  const removeTask = (key, id) => updatePhase(key, { tasks: data[key].tasks.filter((t) => t.id !== id) });
-
-  return (
-    <WorksheetShell>
-      <WorksheetHeader title="30-60-90 Day Plan" subtitle="Break your idea into monthly milestones" onReset={reset} accent={color.accent} />
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }} className="hiab-grid-3">
-        {phases.map((p) => (
-          <div key={p.key} style={{ background: `${p.color}06`, border: `1px solid ${p.color}25`, borderRadius: 12, padding: 14 }}>
-            <div style={{ fontWeight: 700, color: p.color, fontSize: 14 }}>{p.label}</div>
-            <div style={{ fontSize: 11, color: color.muted, marginBottom: 10 }}>{p.subtitle}</div>
-
-            <span style={fieldLabel}>Goal</span>
-            <textarea value={data[p.key].goal} onChange={(e) => updatePhase(p.key, { goal: e.target.value })} rows={2} style={{ ...textareaStyle, background: "#fff", border: "none", marginBottom: 10 }} placeholder="What does done look like?" />
-
-            <span style={fieldLabel}>Tasks</span>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 6 }}>
-              {data[p.key].tasks.map((t) => (
-                <div key={t.id} style={{ display: "flex", gap: 6, alignItems: "center", background: "#fff", borderRadius: 6, padding: "4px 8px", textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.6 : 1 }}>
-                  <input type="checkbox" checked={t.done} onChange={(e) => updateTask(p.key, t.id, { done: e.target.checked })} />
-                  <input value={t.text} onChange={(e) => updateTask(p.key, t.id, { text: e.target.value })} placeholder="Task..." style={{ flex: 1, border: "none", background: "transparent", fontSize: 13, outline: "none", fontFamily: "inherit" }} />
-                  <button onClick={() => removeTask(p.key, t.id)} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer" }}>×</button>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => addTask(p.key)} style={{ background: "transparent", border: `1px dashed ${p.color}55`, color: p.color, borderRadius: 6, padding: "4px 8px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>+ Add task</button>
-
-            <span style={fieldLabel}>Check-in date</span>
-            <input type="date" value={data[p.key].checkIn} onChange={(e) => updatePhase(p.key, { checkIn: e.target.value })} style={inputStyle} />
-          </div>
         ))}
       </div>
     </WorksheetShell>
@@ -3365,7 +3343,7 @@ export default function HackInABox() {
               Before we dive into tools and techniques, it's worth pausing to reflect on <em>why</em> we do this. Innovation in the church isn't about chasing trends or copying Silicon Valley. It's rooted in something much deeper — the belief that the God who created the universe invites us to be creative partners in His work.
             </p>
 
-            <VideoPlaceholder title="Introduction: The Heart of Innovation" description="A short film on why creativity matters in ministry and what drives the HIAB approach." duration="5–8 min" />
+            <VideoEmbed videoId="-ivb5R-44ww" title="Sprint by Jake Knapp — the big idea" duration="overview" />
 
             <FacilitatorNote title="Facilitator Note: How to Present This Section">
               <p>This section works well as an opening devotional or reflection before the sprint begins. You can read the key passages aloud, discuss the reflection questions as a group, or simply share the core ideas in your own words. The goal is to set a tone of humility, curiosity, and faith-driven creativity before the practical work begins.</p>
@@ -3658,7 +3636,7 @@ export default function HackInABox() {
               </FacilitatorNote>
             </Accordion>
 
-            <VideoPlaceholder title="Watch a Real HIAB Sprint" description="A behind-the-scenes look at a church running a full sprint from start to finish." duration="15 min" />
+            <VideoEmbed videoId="K2vSQPh6MCE" title="GV's Sprint Process in 90 Seconds (with Jake Knapp)" duration="90 sec" />
           </div>
         );
 
@@ -3667,7 +3645,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="target" title="Writing Problem Statements" subtitle="Clearly define the challenge before you start solving it" accent={phaseColors.problem.accent} />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>The most common reason innovation efforts fail is that teams solve the <em>wrong problem</em>. A well-crafted problem statement focuses your sprint and makes sure solutions address a real need.</p>
-            <VideoPlaceholder title="How to Write a Great Problem Statement" description="A walkthrough of the HMW framework with real church examples." duration="8 min" />
+            <VideoEmbed videoId="Z8MOwcqZuuU" title="Design Sprint 2.0: the full process explained" duration="14 min" />
             <FacilitatorNote>
               <p><strong>Process order flexibility:</strong> Some facilitators prefer to do empathy mapping <em>before</em> writing problem statements, so the team understands the people involved before defining the challenge. Others prefer to start with a rough problem statement and then refine it after empathy work. Both approaches work — see the Facilitation Guide for detailed agendas for each path.</p>
             </FacilitatorNote>
@@ -3725,7 +3703,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
-            <VideoPlaceholder title="Empathy Mapping in Action" description="Watch a team run through a full empathy map exercise with a real missionary story." duration="10 min" />
+            <VideoEmbed videoId="8-Syxs3SQ7s" title="Jake Knapp & John Zeratsky on running sprints today" duration="interview" />
             <OpenInSprint
               stepLabel="Empathize"
               description="Capture what your subject says, thinks, does, and feels — inside the guided Solo Sprint flow."
@@ -3769,7 +3747,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="lightbulb" title="Ideation & Brainstorming" subtitle="Generate wild, creative, God-inspired ideas — then refine them" accent={phaseColors.ideate.accent} />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Now it's time to generate as many ideas as possible. The goal is <strong>quantity over quality</strong> — wild ideas often lead to breakthroughs.</p>
-            <VideoPlaceholder title="How to Run Crazy 8s" description="A quick demo of the Crazy 8s exercise so you know exactly what to expect." duration="4 min" />
+            <VideoEmbed videoId="xpC_pqlmlEM" title="Crazy 8s & sketching — Design Sprint walkthrough" duration="demo" />
             <Accordion title="Ground Rules for Brainstorming" defaultOpen accent={phaseColors.ideate.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
                 {[
@@ -3867,7 +3845,6 @@ export default function HackInABox() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
               <TemplateCard title="Sprint Summary One-Pager" accent={color.accent} desc="Auto-pulls from your other worksheets so the summary writes itself." items={["HMW problem statement", "Starred ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Leadership Proposal Card" accent={color.accent} desc="A structured pitch card for presenting ideas to pastors and elder boards." items={["The problem (with evidence)", "The proposed solution", "Who it serves and expected impact", "Resources needed and timeline", "What success looks like"]} onLaunch={() => navigate("after")} />
-              <TemplateCard title="30-60-90 Day Action Plan" accent={color.accent} desc="Break your idea into achievable monthly milestones." items={["Day 1–30: Research, plan, and assemble team", "Day 31–60: Pilot or prototype in real setting", "Day 61–90: Evaluate, refine, and expand", "Key metrics and check-in dates"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Impact Story Template" accent={color.accent} desc="Document what happened 6 months after your sprint for future inspiration." items={["The original challenge", "What the team built/launched", "Measurable outcomes and stories", "Lessons learned and what's next"]} onLaunch={() => navigate("after")} />
             </div>
 
@@ -3941,18 +3918,15 @@ export default function HackInABox() {
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Appoint an Innovation Champion" accent={phaseColors.after.accent}
                   description="For each idea moving forward, identify one person who owns it. This person doesn't do all the work — they keep the conversation alive, schedule check-ins, and make sure things don't slip through the cracks. Ideally someone with energy and organizational skills." />
-                <StepCard number={2} title="Create a 30-60-90 Day Plan" accent={phaseColors.after.accent}
-                  description="Break the idea into three monthly phases. Month 1: research, plan, and assemble your team. Month 2: pilot or prototype in a real setting with real people. Month 3: evaluate results, refine, and decide whether to expand, pivot, or pause. (See Templates section for the template)" />
-                <StepCard number={3} title="Schedule Bi-Weekly Check-Ins" accent={phaseColors.after.accent}
+                <StepCard number={2} title="Schedule Bi-Weekly Check-Ins" accent={phaseColors.after.accent}
                   description="Put 30-minute check-ins on the calendar every two weeks. These can be brief — just go around and share: What did you do? What did you learn? What's blocking you? What's next? Consistency matters more than length." />
-                <StepCard number={4} title="Run a Follow-Up Mini-Sprint" duration="2 hours at week 6" accent={phaseColors.after.accent}
+                <StepCard number={3} title="Run a Follow-Up Mini-Sprint" duration="2 hours at week 6" accent={phaseColors.after.accent}
                   description="Schedule a 2-hour reunion at the 6-week mark. Teams share what they've tried, what they've learned, and what surprised them. Then do a quick ideation round to iterate on the original idea based on real-world feedback. This keeps the design thinking muscle active." />
-                <StepCard number={5} title="Document Your Impact Story" accent={phaseColors.after.accent}
+                <StepCard number={4} title="Document Your Impact Story" accent={phaseColors.after.accent}
                   description="At the 6-month mark, write up what happened. Use the Impact Story Template to document the original challenge, what the team built, measurable outcomes, and lessons learned. These stories inspire future sprints and build a culture of innovation." />
               </div>
             </Accordion>
 
-            <ThirtySixtyNinetyWorksheet />
             <ImpactStoryWorksheet />
             <Accordion title="Building a Culture of Innovation" accent={phaseColors.after.accent}>
               <p>One sprint is a great start. But the real power of HIAB comes from making innovation a regular practice in your church:</p>
