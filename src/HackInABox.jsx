@@ -290,27 +290,6 @@ function TemplateCard({ title, desc, items, accent, onLaunch, launchLabel = "Ope
   );
 }
 
-function OpenInSprint({ stepLabel, description, onOpen, accent = color.accent }) {
-  return (
-    <div style={{
-      background: "#fff", borderRadius: 14, padding: "20px 22px",
-      border: `1px solid ${accent}25`, boxShadow: `0 2px 12px ${accent}08`,
-      display: "flex", alignItems: "center", gap: 18, marginTop: 24, marginBottom: 24, flexWrap: "wrap",
-    }}>
-      <div style={{ flex: 1, minWidth: 220 }}>
-        <div style={{ fontSize: 11, color: accent, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 4 }}>Solo Sprint</div>
-        <div style={{ fontFamily: font.sans, fontSize: 17, fontWeight: 700, color: color.ink, marginBottom: 4 }}>Ready to fill this in?</div>
-        <div style={{ fontSize: 14, color: color.muted, lineHeight: 1.55 }}>{description}</div>
-      </div>
-      <button onClick={onOpen} style={{
-        background: accent, color: "#fff", border: "none", borderRadius: 8,
-        padding: "10px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer",
-        fontFamily: font.sans, display: "flex", alignItems: "center", gap: 6,
-      }}>Open {stepLabel} in Solo Sprint →</button>
-    </div>
-  );
-}
-
 function FacilitatorNote({ children, title = "Facilitator Note" }) {
   const [open, setOpen] = useState(false);
   return (
@@ -382,24 +361,10 @@ function VideoEmbed({ videoId, title, duration }) {
   );
 }
 
-const btnStyleSecondary = {
-  background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
-  padding: "8px 14px", fontSize: 13, fontWeight: 500, color: color.body,
-  cursor: "pointer", fontFamily: "inherit",
-};
-
-const btnStyleDanger = {
-  background: "#fff", border: "1px solid #fca5a5", borderRadius: 8,
-  padding: "8px 14px", fontSize: 13, fontWeight: 500, color: "#b91c1c",
-  cursor: "pointer", fontFamily: "inherit",
-};
-
 const inputStyle = {
   width: "100%", padding: "10px 14px", fontSize: 14, borderRadius: 8,
   border: `1px solid ${color.line}`, fontFamily: "inherit", outline: "none",
 };
-
-const textareaStyle = { ...inputStyle, resize: "vertical", lineHeight: 1.55 };
 
 const fieldLabel = { fontSize: 13, fontWeight: 600, color: color.body, display: "block", marginBottom: 6 };
 
@@ -1522,28 +1487,6 @@ function AIHelper({ stepKey, accent }) {
           <div style={{ fontSize: 14, lineHeight: 1.6, color: color.ink, whiteSpace: "pre-wrap" }}>{r.a}</div>
         </div>
       ))}
-    </div>
-  );
-}
-
-function DeeperGuidance({ items, accent }) {
-  const [open, setOpen] = useState(false);
-  if (!items || items.length === 0) return null;
-  return (
-    <div style={{ marginTop: 12, marginBottom: 8 }}>
-      <button onClick={() => setOpen(!open)} style={{
-        background: "none", border: "none", padding: 0,
-        cursor: "pointer", fontFamily: "inherit",
-        color: color.muted, fontWeight: 500, fontSize: 13,
-        textDecoration: "underline", textUnderlineOffset: 3,
-      }}>
-        {open ? "Hide tips" : "More tips"}
-      </button>
-      {open && (
-        <ul style={{ margin: "10px 0 0", padding: "0 0 0 20px", color: color.muted, fontSize: 13, lineHeight: 1.65 }}>
-          {items.map((it, i) => <li key={i} style={{ marginBottom: 4 }}>{it}</li>)}
-        </ul>
-      )}
     </div>
   );
 }
