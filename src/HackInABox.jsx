@@ -2950,7 +2950,7 @@ export default function HackInABox() {
             <PhaseHeader icon="lightbulb" title="Ideation & Brainstorming" subtitle="Generate wild, creative, God-inspired ideas — then refine them" accent={phaseColors.ideate.accent} />
             <SectionArt src={artIdeate} alt="Sketches and arrows radiating outward, representing divergent ideas" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Now it's time to generate as many ideas as possible. The goal is <strong>quantity over quality</strong> — wild ideas often lead to breakthroughs.</p>
-            <VideoEmbed videoId="xpC_pqlmlEM" title="Crazy 8s & sketching — Design Sprint walkthrough" duration="demo" />
+            <VideoEmbed videoId="yz4g87XapQ0" title="Crazy 8s — generate design ideas fast (AJ&Smart)" duration="2 min" />
             <Accordion spot={artIdeateRules} title="Ground Rules for Brainstorming" defaultOpen accent={phaseColors.ideate.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
                 {[
