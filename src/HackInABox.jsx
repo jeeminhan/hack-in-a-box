@@ -3647,12 +3647,7 @@ export default function HackInABox() {
                 <StepCard number={4} title='Reframe as "How Might We..."' duration="10 min" accent={phaseColors.problem.accent} description='Craft a "How might we..." question that captures the problem. Write several versions and refine until it feels both inspiring and specific.' />
               </div>
             </Accordion>
-            <OpenInSprint
-              stepLabel="Define"
-              description="Capture the pains you observed and reframe them as a How Might We question — inside the guided Solo Sprint flow."
-              accent={phaseColors.problem.accent}
-              onOpen={() => openSoloAt(3)}
-            />
+            <AIHelper stepKey="define" accent={phaseColors.problem.accent} />
             <Accordion title="Common Pitfalls to Avoid" accent={phaseColors.problem.accent}>
               {[
                 { bad: "We need a new website.", why: "This jumps to a solution. What's the underlying problem?" },
@@ -3681,12 +3676,7 @@ export default function HackInABox() {
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
             <VideoEmbed videoId="8-Syxs3SQ7s" title="Jake Knapp & John Zeratsky on running sprints today" duration="interview" />
-            <OpenInSprint
-              stepLabel="Empathize"
-              description="Capture what your subject says, thinks, does, and feels — inside the guided Solo Sprint flow."
-              accent={phaseColors.empathy.accent}
-              onOpen={() => openSoloAt(1)}
-            />
+            <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
             <Accordion title="How to Run an Empathy Map Exercise" accent={phaseColors.empathy.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Choose Your Subject" duration="5 min" accent={phaseColors.empathy.accent} description="Decide who you're empathizing with — a real person, a type of person, or a community member affected by your challenge." />
@@ -3701,12 +3691,7 @@ export default function HackInABox() {
 
             <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "32px 0 8px", color: color.ink }}>Personas</h3>
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable.</p>
-            <OpenInSprint
-              stepLabel="Persona"
-              description="Build a vivid character from your empathy work — inside the guided Solo Sprint flow."
-              accent={phaseColors.personas.accent}
-              onOpen={() => openSoloAt(2)}
-            />
+            <AIHelper stepKey="persona" accent={phaseColors.personas.accent} />
             <Accordion title="How to Create Personas" accent={phaseColors.personas.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Review Your Empathy Map" duration="5 min" accent={phaseColors.personas.accent} description="Look at patterns from empathy mapping. Who are the distinct types of people that emerged? You'll typically identify 2–3 key personas." />
@@ -3742,12 +3727,7 @@ export default function HackInABox() {
                 ))}
               </div>
             </Accordion>
-            <OpenInSprint
-              stepLabel="Ideate"
-              description="Run the 8-minute Crazy 8s timer and star your top ideas — inside the guided Solo Sprint flow."
-              accent={phaseColors.ideate.accent}
-              onOpen={() => openSoloAt(4)}
-            />
+            <AIHelper stepKey="ideate" accent={phaseColors.ideate.accent} />
             <Accordion title="Exercise: Crazy 8s (Recommended!)" accent={phaseColors.ideate.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
                 <StepCard number={1} title="Fold your paper into 8 panels" duration="1 min" accent={phaseColors.ideate.accent} description="Fold a blank sheet into 8 equal rectangles." />
@@ -3794,12 +3774,8 @@ export default function HackInABox() {
               ))}
             </Accordion>
 
-            <OpenInSprint
-              stepLabel="Prototype"
-              description="Pick a starred idea, make it tangible, and collect like / wish / what-if feedback — inside the guided Solo Sprint flow."
-              accent={phaseColors.prototype.accent}
-              onOpen={() => openSoloAt(5)}
-            />
+            <PrototypePromptBuilder />
+            <AIHelper stepKey="prototype" accent={phaseColors.prototype.accent} />
             <ProposalAccordion />
           </div>
         );
@@ -3854,12 +3830,6 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <OpenInSprint
-              stepLabel="Pitch"
-              description="The Sprint Summary one-pager lives in the Solo Sprint Pitch step — fill it in there."
-              accent={phaseColors.after.accent}
-              onOpen={() => openSoloAt(6)}
-            />
             <Accordion title="Phase 2: Share with Leadership (Week 1–2)" accent={phaseColors.after.accent}>
               <p>Your ideas need champions and buy-in from church leadership to move forward. Here's how to make a compelling case:</p>
 
@@ -3883,12 +3853,6 @@ export default function HackInABox() {
               </TipBox>
             </Accordion>
 
-            <OpenInSprint
-              stepLabel="Pitch"
-              description="The Leadership Proposal lives in the Solo Sprint Pitch step — fill it in there."
-              accent={phaseColors.after.accent}
-              onOpen={() => openSoloAt(6)}
-            />
             <Accordion title="Phase 3: Keep It Alive (Month 1–3)" accent={phaseColors.after.accent}>
               <p>The biggest risk after any sprint is losing momentum. Here's how to build a sustainable path forward:</p>
 
@@ -3944,12 +3908,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="send" title="Pitch to leadership" subtitle="Turn your prototype into a one-page proposal you can hand to your pastor or leadership" accent={phaseColors.proposal.accent} />
-            <OpenInSprint
-              stepLabel="Pitch"
-              description="Build your Sprint Summary one-pager and Leadership Proposal — inside the guided Solo Sprint flow."
-              accent={phaseColors.proposal.accent}
-              onOpen={() => openSoloAt(6)}
-            />
+            <AIHelper stepKey="pitch" accent={phaseColors.proposal.accent} />
           </div>
         );
 
