@@ -2706,8 +2706,6 @@ export default function HackInABox() {
       <style>{`
         @media (max-width: 767px) {
           .hiab-grid-2 { grid-template-columns: 1fr !important; }
-          .hiab-grid-3 { grid-template-columns: 1fr !important; }
-          .hiab-empathy-grid { grid-template-columns: 1fr !important; }
         }
         html { -webkit-text-size-adjust: 100%; }
       `}</style>
