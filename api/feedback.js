@@ -54,6 +54,12 @@ export default async function handler(req, res) {
     res.status(200).json({ ok: true, stored: true });
   } catch (err) {
     console.error("[feedback] forward failed", err?.message);
-    res.status(502).json({ ok: false, error: "Could not record feedback" });
+    res.status(502).json({
+      ok: false,
+      error: "Could not record feedback",
+      forwardError: String(err?.message || err),
+      urlLen: webhook.length,
+      urlTrimmedDiffers: webhook !== webhook.trim(),
+    });
   }
 }
