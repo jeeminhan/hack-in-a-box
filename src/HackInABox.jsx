@@ -2745,7 +2745,7 @@ function ModeTopBar({ title, subtitle, accent, onHome }) {
 }
 
 // ========== HOME ==========
-function Home({ onStartSprint, onBrowse }) {
+function Home({ onTryAI, onBrowse }) {
   return (
     <div style={{ minHeight: "100vh", background: color.bg, fontFamily: font.sans, overflowY: "auto" }}>
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "64px 24px 80px", textAlign: "center" }}>
@@ -2759,7 +2759,7 @@ function Home({ onStartSprint, onBrowse }) {
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={onBrowse} style={pill("primary")}>Browse the playbook →</button>
-          <button onClick={onStartSprint} style={pill("secondary")}>Start a Solo Sprint</button>
+          <button onClick={onTryAI} style={pill("secondary")}>Try the AI Thinking Partner</button>
         </div>
         <p style={{ fontSize: 13, color: color.faint, marginTop: 40 }}>Auto-saves to this browser · come back anytime</p>
       </div>
@@ -3120,7 +3120,7 @@ export default function HackInABox() {
   const [isMobile, setIsMobile] = useState(false);
   const contentRef = useRef(null);
 
-  const [view, setView] = useState(() => readStoredString("hiab-view", "home")); // "home" | "solo" | <sectionId>
+  const [view, setView] = useState(() => readStoredString("hiab-view", "home")); // "home" | "partner" | <sectionId>
   useEffect(() => { writeStoredString("hiab-view", view); }, [view]);
   const [navOpen, setNavOpen] = useState(false);
   const navigate = (id) => { setView(id); if (contentRef.current) contentRef.current.scrollTop = 0; };
@@ -3140,19 +3140,13 @@ export default function HackInABox() {
     return () => document.head.removeChild(link);
   }, []);
 
-  // GuidedFlow internally calls setMode("picker") and setMode("reference"). Map them:
-  const fromGuided = (m) => setView(m === "picker" ? "home" : m === "reference" ? "overview" : m);
 
-  if (view === "home") return <Home onStartSprint={() => setView("solo")} onBrowse={() => navigate("overview")} />;
-  if (view === "solo") return <GuidedFlow setMode={fromGuided} />;
+  if (view === "home") return <Home onTryAI={() => setView("partner")} onBrowse={() => navigate("overview")} />;
+
 
   const activePhase = phaseOf(view);
   const inRun = activePhase === "run";
 
-  const openSoloAt = (stepIdx) => {
-    writeStoredString("hiab-guided-step", String(stepIdx));
-    setView("solo");
-  };
 
   const renderContent = (active) => {
     switch (active) {
