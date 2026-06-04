@@ -11,7 +11,15 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
-  const { system, messages, max_tokens = 800, model = DEFAULT_MODEL } = req.body || {};
+  const body = req.body || {};
+
+  // Structured AI-Coach requests from the SCIPAB problem builder and the proposal
+  // generator. These send { type, responses, steps } and expect { result: {...} }.
+  if (body.type === "scipab" || body.type === "proposal") {
+    return handleStructured(body, apiKey, res);
+  }
+
+  const { system, messages, max_tokens = 800, model = DEFAULT_MODEL } = body;
 
   if (!Array.isArray(messages) || messages.length === 0) {
     res.status(400).json({ error: "messages array required" });
@@ -57,6 +65,82 @@ export default async function handler(req, res) {
   } catch (err) {
     res.status(500).json({ error: err.message || "Unknown server error" });
   }
+}
+
+// Handles the structured "AI Coach" requests (SCIPAB refine + proposal generator).
+// Returns { result: <object the UI renders> }. Falls back to a usable demo result
+// when GEMINI_API_KEY isn't set or the model response can't be parsed.
+async function handleStructured(body, apiKey, res) {
+  const steps = Array.isArray(body.steps) ? body.steps : [];
+  const responses = body.responses || {};
+  const stepKeys = steps.map((s) => s.key).filter(Boolean);
+  const answersText = steps
+    .map((s) => `${s.label || s.key}: ${responses[s.key] || "(not provided)"}`)
+    .join("\n");
+
+  if (!apiKey) {
+    res.status(200).json({ result: demoStructured(body.type, stepKeys, responses), demo: true });
+    return;
+  }
+
+  const prompt = body.type === "scipab"
+    ? `You are an expert design-sprint facilitator helping a church called "${body.churchName || "the church"}" sharpen a problem statement using the SCIPAB framework.\n\nTheir notes:\n${answersText}\n\nReturn ONLY a JSON object with this exact shape:\n{\n  "hackability": { "score": <integer 1-5 for how focused and solvable-in-one-sprint this is>, "feedback": "<2-3 sentences assessing the problem and how to sharpen it>" },\n  "hmw": "<one strong 'How might we…' statement>",\n  "refined": { ${stepKeys.map((k) => `"${k}": "<a polished one-paragraph version>"`).join(", ")} }\n}`
+    : `You are helping a church team "${body.teamName || ""}" turn sprint results into a clear, leadership-ready proposal.\n\nTheir notes:\n${answersText}\n\nReturn ONLY a JSON object with this exact shape:\n{\n  "title": "<short, compelling proposal title>",\n  "elevator_pitch": "<2-3 sentence pitch a pastor would grasp instantly>",\n  "refined": { ${stepKeys.map((k) => `"${k}": "<a polished, persuasive paragraph>"`).join(", ")} }\n}`;
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const upstream = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.6, maxOutputTokens: 1200, responseMimeType: "application/json" },
+      }),
+    });
+    const data = await upstream.json();
+    if (!upstream.ok) {
+      res.status(200).json({ result: demoStructured(body.type, stepKeys, responses), demo: true, fallback: true });
+      return;
+    }
+    const raw = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
+    const parsed = safeParseJson(raw);
+    if (!parsed) {
+      res.status(200).json({ result: demoStructured(body.type, stepKeys, responses), demo: true, fallback: true });
+      return;
+    }
+    res.status(200).json({ result: parsed, demo: false });
+  } catch {
+    res.status(200).json({ result: demoStructured(body.type, stepKeys, responses), demo: true, fallback: true });
+  }
+}
+
+function safeParseJson(text) {
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { /* try to recover */ }
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start !== -1 && end > start) {
+    try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+  }
+  return null;
+}
+
+// Built from the user's own answers so it's still useful without a model key.
+function demoStructured(type, stepKeys, responses) {
+  const refined = {};
+  stepKeys.forEach((k) => { refined[k] = responses[k] || "Add detail here for a stronger statement."; });
+  if (type === "proposal") {
+    return {
+      title: "Proposal (demo mode — set GEMINI_API_KEY for AI polish)",
+      elevator_pitch: "Your proposal content is saved below. Set GEMINI_API_KEY in Vercel to have AI refine it into a polished, leadership-ready pitch.",
+      refined,
+    };
+  }
+  return {
+    hackability: { score: 3, feedback: "Demo mode — set GEMINI_API_KEY in Vercel for a real AI assessment. Your inputs are preserved below." },
+    hmw: responses.position || responses.complication || "How might we address this challenge in a focused sprint?",
+    refined,
+  };
 }
 
 function demoResponse(system, messages) {

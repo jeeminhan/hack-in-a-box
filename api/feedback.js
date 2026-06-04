@@ -41,7 +41,14 @@ export default async function handler(req, res) {
     if (!upstream.ok) {
       const detail = await upstream.text().catch(() => "");
       console.error("[feedback] webhook error", upstream.status, detail.slice(0, 300));
-      res.status(502).json({ ok: false, error: "Could not record feedback" });
+      // Surface the upstream status for diagnosis (the Apps Script is the user's own).
+      res.status(502).json({
+        ok: false,
+        error: "Could not record feedback",
+        upstreamStatus: upstream.status,
+        upstreamSnippet: detail.slice(0, 160),
+        finalUrlWasRedirected: upstream.redirected || false,
+      });
       return;
     }
     res.status(200).json({ ok: true, stored: true });
