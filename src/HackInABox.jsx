@@ -1,6 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 import { color, font, pill } from "./theme.js";
 
+// Textured-gouache illustration set (Indigitous orange accent). See
+// assets/illustrations/PLACEMENT.md for the full mapping.
+import artHeroTable from "./assets/illustrations/hero-sprint-table.webp";
+import artHeroBox from "./assets/illustrations/hero-kit-box.webp";
+import artEmpathize from "./assets/illustrations/phase-1-empathize.webp";
+import artDefine from "./assets/illustrations/phase-2-define.webp";
+import artIdeate from "./assets/illustrations/phase-3-ideate.webp";
+import artPrototype from "./assets/illustrations/phase-4-prototype.webp";
+import artPitch from "./assets/illustrations/phase-5-pitch.webp";
+import artAfter from "./assets/illustrations/phase-6-after-sprint.webp";
+import artEmpathyMap from "./assets/illustrations/worksheet-empathy-map.webp";
+import artPersonaCard from "./assets/illustrations/worksheet-persona-card.webp";
+import artProblemStatement from "./assets/illustrations/worksheet-problem-statement.webp";
+import artSprintSummary from "./assets/illustrations/worksheet-sprint-summary.webp";
+import artCommunity from "./assets/illustrations/concept-community-network.webp";
+import artLightbulb from "./assets/illustrations/concept-insight-lightbulb.webp";
+import artStopwatch from "./assets/illustrations/concept-stopwatch.webp";
+import artHandsCards from "./assets/illustrations/concept-hands-cards.webp";
+
 // Five-phase spine. Each phase has an id, label, and the section ids it contains.
 // eslint-disable-next-line react-refresh/only-export-components
 export const PHASES = [
@@ -265,9 +284,30 @@ function PhaseHeader({ icon, title, subtitle, accent }) {
   );
 }
 
-function TemplateCard({ title, desc, items, accent, onLaunch, launchLabel = "Open interactive worksheet" }) {
+// Reusable framed illustration. Warm-cream backing, rounded, lazy-loaded.
+// `ratio` keeps space reserved so images never cause layout shift.
+function SectionArt({ src, alt, ratio = "16 / 9", max = 680, style }) {
+  return (
+    <div style={{
+      maxWidth: max, margin: "0 0 24px", borderRadius: 14, overflow: "hidden",
+      background: color.rail, border: `1px solid ${color.line}`, ...style,
+    }}>
+      <img
+        src={src} alt={alt} loading="lazy" decoding="async"
+        style={{ display: "block", width: "100%", aspectRatio: ratio, objectFit: "cover" }}
+      />
+    </div>
+  );
+}
+
+function TemplateCard({ title, desc, items, accent, onLaunch, image, launchLabel = "Open interactive worksheet" }) {
   return (
     <div style={{ background: "#fff", borderRadius: 14, padding: 24, border: `1px solid ${accent}18`, boxShadow: `0 2px 12px ${accent}08`, display: "flex", flexDirection: "column" }}>
+      {image && (
+        <div style={{ margin: "-24px -24px 16px", background: color.rail, borderBottom: `1px solid ${accent}12` }}>
+          <img src={image} alt="" loading="lazy" decoding="async" style={{ display: "block", width: "100%", aspectRatio: "16 / 9", objectFit: "cover" }} />
+        </div>
+      )}
       <h4 style={{ margin: "0 0 8px", fontFamily: font.sans, fontSize: 18, color: color.ink }}>{title}</h4>
       <p style={{ margin: "0 0 16px", fontSize: 14, color: color.muted, lineHeight: 1.6 }}>{desc}</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
@@ -768,6 +808,7 @@ function SCIPABChatbot() {
   return (
     <div>
       <PhaseHeader icon="chat" title="Submit a Problem" subtitle="Use our AI-guided SCIPAB tool to articulate your church's challenge" accent={phaseColors.submit.accent} />
+      <SectionArt src={artLightbulb} alt="A lightbulb with a glowing orange filament, representing an insight" max={560} />
 
       {/* Hackable Problem Reminder */}
       <div style={{
@@ -1548,6 +1589,7 @@ function Home({ onTryAI, onBrowse }) {
           <button onClick={onBrowse} style={pill("primary")}>Browse the playbook →</button>
           <button onClick={onTryAI} style={pill("secondary")}>Try the AI Thinking Partner</button>
         </div>
+        <SectionArt src={artHeroTable} alt="A team gathered around a table covered in sticky notes during a design sprint" max={620} style={{ margin: "44px auto 0" }} />
         <p style={{ fontSize: 13, color: color.faint, marginTop: 40 }}>Auto-saves to this browser · come back anytime</p>
       </div>
     </div>
@@ -2054,6 +2096,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="book" title="What is HIAB?" subtitle="Understanding Design Thinking Brainstorm Sprints for faith-based organizations" accent={color.accent} />
+            <SectionArt src={artHeroBox} alt="An open box with a lightbulb and tools lifting out, like a sprint kit being unpacked" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>
               A <strong>Hack In A Box (HIAB)</strong> is a Design Thinking Brainstorm Sprint created by <strong>Indigitous US</strong>, specifically tailored for churches and faith-based organizations. Think of it as a focused retreat where your church's leaders and members come together to pray, brainstorm, and collaborate on solutions to real challenges your ministry faces.
             </p>
@@ -2096,6 +2139,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="heart" title="Heart of Innovation" subtitle="Why creativity matters in ministry — and the values that guide our approach" accent={phaseColors.foundation.accent} />
+            <SectionArt src={artCommunity} alt="Houses and people connected in a community network" />
 
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               Before we dive into tools and techniques, it's worth pausing to reflect on <em>why</em> we do this. Innovation in the church isn't about chasing trends or copying Silicon Valley. It's rooted in something much deeper — the belief that the God who created the universe invites us to be creative partners in His work.
@@ -2167,6 +2211,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="clipboard" title="Prepare Your Sprint" subtitle="Everything you need to plan and organize a successful HIAB event" accent={phaseColors.prepare.accent} />
+            <SectionArt src={artStopwatch} alt="A stopwatch marking a short timeboxed sprint" />
 
             <FacilitatorNote title="First-Time Facilitator? Start Here">
               <p>If you've never facilitated a sprint before, here's what to know:</p>
@@ -2402,6 +2447,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="target" title="Writing Problem Statements" subtitle="Clearly define the challenge before you start solving it" accent={phaseColors.problem.accent} />
+            <SectionArt src={artDefine} alt="A hand placing one orange sticky note at the center of a cluster, narrowing to one problem" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>The most common reason innovation efforts fail is that teams solve the <em>wrong problem</em>. A well-crafted problem statement focuses your sprint and makes sure solutions address a real need.</p>
             <VideoEmbed videoId="sRGk5oKXgCk" title="How Might We — framing the problem (AJ&Smart)" duration="6 min" />
             <FacilitatorNote>
@@ -2455,6 +2501,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
+            <SectionArt src={artEmpathize} alt="Two people sitting in conversation, one listening closely" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
             <VideoEmbed videoId="Tz0dpeqcO60" title="How to Use Empathy Maps (Nielsen Norman Group)" duration="4 min" />
             <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
@@ -2489,6 +2536,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="lightbulb" title="Ideation & Brainstorming" subtitle="Generate wild, creative, God-inspired ideas — then refine them" accent={phaseColors.ideate.accent} />
+            <SectionArt src={artIdeate} alt="Sketches and arrows radiating outward, representing divergent ideas" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Now it's time to generate as many ideas as possible. The goal is <strong>quantity over quality</strong> — wild ideas often lead to breakthroughs.</p>
             <VideoEmbed videoId="xpC_pqlmlEM" title="Crazy 8s & sketching — Design Sprint walkthrough" duration="demo" />
             <Accordion title="Ground Rules for Brainstorming" defaultOpen accent={phaseColors.ideate.accent}>
@@ -2524,6 +2572,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="cube" title="Prototyping" subtitle="Make your best ideas tangible so you can test them" accent={phaseColors.prototype.accent} />
+            <SectionArt src={artPrototype} alt="Hands building a rough paper-and-tape mockup of a phone screen" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>A prototype is a quick, rough version of your idea. It doesn't have to be perfect — the goal is to make it concrete enough for feedback.</p>
             <Accordion title="What Can a Prototype Look Like?" defaultOpen accent={phaseColors.prototype.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, marginTop: 12 }}>
@@ -2567,17 +2616,17 @@ export default function HackInABox() {
             <PhaseHeader icon="download" title="Templates & Resources" subtitle="Printable templates and quick-reference cards for your sprint" accent={phaseColors.templates.accent} />
             <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
-              <TemplateCard title="Empathy Map Template" accent={color.accent} desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
-              <TemplateCard title="Persona Card Template" accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("empathy")} />
-              <TemplateCard title="Problem Statement Worksheet" accent={color.accent} desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
+              <TemplateCard title="Empathy Map Template" image={artEmpathyMap} accent={color.accent} desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
+              <TemplateCard title="Persona Card Template" image={artPersonaCard} accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("empathy")} />
+              <TemplateCard title="Problem Statement Worksheet" image={artProblemStatement} accent={color.accent} desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
               <TemplateCard title="SCIPAB Submission Template" accent={color.accent} desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("problem")} launchLabel="Open AI-guided chatbot" />
-              <TemplateCard title="Crazy 8s Sheet" accent={color.accent} desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("ideate")} />
+              <TemplateCard title="Crazy 8s Sheet" image={artHandsCards} accent={color.accent} desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("ideate")} />
               <TemplateCard title="Feedback Cards" accent={color.accent} desc="Structured feedback for prototyping." items={["I like...", "I wish...", "What if...", "Overall notes"]} onLaunch={() => navigate("prototype")} />
             </div>
 
             <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Post-Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
-              <TemplateCard title="Sprint Summary One-Pager" accent={color.accent} desc="Auto-pulls from your other worksheets so the summary writes itself." items={["HMW problem statement", "Starred ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
+              <TemplateCard title="Sprint Summary One-Pager" image={artSprintSummary} accent={color.accent} desc="Auto-pulls from your other worksheets so the summary writes itself." items={["HMW problem statement", "Starred ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Leadership Proposal Card" accent={color.accent} desc="A structured pitch card for presenting ideas to pastors and elder boards." items={["The problem (with evidence)", "The proposed solution", "Who it serves and expected impact", "Resources needed and timeline", "What success looks like"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Impact Story Template" accent={color.accent} desc="Document what happened 6 months after your sprint for future inspiration." items={["The original challenge", "What the team built/launched", "Measurable outcomes and stories", "Lessons learned and what's next"]} onLaunch={() => navigate("after")} />
             </div>
@@ -2592,6 +2641,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="star" title="After the Sprint" subtitle="How to capture momentum, share results, and keep your ideas alive" accent={phaseColors.after.accent} />
+            <SectionArt src={artAfter} alt="A winding path with milestone flags leading toward the horizon" />
 
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               The sprint is over — but the real work is just beginning. The energy, ideas, and connections from your HIAB are incredibly valuable, but they fade fast without intentional follow-through. This section walks you through three critical phases: capturing what happened, sharing it with leadership, and building a sustainable plan to keep going.
@@ -2688,6 +2738,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="send" title="Pitch to leadership" subtitle="Turn your prototype into a one-page proposal you can hand to your pastor or leadership" accent={phaseColors.proposal.accent} />
+            <SectionArt src={artPitch} alt="A person presenting at an easel to a small seated group" />
             <AIHelper stepKey="pitch" accent={phaseColors.proposal.accent} />
           </div>
         );
