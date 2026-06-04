@@ -375,13 +375,12 @@ function SectionArt({ src, alt, ratio = "16 / 9", max = 680, style }) {
   );
 }
 
-// Small square illustration that sits next to an accordion title or h3.
-// Illustration shown inside an accordion body or under an h3. Full content width, no border
-// or matting — the art fills a soft 16:9 frame (objectFit cover) so its own painted cream
-// bleeds to the rounded edges and reads as an integrated header image, not a pasted-in box.
-function IllustrationBanner({ src, ratio = "16 / 9" }) {
+// Illustration shown inside an accordion body or under an h3. Centered and width-capped so it
+// stays a modest focal image (never huge on wide screens). No border or matting — the art fills
+// a soft 3:2 frame (objectFit cover) so its painted cream bleeds to the rounded edges.
+function IllustrationBanner({ src, ratio = "3 / 2", max = 300 }) {
   return (
-    <div style={{ width: "100%", margin: "0 0 18px", borderRadius: 12, overflow: "hidden" }}>
+    <div style={{ maxWidth: max, margin: "0 auto 18px", borderRadius: 12, overflow: "hidden" }}>
       <img
         src={src} alt="" loading="lazy" decoding="async"
         style={{ display: "block", width: "100%", aspectRatio: ratio, objectFit: "cover" }}
@@ -2898,8 +2897,8 @@ export default function HackInABox() {
               </div>
             </Accordion>
             <figure style={{ margin: "16px 0 8px" }}>
-              <SectionArt src={artEmpathyMap} alt="A four-quadrant empathy map — Says, Thinks, Does, Feels — filled with sticky-note observations" max={560} style={{ margin: 0 }} />
-              <figcaption style={{ fontSize: 13, color: color.muted, marginTop: 8, fontStyle: "italic", textAlign: "center" }}>Example — what a finished empathy map looks like: four quadrants (Says · Thinks · Does · Feels) filled with sticky-note observations.</figcaption>
+              <SectionArt src={artEmpathyMap} alt="The four quadrants of an empathy map — Says, Thinks, Does, and Feels" max={560} style={{ margin: 0 }} />
+              <figcaption style={{ fontSize: 13, color: color.muted, marginTop: 8, fontStyle: "italic", textAlign: "center" }}>An empathy map has four quadrants — Says, Thinks, Does, and Feels — that you fill in with observations about the person you're designing for.</figcaption>
             </figure>
             <TipBox accent={phaseColors.empathy.accent} label="Ministry connection">
               Empathy mapping is a spiritual exercise. It's about genuinely understanding another person's reality — the heart of loving your neighbor. Open with prayer, asking God to help your team see through others' eyes.
