@@ -859,7 +859,9 @@ function Crazy8sWorksheet() {
 }
 
 // ========== PROTOTYPE PROMPT BUILDER ==========
-function PrototypePromptBuilder({ hmw, idea }) {
+function PrototypePromptBuilder({ hmw: hmwProp = "", idea: ideaProp = "" }) {
+  const [hmw, setHmw] = useState(hmwProp);
+  const [idea, setIdea] = useState(ideaProp);
   const [open, setOpen] = useState(false);
   const [formatKey, setFormatKey] = useState(PROTOTYPE_FORMATS[0].key);
   const [audience, setAudience] = useState("");
@@ -910,6 +912,14 @@ function PrototypePromptBuilder({ hmw, idea }) {
 
   return (
     <div style={{ marginBottom: 16, borderRadius: 14, border: `1.5px solid ${color.accent}40`, background: `linear-gradient(135deg, ${color.accent}10, ${color.accent}05)`, padding: "16px 18px" }}>
+      <label style={{ display: "block", marginBottom: 10 }}>
+        <span style={fieldLabel}>Your "How might we…" question</span>
+        <input value={hmw} onChange={(e) => setHmw(e.target.value)} placeholder="How might we …?" style={inputStyle} />
+      </label>
+      <label style={{ display: "block", marginBottom: 14 }}>
+        <span style={fieldLabel}>The idea you want to prototype</span>
+        <input value={idea} onChange={(e) => setIdea(e.target.value)} placeholder="Describe your starred idea" style={inputStyle} />
+      </label>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
         <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 10, background: color.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name="chat" size={18} color="#fff" />
