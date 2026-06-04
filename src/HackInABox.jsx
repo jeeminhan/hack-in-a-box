@@ -19,15 +19,45 @@ import artCommunity from "./assets/illustrations/concept-community-network.webp"
 import artLightbulb from "./assets/illustrations/concept-insight-lightbulb.webp";
 import artStopwatch from "./assets/illustrations/concept-stopwatch.webp";
 import artHandsCards from "./assets/illustrations/concept-hands-cards.webp";
+// Subsection spot icons + banners (batch 2).
+import artAiWhy from "./assets/illustrations/ai-why.webp";
+import artAiTools from "./assets/illustrations/ai-tools.webp";
+import artAiEachStep from "./assets/illustrations/ai-each-step.webp";
+import artOverviewDifferent from "./assets/illustrations/overview-different.webp";
+import artOverviewProcess from "./assets/illustrations/overview-process.webp";
+import artFoundationCreated from "./assets/illustrations/foundation-created.webp";
+import artFoundationHumility from "./assets/illustrations/foundation-humility.webp";
+import artFoundationExperiment from "./assets/illustrations/foundation-experiment.webp";
+import artFoundationValues from "./assets/illustrations/foundation-values.webp";
+import artPreparePrayer from "./assets/illustrations/prepare-prayer.webp";
+import artPrepareRecruit from "./assets/illustrations/prepare-recruit.webp";
+import artPrepareTimeline from "./assets/illustrations/prepare-timeline.webp";
+import artPrepareMultiChurch from "./assets/illustrations/prepare-multi-church.webp";
+import artPrepareTeam from "./assets/illustrations/prepare-team.webp";
+import artPrepareMaterials from "./assets/illustrations/prepare-materials.webp";
+import artPrepareAgendas from "./assets/illustrations/prepare-agendas.webp";
+import artProblemHmw from "./assets/illustrations/problem-hmw.webp";
+import artProblemPitfalls from "./assets/illustrations/problem-pitfalls.webp";
+import artEmpathyExercise from "./assets/illustrations/empathy-exercise.webp";
+import artEmpathyPersonas from "./assets/illustrations/empathy-personas.webp";
+import artIdeateRules from "./assets/illustrations/ideate-rules.webp";
+import artIdeateCrazy8s from "./assets/illustrations/ideate-crazy8s.webp";
+import artPrototypeForms from "./assets/illustrations/prototype-forms.webp";
+import artPrototypeFeedback from "./assets/illustrations/prototype-feedback.webp";
+import artAfterPhase1 from "./assets/illustrations/after-phase1-capture.webp";
+import artAfterPhase2 from "./assets/illustrations/after-phase2-share.webp";
+import artAfterPhase3 from "./assets/illustrations/after-phase3-alive.webp";
+import artAfterCulture from "./assets/illustrations/after-culture.webp";
+import artTemplateScipab from "./assets/illustrations/template-scipab.webp";
 
 // Five-phase spine. Each phase has an id, label, and the section ids it contains.
 // eslint-disable-next-line react-refresh/only-export-components
 export const PHASES = [
   { id: "start",     label: "Get started",      sections: ["overview", "foundation"] },
-  { id: "prepare",   label: "Prepare",          sections: ["prepare"] },
-  { id: "run",       label: "Run the sprint",   sections: ["empathy", "problem", "ideate", "prototype", "pitch"] },
-  { id: "after",     label: "After the sprint", sections: ["after"] },
-  { id: "resources", label: "Resources",        sections: ["templates", "ai", "partner"] },
+  { id: "prepare",   label: "Prepare",          sections: ["prepare", "prepare-buyin", "prepare-recruit", "prepare-team", "prepare-agendas"] },
+  { id: "run",       label: "Run the sprint",   sections: ["empathy", "personas", "problem", "ideate", "crazy8s", "prototype", "feedback", "pitch"] },
+  { id: "after",     label: "After the sprint", sections: ["after", "after-share", "after-sustain"] },
+  { id: "resources", label: "Resources",        sections: ["templates", "templates-post", "ai", "partner"] },
 ];
 
 // The 5 numbered steps shown in the top step bar during the "run" phase.
@@ -40,10 +70,54 @@ export const STEPS = [
   { id: "pitch",     n: 5, label: "Pitch" },
 ];
 
+// A single sprint step can span more than one page (e.g. Empathize covers both
+// the Empathy Maps page and the Personas page). Maps a page id → its step id so
+// the 5-step bar highlights correctly even though there are more than 5 pages.
+// eslint-disable-next-line react-refresh/only-export-components
+export const STEP_PAGES = {
+  empathy: ["empathy", "personas"],
+  problem: ["problem"],
+  ideate: ["ideate", "crazy8s"],
+  prototype: ["prototype", "feedback"],
+  pitch: ["pitch"],
+};
+
 // Flat lookup: which phase a section belongs to.
 // eslint-disable-next-line react-refresh/only-export-components
 export const phaseOf = (sectionId) =>
   PHASES.find((p) => p.sections.includes(sectionId))?.id ?? "start";
+
+// Ordered walk-through of every content section, used by the sticky Prev/Next bar.
+// "partner" (the full-screen AI chat) is intentionally excluded from the linear flow.
+// eslint-disable-next-line react-refresh/only-export-components
+export const FLOW = PHASES.flatMap((p) => p.sections).filter((id) => id !== "partner");
+
+// Short, friendly labels for the Prev/Next bar.
+// eslint-disable-next-line react-refresh/only-export-components
+export const SECTION_LABELS = {
+  overview: "Overview",
+  foundation: "Foundation",
+  prepare: "Before You Start",
+  "prepare-buyin": "Leadership Buy-In",
+  "prepare-recruit": "Recruit & Plan",
+  "prepare-team": "Team & Materials",
+  "prepare-agendas": "Sprint Formats",
+  empathy: "Empathy Maps",
+  personas: "Personas",
+  problem: "Define",
+  ideate: "Ideation",
+  crazy8s: "Crazy 8s",
+  prototype: "Prototyping",
+  feedback: "Getting Feedback",
+  pitch: "Pitch",
+  after: "Capture & Document",
+  "after-share": "Share with Leadership",
+  "after-sustain": "Keep It Alive",
+  templates: "Sprint Templates",
+  "templates-post": "Post-Sprint Templates",
+  ai: "AI in your sprint",
+  partner: "AI Thinking Partner",
+};
 
 const phaseColors = new Proxy({}, { get: () => ({ bg: color.rail, accent: color.accent, light: color.accentSoft }) });
 
@@ -186,7 +260,7 @@ function BrandMark({ size = 26 }) {
   );
 }
 
-function Icon({ name, size = 24, color = "currentColor" }) {
+function Icon({ name, size = 24, color = "currentColor", style }) {
   const icons = {
     home: <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z" />,
     book: <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />,
@@ -208,6 +282,7 @@ function Icon({ name, size = 24, color = "currentColor" }) {
     arrow: <path d="M13 7l5 5m0 0l-5 5m5-5H6" />,
     send: <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />,
     chat: <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />,
+    mic: <><path d="M12 2a3 3 0 00-3 3v6a3 3 0 006 0V5a3 3 0 00-3-3z" /><path d="M19 10v1a7 7 0 01-14 0v-1M12 18v4M8 22h8" /></>,
     sparkle: <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />,
     info: <><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></>,
     zap: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
@@ -218,13 +293,13 @@ function Icon({ name, size = 24, color = "currentColor" }) {
     monitor: <path d="M2 3h20v14H2zM8 21h8M12 17v4" />,
   };
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={style}>
       {icons[name]}
     </svg>
   );
 }
 
-function Accordion({ title, subtitle, children, defaultOpen = false, accent = color.accent }) {
+function Accordion({ title, subtitle, children, defaultOpen = false, accent = color.accent, spot }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ borderRadius: 12, border: `1px solid ${accent}22`, marginBottom: 12, overflow: "hidden", background: "#fff" }}>
@@ -242,7 +317,7 @@ function Accordion({ title, subtitle, children, defaultOpen = false, accent = co
           <Icon name="chevronDown" size={20} color={accent} />
         </span>
       </button>
-      {open && <div style={{ padding: "4px 20px 20px", lineHeight: 1.7, color: color.body }}>{children}</div>}
+      {open && <div style={{ padding: "4px 20px 20px", lineHeight: 1.7, color: color.body }}>{spot && <IllustrationBanner src={spot} />}{children}</div>}
     </div>
   );
 }
@@ -294,6 +369,21 @@ function SectionArt({ src, alt, ratio = "16 / 9", max = 680, style }) {
     }}>
       <img
         src={src} alt={alt} loading="lazy" decoding="async"
+        style={{ display: "block", width: "100%", aspectRatio: ratio, objectFit: "cover" }}
+      />
+    </div>
+  );
+}
+
+// Small square illustration that sits next to an accordion title or h3.
+// Illustration shown inside an accordion body or under an h3. Full content width, no border
+// or matting — the art fills a soft 16:9 frame (objectFit cover) so its own painted cream
+// bleeds to the rounded edges and reads as an integrated header image, not a pasted-in box.
+function IllustrationBanner({ src, ratio = "16 / 9" }) {
+  return (
+    <div style={{ width: "100%", margin: "0 0 18px", borderRadius: 12, overflow: "hidden" }}>
+      <img
+        src={src} alt="" loading="lazy" decoding="async"
         style={{ display: "block", width: "100%", aspectRatio: ratio, objectFit: "cover" }}
       />
     </div>
@@ -367,6 +457,9 @@ function VideoPlaceholder({ title, duration }) {
 // Lazy click-to-play YouTube embed — loads the iframe only on click to keep the page light.
 function VideoEmbed({ videoId, title, duration }) {
   const [playing, setPlaying] = useState(false);
+  // Reset to the thumbnail whenever the section (and thus the video) changes, so a
+  // video the user played on one page doesn't auto-play when they navigate to another.
+  useEffect(() => { setPlaying(false); }, [videoId]);
   const thumb = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
   return (
     <div style={{ marginBottom: 20, maxWidth: 560 }}>
@@ -1855,14 +1948,14 @@ function ThinkingPartner({ setMode }) {
 
           <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
             {voice.supported.recog && (
-              <button onClick={micPress} title={voice.listening ? "Stop listening" : "Speak instead of type"} style={{
+              <button onClick={micPress} aria-label={voice.listening ? "Stop listening" : "Speak instead of typing"} title={voice.listening ? "Stop listening" : "Speak instead of typing"} style={{
                 background: voice.listening ? "#DC2626" : "#fff",
                 color: voice.listening ? "#fff" : color.accent,
                 border: `1px solid ${voice.listening ? "#DC2626" : color.accent}`,
                 borderRadius: 12, width: 48, height: 48, fontSize: 20,
                 cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
                 display: "flex", alignItems: "center", justifyContent: "center",
-              }}>{voice.listening ? <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#fff", display: "block" }} /> : <Icon name="chat" size={20} color={color.accent} />}</button>
+              }}>{voice.listening ? <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#fff", display: "block" }} /> : <Icon name="mic" size={20} color={color.accent} />}</button>
             )}
             <textarea
               value={input}
@@ -1914,7 +2007,7 @@ function Sidebar({ activePhase, onNavigate }) {
 }
 
 function StepBar({ activeSection, onNavigate }) {
-  const idx = STEPS.findIndex((s) => s.id === activeSection);
+  const idx = STEPS.findIndex((s) => (STEP_PAGES[s.id] || [s.id]).includes(activeSection));
   return (
     <div style={{ display: "flex", alignItems: "center", padding: "10px 28px", borderBottom: `1px solid ${color.lineSoft}`, background: color.surface, overflowX: "auto" }}>
       {STEPS.map((s, i) => {
@@ -1945,6 +2038,241 @@ function StepBar({ activeSection, onNavigate }) {
   );
 }
 
+// Sticky Prev/Next bar so facilitators can move through the playbook without
+// scrolling back up to the sidebar. Sticks to the bottom of the scroll area.
+function FlowNav({ view, navigate, isMobile }) {
+  const idx = FLOW.indexOf(view);
+  if (idx === -1) return null;
+  const prev = idx > 0 ? FLOW[idx - 1] : null;
+  const next = idx < FLOW.length - 1 ? FLOW[idx + 1] : null;
+  const btn = (id, dir) => (
+    <button
+      onClick={() => navigate(id)}
+      style={{
+        display: "flex", alignItems: "center", gap: 8,
+        background: dir === "next" ? color.accent : "#fff",
+        color: dir === "next" ? "#fff" : color.body,
+        border: dir === "next" ? "none" : `1px solid ${color.line}`,
+        borderRadius: 10, padding: isMobile ? "11px 16px" : "11px 20px",
+        fontFamily: font.sans, fontSize: 14, fontWeight: 700, cursor: "pointer",
+        maxWidth: "48%", boxShadow: dir === "next" ? "0 2px 12px rgba(124,58,237,0.25)" : "none",
+      }}
+    >
+      {dir === "prev" && <Icon name="arrow" size={16} color={color.muted} style={{ transform: "rotate(180deg)" }} />}
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {dir === "prev" ? "Back" : "Next"}
+        <span style={{ fontWeight: 500, opacity: dir === "next" ? 0.85 : 0.7 }}>{` · ${SECTION_LABELS[id]}`}</span>
+      </span>
+      {dir === "next" && <Icon name="arrow" size={16} color="#fff" />}
+    </button>
+  );
+  return (
+    <div style={{
+      position: "sticky", bottom: 0, marginTop: 40,
+      display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12,
+      padding: isMobile ? "12px 0" : "14px 0",
+      background: `linear-gradient(to top, ${color.bg} 70%, ${color.bg}00)`,
+    }}>
+      {prev ? btn(prev, "prev") : <span />}
+      {next ? btn(next, "next") : <span />}
+    </div>
+  );
+}
+
+// Persistent per-page feedback. A small launcher pill always sits in the bottom-right
+// corner; it auto-opens once per page, and after dismiss/submit it collapses back to the
+// pill (never fully disappears) so testers can always reopen it. Posts to /api/feedback.
+const FEEDBACK_DONE_KEY = "hiab-feedback-done";
+
+function FeedbackWidget({ section, isMobile }) {
+  const [done, setDone] = useState(() => new Set(readStoredString(FEEDBACK_DONE_KEY, "").split(",").filter(Boolean)));
+  const answered = done.has(section);
+  const [expanded, setExpanded] = useState(false);
+  const [helpful, setHelpful] = useState(null);
+  const [wouldUse, setWouldUse] = useState(null);
+  const [comment, setComment] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | sending | done | error
+
+  // Mounted fresh per section via key={view}. Auto-open once on a page we haven't
+  // answered yet; otherwise it just sits collapsed in the corner until clicked.
+  useEffect(() => {
+    if (!section || section === "home" || section === "partner" || answered) return;
+    const t = setTimeout(() => setExpanded(true), 1400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const markDone = () => {
+    const next = new Set(done); next.add(section);
+    setDone(next);
+    writeStoredString(FEEDBACK_DONE_KEY, [...next].join(","));
+  };
+
+  const submit = async () => {
+    if (helpful === null && wouldUse === null && !comment.trim()) return;
+    setStatus("sending");
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section, helpful, wouldUse, comment: comment.trim() }),
+      });
+      setStatus("done");
+      markDone();
+      setTimeout(() => setExpanded(false), 2200);
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  if (!section || section === "home") return null;
+
+  const corner = { right: isMobile ? 12 : 24, bottom: isMobile ? 12 : 24 };
+
+  // Collapsed launcher pill — always available in the corner.
+  if (!expanded) {
+    return (
+      <button onClick={() => setExpanded(true)} aria-label="Give feedback on this page" style={{
+        position: "fixed", zIndex: 60, ...corner,
+        display: "flex", alignItems: "center", gap: 8,
+        background: color.accent, color: "#fff", border: "none",
+        borderRadius: 999, padding: isMobile ? "10px 14px" : "11px 18px",
+        fontFamily: font.sans, fontSize: 13.5, fontWeight: 700, cursor: "pointer",
+        boxShadow: "0 6px 20px rgba(124,58,237,0.35)",
+      }}>
+        <Icon name="chat" size={17} color="#fff" />
+        Feedback
+        {answered && <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: "50%", background: "rgba(255,255,255,0.25)", alignItems: "center", justifyContent: "center" }}><Icon name="check" size={11} color="#fff" /></span>}
+      </button>
+    );
+  }
+
+  const yesNo = (value, setValue) => (
+    <div style={{ display: "flex", gap: 8 }}>
+      {[["Yes", true], ["No", false]].map(([txt, val]) => (
+        <button key={txt} onClick={() => setValue(value === val ? null : val)} style={{
+          flex: 1, padding: "8px 0", borderRadius: 8, cursor: "pointer",
+          fontFamily: font.sans, fontSize: 13, fontWeight: 700,
+          border: value === val ? `1.5px solid ${color.accent}` : `1px solid ${color.line}`,
+          background: value === val ? `${color.accent}12` : "#fff",
+          color: value === val ? color.accent : color.body,
+        }}>{txt}</button>
+      ))}
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: "fixed", zIndex: 60, ...corner,
+      left: isMobile ? 12 : "auto",
+      width: isMobile ? "auto" : 320,
+      background: "#fff", borderRadius: 16, border: `1px solid ${color.line}`,
+      boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: 18,
+      fontFamily: font.sans,
+    }}>
+      <button onClick={() => setExpanded(false)} aria-label="Minimize feedback" style={{
+        position: "absolute", top: 10, right: 10, background: "none", border: "none",
+        cursor: "pointer", color: color.muted, padding: 4,
+      }}><Icon name="x" size={16} color={color.muted} /></button>
+
+      {status === "done" ? (
+        <div style={{ padding: "8px 4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <Icon name="check" size={18} color={color.accent} />
+            <strong style={{ fontSize: 15, color: color.ink }}>Thank you!</strong>
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: color.muted, lineHeight: 1.5 }}>Your feedback helps us shape this prototype.</p>
+        </div>
+      ) : (
+        <>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: color.accent, marginBottom: 4 }}>Quick feedback · prototype</div>
+          <p style={{ margin: "0 0 14px", fontSize: 13, color: color.muted, lineHeight: 1.5 }}>
+            On the <strong style={{ color: color.body }}>{SECTION_LABELS[section] || "this"}</strong> page —
+          </p>
+
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: color.ink, marginBottom: 6 }}>Is this helpful?</label>
+          {yesNo(helpful, setHelpful)}
+
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: color.ink, margin: "14px 0 6px" }}>Would you use this tool?</label>
+          {yesNo(wouldUse, setWouldUse)}
+
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Anything you'd change? (optional)"
+            rows={2}
+            style={{
+              width: "100%", marginTop: 14, padding: "9px 11px", borderRadius: 8,
+              border: `1px solid ${color.line}`, fontFamily: font.sans, fontSize: 13,
+              resize: "vertical", outline: "none", boxSizing: "border-box", color: color.ink,
+            }}
+          />
+
+          {status === "error" && <p style={{ margin: "8px 0 0", fontSize: 12, color: "#dc2626" }}>Couldn't send — please try again.</p>}
+
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button onClick={() => setExpanded(false)} style={{
+              padding: "9px 14px", borderRadius: 8, border: `1px solid ${color.line}`, background: "#fff",
+              color: color.muted, fontFamily: font.sans, fontSize: 13, fontWeight: 600, cursor: "pointer",
+            }}>Not now</button>
+            <button onClick={submit} disabled={status === "sending" || (helpful === null && wouldUse === null && !comment.trim())} style={{
+              flex: 1, padding: "9px 14px", borderRadius: 8, border: "none",
+              background: (helpful === null && wouldUse === null && !comment.trim()) ? `${color.accent}55` : color.accent,
+              color: "#fff", fontFamily: font.sans, fontSize: 13, fontWeight: 700,
+              cursor: status === "sending" ? "default" : "pointer",
+            }}>{status === "sending" ? "Sending…" : "Send feedback"}</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// One-time welcome modal shown the first time someone enters the playbook. Explains
+// that this is a prototype under test and points to the per-page feedback corner.
+const INTRO_SEEN_KEY = "hiab-intro-seen";
+
+function IntroModal({ onClose, isMobile }) {
+  return (
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, zIndex: 80, background: `${color.ink}66`,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        background: "#fff", borderRadius: 18, maxWidth: 440, width: "100%",
+        padding: isMobile ? "26px 22px" : "32px 30px", fontFamily: font.sans,
+        boxShadow: "0 24px 60px rgba(15,23,42,0.3)", position: "relative",
+      }}>
+        <button onClick={onClose} aria-label="Close" style={{
+          position: "absolute", top: 14, right: 14, background: "none", border: "none",
+          cursor: "pointer", color: color.muted, padding: 4,
+        }}><Icon name="x" size={18} color={color.muted} /></button>
+
+        <div style={{ width: 48, height: 48, borderRadius: 14, background: `${color.accent}14`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+          <Icon name="sparkle" size={24} color={color.accent} />
+        </div>
+
+        <h2 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 10px", color: color.ink }}>You're testing an early prototype</h2>
+        <p style={{ margin: "0 0 14px", fontSize: 15, lineHeight: 1.65, color: color.body }}>
+          Thanks for trying Hack In A Box! This is a work-in-progress and your feedback genuinely shapes where it goes next.
+        </p>
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: `${color.accent}08`, border: `1px solid ${color.accent}20`, borderRadius: 12, padding: "14px 16px", marginBottom: 22 }}>
+          <div style={{ flexShrink: 0, marginTop: 1 }}><Icon name="chat" size={18} color={color.accent} /></div>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: color.body }}>
+            As you explore, look for the <strong style={{ color: color.accent }}>Feedback</strong> button in the <strong>bottom-right corner</strong> of every page. Each one is specific to the page you're on — tell us what's helpful and what isn't. It only takes a few seconds.
+          </p>
+        </div>
+
+        <button onClick={onClose} style={{
+          width: "100%", padding: "13px 0", borderRadius: 10, border: "none",
+          background: color.accent, color: "#fff", fontFamily: font.sans, fontSize: 15, fontWeight: 700,
+          cursor: "pointer", boxShadow: "0 4px 16px rgba(124,58,237,0.3)",
+        }}>Got it — let's go</button>
+      </div>
+    </div>
+  );
+}
+
 export default function HackInABox() {
   const [isMobile, setIsMobile] = useState(false);
   const contentRef = useRef(null);
@@ -1952,7 +2280,30 @@ export default function HackInABox() {
   const [view, setView] = useState(() => readStoredString("hiab-view", "home")); // "home" | "partner" | <sectionId>
   useEffect(() => { writeStoredString("hiab-view", view); }, [view]);
   const [navOpen, setNavOpen] = useState(false);
-  const navigate = (id) => { setView(id); if (contentRef.current) contentRef.current.scrollTop = 0; };
+  const [introSeen, setIntroSeen] = useState(() => readStoredString(INTRO_SEEN_KEY, "no") === "yes");
+  const dismissIntro = () => { setIntroSeen(true); writeStoredString(INTRO_SEEN_KEY, "yes"); };
+  const navigate = (id) => {
+    setView(id);
+    setNavOpen(false);
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+    if (typeof window !== "undefined" && window.history.state?.hiabView !== id) {
+      window.history.pushState({ hiabView: id }, "");
+    }
+  };
+
+  // Make the browser / Android hardware back button move between views.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.history.replaceState({ hiabView: view }, "");
+    const onPop = (e) => {
+      const next = e.state?.hiabView ?? "home";
+      setView(next);
+      if (contentRef.current) contentRef.current.scrollTop = 0;
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -1970,7 +2321,7 @@ export default function HackInABox() {
   }, []);
 
 
-  if (view === "home") return <Home onTryAI={() => setView("partner")} onBrowse={() => navigate("overview")} />;
+  if (view === "home") return <Home onTryAI={() => navigate("partner")} onBrowse={() => navigate("overview")} />;
 
 
   const activePhase = phaseOf(view);
@@ -2015,7 +2366,8 @@ export default function HackInABox() {
             </p>
 
             <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${ai.accent}20`, marginBottom: 28 }}>
-              <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>Why use AI in a Hack In A Box?</h3>
+              <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 12px", color: color.ink }}>Why use AI in a Hack In A Box?</h3>
+              <IllustrationBanner src={artAiWhy} />
               {[
                 { title: "Prep in a fraction of the time", desc: "Draft agendas, prompts, and participant invites in minutes so you can focus on the people in the room." },
                 { title: "Hear your community more clearly", desc: "Synthesize interviews and survey notes into themes and empathy maps — without losing the human details." },
@@ -2035,7 +2387,7 @@ export default function HackInABox() {
               color: "#fff", margin: "0 0 32px", textAlign: "left",
               display: "flex", alignItems: "center", gap: 20, cursor: "pointer",
               boxShadow: "0 4px 20px rgba(124,58,237,0.25)",
-            }} onClick={() => setView("partner")}>
+            }} onClick={() => navigate("partner")}>
               <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name="chat" size={28} color="#fff" />
               </div>
@@ -2049,6 +2401,7 @@ export default function HackInABox() {
             </div>
 
             <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>Tools you can use</h3>
+            <IllustrationBanner src={artAiTools} />
             <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>
               Any general AI assistant works. Most have a free tier that's plenty for a sprint — start with one you already have access to.
             </p>
@@ -2066,6 +2419,7 @@ export default function HackInABox() {
             </div>
 
             <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>How to use AI at each step</h3>
+            <IllustrationBanner src={artAiEachStep} />
             <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>
               Copy a prompt below, swap in your own details, and paste it into your AI tool. Always read the output with your team and keep what rings true.
             </p>
@@ -2104,7 +2458,8 @@ export default function HackInABox() {
               This isn't about technology or complicated tools. It's about guiding your team through creative discussions and hands-on activities to produce clear, actionable plans that work for your unique church family.
             </p>
             <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${color.line}`, marginBottom: 28 }}>
-              <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>What Makes HIAB Different?</h3>
+              <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 12px", color: color.ink }}>What Makes HIAB Different?</h3>
+              <IllustrationBanner src={artOverviewDifferent} />
               {[
                 { title: "Faith at the Center", desc: "Every idea explored is rooted in your church's mission and values. We begin and end with prayer." },
                 { title: "Custom for Your Church", desc: "Every sprint is designed to reflect your congregation's unique strengths, challenges, and context." },
@@ -2118,6 +2473,7 @@ export default function HackInABox() {
               ))}
             </div>
             <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>The Design Thinking Process</h3>
+            <SectionArt src={artOverviewProcess} alt="Five stepping stones — empathize, define, ideate, prototype, test — with the middle one highlighted" max={560} />
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
               {[
                 { phase: "Empathize", desc: "Understand the people and communities you're trying to serve", color: color.accent },
@@ -2152,7 +2508,7 @@ export default function HackInABox() {
               <p>If you're short on time, focus on the "Created to Create" section and one reflection question.</p>
             </FacilitatorNote>
 
-            <Accordion title="Created to Create" defaultOpen accent={phaseColors.foundation.accent}>
+            <Accordion spot={artFoundationCreated} title="Created to Create" defaultOpen accent={phaseColors.foundation.accent}>
               <p>The very first thing we learn about God in Scripture is that He creates. He speaks light into darkness, shapes life from dust, and calls it good. And then — remarkably — He invites humanity to join in that creative work. We're given the task of naming, cultivating, building, and caring for the world around us.</p>
               <p>When your church runs a HIAB sprint, you're participating in that same creative tradition. You're looking at the world God loves, seeing what's broken or missing, and asking: "What could we build to make this better?" That's not just problem-solving. That's worship.</p>
               <FacilitatorNote>
@@ -2160,7 +2516,7 @@ export default function HackInABox() {
               </FacilitatorNote>
             </Accordion>
 
-            <Accordion title="Innovation Starts with Humility" accent={phaseColors.foundation.accent}>
+            <Accordion spot={artFoundationHumility} title="Innovation Starts with Humility" accent={phaseColors.foundation.accent}>
               <p>Real innovation requires admitting we don't have all the answers. It means listening before speaking, asking questions before proposing solutions, and being willing to be wrong. In church culture, where we often feel pressure to have everything figured out, this can be uncomfortable.</p>
               <p>But humility is actually our greatest strength. When we approach a challenge with open hands instead of clenched fists, we make room for the Spirit to move, for unexpected voices to be heard, and for ideas we never would have imagined on our own.</p>
               <p>That's why the HIAB process begins with empathy — with genuinely trying to understand someone else's experience before rushing to fix it.</p>
@@ -2169,7 +2525,7 @@ export default function HackInABox() {
               </FacilitatorNote>
             </Accordion>
 
-            <Accordion title="Permission to Experiment" accent={phaseColors.foundation.accent}>
+            <Accordion spot={artFoundationExperiment} title="Permission to Experiment" accent={phaseColors.foundation.accent}>
               <p>Many churches have an unspoken rule: if you try something and it fails, that's a mark against you. This fear of failure kills creativity before it starts. HIAB works because it creates a safe space where wild ideas are welcome, where "bad" ideas are celebrated as stepping stones, and where experimentation is treated as faithfulness — not recklessness.</p>
               <p>Think about it this way: every ministry your church runs today was once somebody's untested idea. Someone took a risk. HIAB gives your congregation permission to take that same kind of risk — but with structure, support, and prayer behind it.</p>
               <FacilitatorNote>
@@ -2177,7 +2533,7 @@ export default function HackInABox() {
               </FacilitatorNote>
             </Accordion>
 
-            <Accordion title="Our Guiding Values" accent={phaseColors.foundation.accent}>
+            <Accordion spot={artFoundationValues} title="Our Guiding Values" accent={phaseColors.foundation.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
                 {[
                   { value: "People First", desc: "Every idea must serve real people with real needs. We never innovate for innovation's sake." },
@@ -2222,8 +2578,15 @@ export default function HackInABox() {
               <p><strong>Celebrate generously.</strong> Clap for presentations, thank people for sharing, affirm wild ideas. A positive atmosphere unlocks creativity.</p>
               <p>If this is your first HIAB, start with the <strong>Express Sprint (2 hours)</strong> or <strong>Standard Sprint (3 hours)</strong>. You can always run a longer format next time.</p>
             </FacilitatorNote>
+          </div>
+        );
 
-            <Accordion title="Prayer & Spiritual Preparation" defaultOpen accent={phaseColors.prepare.accent}>
+      case "prepare-buyin":
+        return (
+          <div>
+            <PhaseHeader icon="heart" title="Get Leadership Buy-In" subtitle="Lay a spiritual foundation and bring your pastor or leadership on board" accent={phaseColors.prepare.accent} />
+
+            <Accordion spot={artPreparePrayer} title="Prayer & Spiritual Preparation" defaultOpen accent={phaseColors.prepare.accent}>
               <p>Before any logistics, lay a spiritual foundation. Invite your leadership team and participants into a season of intentional prayer.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
                 {["Pray for God to reveal the right challenge to focus on", "Ask for open hearts and minds among participants", "Pray for creative, Spirit-led ideas to come forward", "Commission the event during a Sunday service to build support"].map((item, i) => (
@@ -2251,8 +2614,15 @@ export default function HackInABox() {
                 <p>If you're having trouble getting a meeting with leadership, try writing a brief email using the SCIPAB framework from this playbook. It's designed to communicate problems and proposals clearly and persuasively.</p>
               </FacilitatorNote>
             </Accordion>
+          </div>
+        );
 
-            <Accordion title="How to Market and Recruit Participants" accent={phaseColors.prepare.accent}>
+      case "prepare-recruit":
+        return (
+          <div>
+            <PhaseHeader icon="users" title="Recruit & Plan" subtitle="Get the right people in the room and map your countdown to sprint day" accent={phaseColors.prepare.accent} />
+
+            <Accordion spot={artPrepareRecruit} title="How to Market and Recruit Participants" accent={phaseColors.prepare.accent}>
               <p>Getting the right people in the room matters. Here's how to spread the word effectively:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -2271,7 +2641,7 @@ export default function HackInABox() {
               <VideoEmbed videoId="K-nlw1G8i6o" title="Sample church event invite promo (template inspiration)" duration="90 sec" />
             </Accordion>
 
-            <Accordion title="Week-by-Week Planning Timeline" accent={phaseColors.prepare.accent}>
+            <Accordion spot={artPrepareTimeline} title="Week-by-Week Planning Timeline" accent={phaseColors.prepare.accent}>
               <p>Use this countdown to stay on track. Adjust dates based on when your sprint is scheduled.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {[
@@ -2300,8 +2670,15 @@ export default function HackInABox() {
                 ))}
               </div>
             </Accordion>
+          </div>
+        );
 
-            <Accordion title="Adapting for Multi-Church or Multi-Org Collaboration" accent={phaseColors.prepare.accent}>
+      case "prepare-team":
+        return (
+          <div>
+            <PhaseHeader icon="clipboard" title="Team & Materials" subtitle="Assemble your facilitator team, gather supplies, and adapt for multi-church sprints" accent={phaseColors.prepare.accent} />
+
+            <Accordion spot={artPrepareMultiChurch} title="Adapting for Multi-Church or Multi-Org Collaboration" accent={phaseColors.prepare.accent}>
               <p>HIAB is especially powerful when multiple churches or organizations come together around a shared challenge — like serving a neighborhood, reaching a people group, or tackling a community issue. Here's how to adapt:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -2322,13 +2699,13 @@ export default function HackInABox() {
               </FacilitatorNote>
             </Accordion>
 
-            <Accordion title="Team Assembly" accent={phaseColors.prepare.accent}>
+            <Accordion spot={artPrepareTeam} title="Team Assembly" accent={phaseColors.prepare.accent}>
               <p><strong>Ideal group size:</strong> 15–30 people, broken into tables of 4–6.</p>
               <p>Aim for diversity — different ages, roles, backgrounds, and time at your church. Consider inviting people who don't normally attend planning meetings.</p>
               <p><strong>Key roles:</strong> Lead Facilitator, Table Coaches (one per table), Timekeeper, and Notetaker/Photographer.</p>
             </Accordion>
 
-            <Accordion title="Materials Checklist" accent={phaseColors.prepare.accent}>
+            <Accordion spot={artPrepareMaterials} title="Materials Checklist" accent={phaseColors.prepare.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
                 <div>
                   <strong style={{ color: phaseColors.prepare.accent, fontSize: 14 }}>Must-Haves</strong>
@@ -2344,8 +2721,15 @@ export default function HackInABox() {
                 </div>
               </div>
             </Accordion>
+          </div>
+        );
 
+      case "prepare-agendas":
+        return (
+          <div>
+            <PhaseHeader icon="clock" title="Choose Your Sprint Format" subtitle="Ready-to-print agendas — pick the one that fits your group's time and energy" accent={phaseColors.prepare.accent} />
             <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "28px 0 8px", color: color.ink }}>Sprint Formats & Agendas</h3>
+            <IllustrationBanner src={artPrepareAgendas} />
             <p style={{ fontSize: 15, lineHeight: 1.65, color: color.body, marginBottom: 16 }}>
               Choose the format that fits your group's time and energy. Each agenda below is ready to print and follow. All use an "Empathy First" flow by default — to swap to "Problem First," just switch those two time blocks.
             </p>
@@ -2453,7 +2837,7 @@ export default function HackInABox() {
             <FacilitatorNote>
               <p><strong>Process order flexibility:</strong> Some facilitators prefer to do empathy mapping <em>before</em> writing problem statements, so the team understands the people involved before defining the challenge. Others prefer to start with a rough problem statement and then refine it after empathy work. Both approaches work — see the Facilitation Guide for detailed agendas for each path.</p>
             </FacilitatorNote>
-            <Accordion title='The "How Might We..." Framework' defaultOpen accent={phaseColors.problem.accent}>
+            <Accordion spot={artProblemHmw} title='The "How Might We..." Framework' defaultOpen accent={phaseColors.problem.accent}>
               <p>The gold standard for problem statements in design thinking is the <strong>"How Might We" (HMW)</strong> question.</p>
               <div style={{ background: `${phaseColors.problem.accent}08`, borderRadius: 12, padding: "20px 24px", border: `1px solid ${phaseColors.problem.accent}20`, margin: "16px 0", textAlign: "center" }}>
                 <div style={{ fontSize: 14, color: phaseColors.problem.accent, fontWeight: 600, marginBottom: 8, letterSpacing: 0.5, textTransform: "uppercase" }}>Formula</div>
@@ -2475,7 +2859,7 @@ export default function HackInABox() {
               </div>
             </Accordion>
             <AIHelper stepKey="define" accent={phaseColors.problem.accent} />
-            <Accordion title="Common Pitfalls to Avoid" accent={phaseColors.problem.accent}>
+            <Accordion spot={artProblemPitfalls} title="Common Pitfalls to Avoid" accent={phaseColors.problem.accent}>
               {[
                 { bad: "We need a new website.", why: "This jumps to a solution. What's the underlying problem?" },
                 { bad: "Young people don't come to church.", why: "Too vague. Which young people? What have you tried?" },
@@ -2505,7 +2889,7 @@ export default function HackInABox() {
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
             <VideoEmbed videoId="Tz0dpeqcO60" title="How to Use Empathy Maps (Nielsen Norman Group)" duration="4 min" />
             <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
-            <Accordion title="How to Run an Empathy Map Exercise" accent={phaseColors.empathy.accent}>
+            <Accordion spot={artEmpathyExercise} title="How to Run an Empathy Map Exercise" accent={phaseColors.empathy.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Choose Your Subject" duration="5 min" accent={phaseColors.empathy.accent} description="Decide who you're empathizing with — a real person, a type of person, or a community member affected by your challenge." />
                 <StepCard number={2} title="Gather Context" duration="15 min" accent={phaseColors.empathy.accent} description="Read a letter or testimony. Watch a video. Or have the person share their story directly. Listen actively." />
@@ -2513,14 +2897,24 @@ export default function HackInABox() {
                 <StepCard number={4} title="Identify Insights" duration="10 min" accent={phaseColors.empathy.accent} description="Look for tensions, surprises, patterns, and unmet needs. Circle the most important insights." />
               </div>
             </Accordion>
+            <figure style={{ margin: "16px 0 8px" }}>
+              <SectionArt src={artEmpathyMap} alt="A four-quadrant empathy map — Says, Thinks, Does, Feels — filled with sticky-note observations" max={560} style={{ margin: 0 }} />
+              <figcaption style={{ fontSize: 13, color: color.muted, marginTop: 8, fontStyle: "italic", textAlign: "center" }}>Example — what a finished empathy map looks like: four quadrants (Says · Thinks · Does · Feels) filled with sticky-note observations.</figcaption>
+            </figure>
             <TipBox accent={phaseColors.empathy.accent} label="Ministry connection">
               Empathy mapping is a spiritual exercise. It's about genuinely understanding another person's reality — the heart of loving your neighbor. Open with prayer, asking God to help your team see through others' eyes.
             </TipBox>
+          </div>
+        );
 
-            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "32px 0 8px", color: color.ink }}>Personas</h3>
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable.</p>
+      case "personas":
+        return (
+          <div>
+            <PhaseHeader icon="users" title="Personas" subtitle="Turn your empathy work into a few specific, memorable people your team designs for" accent={phaseColors.personas.accent} />
+            <SectionArt src={artPersonaCard} alt="A persona profile card with a portrait, goals, and pain points" max={560} />
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable — and they build directly on the empathy map you just made.</p>
             <AIHelper stepKey="persona" accent={phaseColors.personas.accent} />
-            <Accordion title="How to Create Personas" accent={phaseColors.personas.accent}>
+            <Accordion spot={artEmpathyPersonas} title="How to Create Personas" accent={phaseColors.personas.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Review Your Empathy Map" duration="5 min" accent={phaseColors.personas.accent} description="Look at patterns from empathy mapping. Who are the distinct types of people that emerged? You'll typically identify 2–3 key personas." />
                 <StepCard number={2} title="Give Them a Name and Story" duration="10 min" accent={phaseColors.personas.accent} description="Give each persona a name, age, occupation, and brief backstory. Think about people you actually know who fit this profile." />
@@ -2539,7 +2933,7 @@ export default function HackInABox() {
             <SectionArt src={artIdeate} alt="Sketches and arrows radiating outward, representing divergent ideas" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Now it's time to generate as many ideas as possible. The goal is <strong>quantity over quality</strong> — wild ideas often lead to breakthroughs.</p>
             <VideoEmbed videoId="xpC_pqlmlEM" title="Crazy 8s & sketching — Design Sprint walkthrough" duration="demo" />
-            <Accordion title="Ground Rules for Brainstorming" defaultOpen accent={phaseColors.ideate.accent}>
+            <Accordion spot={artIdeateRules} title="Ground Rules for Brainstorming" defaultOpen accent={phaseColors.ideate.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
                 {[
                   { rule: "Defer Judgment", desc: "No idea is too crazy. Don't evaluate yet." },
@@ -2557,7 +2951,15 @@ export default function HackInABox() {
               </div>
             </Accordion>
             <AIHelper stepKey="ideate" accent={phaseColors.ideate.accent} />
-            <Accordion title="Exercise: Crazy 8s (Recommended!)" accent={phaseColors.ideate.accent}>
+          </div>
+        );
+
+      case "crazy8s":
+        return (
+          <div>
+            <PhaseHeader icon="zap" title="Exercise: Crazy 8s" subtitle="The fastest way to push past the obvious — eight ideas in eight minutes" accent={phaseColors.ideate.accent} />
+            <SectionArt src={artHandsCards} alt="Hands sketching quick ideas on a folded eight-panel sheet" max={560} />
+            <Accordion spot={artIdeateCrazy8s} title="Exercise: Crazy 8s (Recommended!)" defaultOpen accent={phaseColors.ideate.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
                 <StepCard number={1} title="Fold your paper into 8 panels" duration="1 min" accent={phaseColors.ideate.accent} description="Fold a blank sheet into 8 equal rectangles." />
                 <StepCard number={2} title="Set the timer for 8 minutes" duration="8 min" accent={phaseColors.ideate.accent} description="1 minute per panel. Sketch ONE idea per panel. Don't go back!" />
@@ -2574,7 +2976,7 @@ export default function HackInABox() {
             <PhaseHeader icon="cube" title="Prototyping" subtitle="Make your best ideas tangible so you can test them" accent={phaseColors.prototype.accent} />
             <SectionArt src={artPrototype} alt="Hands building a rough paper-and-tape mockup of a phone screen" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>A prototype is a quick, rough version of your idea. It doesn't have to be perfect — the goal is to make it concrete enough for feedback.</p>
-            <Accordion title="What Can a Prototype Look Like?" defaultOpen accent={phaseColors.prototype.accent}>
+            <Accordion spot={artPrototypeForms} title="What Can a Prototype Look Like?" defaultOpen accent={phaseColors.prototype.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, marginTop: 12 }}>
                 {[
                   { type: "Storyboard", desc: "Draw 6–8 panels showing someone's experience", icon: "film" },
@@ -2592,7 +2994,18 @@ export default function HackInABox() {
                 ))}
               </div>
             </Accordion>
-            <Accordion title="The Feedback Framework" accent={phaseColors.prototype.accent}>
+            <PrototypePromptBuilder />
+            <AIHelper stepKey="prototype" accent={phaseColors.prototype.accent} />
+            <ProposalAccordion />
+          </div>
+        );
+
+      case "feedback":
+        return (
+          <div>
+            <PhaseHeader icon="chat" title="Test & Get Feedback" subtitle="Put your prototype in front of people and capture honest reactions" accent={phaseColors.prototype.accent} />
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Once a table has something tangible, have them share it and gather structured feedback. This simple three-prompt framework keeps reactions constructive and specific.</p>
+            <Accordion spot={artPrototypeFeedback} title="The Feedback Framework" defaultOpen accent={phaseColors.prototype.accent}>
               {[
                 { prompt: "I like...", desc: "What's working well?", color: color.accent },
                 { prompt: "I wish...", desc: "What would you change?", color: color.accent },
@@ -2603,10 +3016,7 @@ export default function HackInABox() {
                 </div>
               ))}
             </Accordion>
-
-            <PrototypePromptBuilder />
-            <AIHelper stepKey="prototype" accent={phaseColors.prototype.accent} />
-            <ProposalAccordion />
+            <TipBox accent={phaseColors.prototype.accent}>Assign one person per table to write down the "I wish" and "What if" notes — those are the seeds of your next iteration.</TipBox>
           </div>
         );
 
@@ -2617,13 +3027,19 @@ export default function HackInABox() {
             <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
               <TemplateCard title="Empathy Map Template" image={artEmpathyMap} accent={color.accent} desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
-              <TemplateCard title="Persona Card Template" image={artPersonaCard} accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("empathy")} />
+              <TemplateCard title="Persona Card Template" image={artPersonaCard} accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("personas")} />
               <TemplateCard title="Problem Statement Worksheet" image={artProblemStatement} accent={color.accent} desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
-              <TemplateCard title="SCIPAB Submission Template" accent={color.accent} desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("problem")} launchLabel="Open AI-guided chatbot" />
-              <TemplateCard title="Crazy 8s Sheet" image={artHandsCards} accent={color.accent} desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("ideate")} />
-              <TemplateCard title="Feedback Cards" accent={color.accent} desc="Structured feedback for prototyping." items={["I like...", "I wish...", "What if...", "Overall notes"]} onLaunch={() => navigate("prototype")} />
+              <TemplateCard title="SCIPAB Submission Template" image={artTemplateScipab} accent={color.accent} desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("problem")} launchLabel="Open AI-guided chatbot" />
+              <TemplateCard title="Crazy 8s Sheet" image={artHandsCards} accent={color.accent} desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("crazy8s")} />
+              <TemplateCard title="Feedback Cards" accent={color.accent} desc="Structured feedback for prototyping." items={["I like...", "I wish...", "What if...", "Overall notes"]} onLaunch={() => navigate("feedback")} />
             </div>
+          </div>
+        );
 
+      case "templates-post":
+        return (
+          <div>
+            <PhaseHeader icon="download" title="Post-Sprint Templates" subtitle="Capture results and carry momentum into leadership and follow-up" accent={phaseColors.templates.accent} />
             <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Post-Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
               <TemplateCard title="Sprint Summary One-Pager" image={artSprintSummary} accent={color.accent} desc="Auto-pulls from your other worksheets so the summary writes itself." items={["HMW problem statement", "Starred ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
@@ -2647,7 +3063,7 @@ export default function HackInABox() {
               The sprint is over — but the real work is just beginning. The energy, ideas, and connections from your HIAB are incredibly valuable, but they fade fast without intentional follow-through. This section walks you through three critical phases: capturing what happened, sharing it with leadership, and building a sustainable plan to keep going.
             </p>
 
-            <Accordion title="Phase 1: Capture & Document (Same Day)" defaultOpen accent={phaseColors.after.accent}>
+            <Accordion spot={artAfterPhase1} title="Phase 1: Capture & Document (Same Day)" defaultOpen accent={phaseColors.after.accent}>
               <p>Do these things <strong>before everyone leaves the room</strong> if possible, or within 24 hours at most:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Photo Everything" duration="10 min" accent={phaseColors.after.accent}
@@ -2660,8 +3076,15 @@ export default function HackInABox() {
                   description="Pass out index cards and ask everyone to write: (1) one thing they learned, (2) one thing that surprised them, and (3) their energy level for continuing this work on a scale of 1–5. This gives you valuable data for planning next steps." />
               </div>
             </Accordion>
+          </div>
+        );
 
-            <Accordion title="Phase 2: Share with Leadership (Week 1–2)" accent={phaseColors.after.accent}>
+      case "after-share":
+        return (
+          <div>
+            <PhaseHeader icon="send" title="Share with Leadership" subtitle="Turn sprint energy into buy-in — make a compelling case in week 1–2" accent={phaseColors.after.accent} />
+
+            <Accordion spot={artAfterPhase2} title="Phase 2: Share with Leadership (Week 1–2)" defaultOpen accent={phaseColors.after.accent}>
               <p>Your ideas need champions and buy-in from church leadership to move forward. Here's how to make a compelling case:</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
@@ -2683,8 +3106,15 @@ export default function HackInABox() {
                 Use the <strong onClick={() => navigate("prototype")} style={{ color: phaseColors.after.accent, cursor: "pointer", textDecoration: "underline" }}>Proposal Generator tool</strong> (inside the Prototyping section) to create a polished, AI-refined proposal you can present to leadership.
               </TipBox>
             </Accordion>
+          </div>
+        );
 
-            <Accordion title="Phase 3: Keep It Alive (Month 1–3)" accent={phaseColors.after.accent}>
+      case "after-sustain":
+        return (
+          <div>
+            <PhaseHeader icon="star" title="Keep It Alive" subtitle="Sustain momentum over the first months and build a lasting culture of innovation" accent={phaseColors.after.accent} />
+
+            <Accordion spot={artAfterPhase3} title="Phase 3: Keep It Alive (Month 1–3)" defaultOpen accent={phaseColors.after.accent}>
               <p>The biggest risk after any sprint is losing momentum. Here's how to build a sustainable path forward:</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -2699,7 +3129,7 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <Accordion title="Building a Culture of Innovation" accent={phaseColors.after.accent}>
+            <Accordion spot={artAfterCulture} title="Building a Culture of Innovation" accent={phaseColors.after.accent}>
               <p>One sprint is a great start. But the real power of HIAB comes from making innovation a regular practice in your church:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -2744,13 +3174,13 @@ export default function HackInABox() {
         );
 
       case "partner":
-        return <ThinkingPartner setMode={(m) => (m === "picker" ? setView("home") : navigate(m))} />;
+        return <ThinkingPartner setMode={(m) => navigate(m === "picker" ? "home" : m)} />;
 
       default: return null;
     }
   };
 
-  const goNav = (id) => { setNavOpen(false); id === "home" ? setView("home") : navigate(id); };
+  const goNav = (id) => { navigate(id); };
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: color.bg, fontFamily: font.sans }}>
@@ -2778,11 +3208,22 @@ export default function HackInABox() {
             <span style={{ fontWeight: 700, fontSize: 14, color: color.ink }}>Hack In A Box</span>
           </div>
         )}
+        {inRun && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "8px 18px" : "8px 28px", background: `${color.accent}0c`, borderBottom: `1px solid ${color.lineSoft}`, fontSize: 12.5, color: color.body }}>
+            <Icon name="users" size={15} color={color.accent} />
+            <span><strong>Facilitator guide</strong> — how to lead each step with your team in the room.</span>
+          </div>
+        )}
         {inRun && <StepBar activeSection={view} onNavigate={navigate} />}
         <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: isMobile ? "22px 18px" : "34px 38px" }}>
-          <div style={{ maxWidth: 860, margin: "0 auto" }}>{renderContent(view)}</div>
+          <div style={{ maxWidth: 860, margin: "0 auto" }}>
+            {renderContent(view)}
+            {view !== "partner" && <FlowNav view={view} navigate={navigate} isMobile={isMobile} />}
+          </div>
         </div>
       </div>
+      <FeedbackWidget key={view} section={view} isMobile={isMobile} />
+      {!introSeen && view !== "partner" && <IntroModal onClose={dismissIntro} isMobile={isMobile} />}
     </div>
   );
 }
