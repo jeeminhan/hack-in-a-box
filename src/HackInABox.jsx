@@ -2101,7 +2101,7 @@ export default function HackInABox() {
               Before we dive into tools and techniques, it's worth pausing to reflect on <em>why</em> we do this. Innovation in the church isn't about chasing trends or copying Silicon Valley. It's rooted in something much deeper — the belief that the God who created the universe invites us to be creative partners in His work.
             </p>
 
-            <VideoEmbed videoId="-ivb5R-44ww" title="Sprint by Jake Knapp — the big idea" duration="overview" />
+            <VideoEmbed videoId="16p9YRF0l-g" title="How to build your creative confidence — David Kelley (TED)" duration="12 min" />
 
             <FacilitatorNote title="Facilitator Note: How to Present This Section">
               <p>This section works well as an opening devotional or reflection before the sprint begins. You can read the key passages aloud, discuss the reflection questions as a group, or simply share the core ideas in your own words. The goal is to set a tone of humility, curiosity, and faith-driven creativity before the practical work begins.</p>
@@ -2154,7 +2154,7 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <VideoPlaceholder title="Stories of Innovation in the Church" description="Real examples of churches that ran HIAB sprints and what happened next." duration="10 min" />
+            <VideoEmbed videoId="teyWls_oQTc" title="Expressions Church Story — creative ministry in action" duration="5 min" />
 
             <FacilitatorNote title="Facilitator Note: Presentation Mode">
               <p>If you want to present this content to your group, walk through each section at a comfortable pace. Pause after each reflection question and give people 2–3 minutes to discuss at their tables. End with the guiding values and ask: "Which of these values resonates most with you? Which one do you think our church needs most right now?"</p>
@@ -2185,7 +2185,7 @@ export default function HackInABox() {
                   <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}><Icon name="check" size={16} color={phaseColors.prepare.accent} /><span style={{ fontSize: 15 }}>{item}</span></div>
                 ))}
               </div>
-              <VideoPlaceholder title="Prayer Guide for Innovation Sprints" description="A guided prayer exercise you can use with your team before the event." duration="5 min" />
+              <VideoEmbed videoId="TyawcHXj56M" title="Morning Creativity — a guided prayer before you create" duration="6 min" />
             </Accordion>
 
             <Accordion title="How to Pitch HIAB to Your Pastor or Leadership" accent={phaseColors.prepare.accent}>
@@ -2223,7 +2223,7 @@ export default function HackInABox() {
                   </div>
                 ))}
               </div>
-              <VideoPlaceholder title="Sample Recruitment Video" description="A customizable promo video template you can adapt for your church." duration="2 min" />
+              <VideoEmbed videoId="K-nlw1G8i6o" title="Sample church event invite promo (template inspiration)" duration="90 sec" />
             </Accordion>
 
             <Accordion title="Week-by-Week Planning Timeline" accent={phaseColors.prepare.accent}>
@@ -2403,7 +2403,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="target" title="Writing Problem Statements" subtitle="Clearly define the challenge before you start solving it" accent={phaseColors.problem.accent} />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>The most common reason innovation efforts fail is that teams solve the <em>wrong problem</em>. A well-crafted problem statement focuses your sprint and makes sure solutions address a real need.</p>
-            <VideoEmbed videoId="Z8MOwcqZuuU" title="Design Sprint 2.0: the full process explained" duration="14 min" />
+            <VideoEmbed videoId="sRGk5oKXgCk" title="How Might We — framing the problem (AJ&Smart)" duration="6 min" />
             <FacilitatorNote>
               <p><strong>Process order flexibility:</strong> Some facilitators prefer to do empathy mapping <em>before</em> writing problem statements, so the team understands the people involved before defining the challenge. Others prefer to start with a rough problem statement and then refine it after empathy work. Both approaches work — see the Facilitation Guide for detailed agendas for each path.</p>
             </FacilitatorNote>
@@ -2456,7 +2456,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
-            <VideoEmbed videoId="8-Syxs3SQ7s" title="Jake Knapp & John Zeratsky on running sprints today" duration="interview" />
+            <VideoEmbed videoId="Tz0dpeqcO60" title="How to Use Empathy Maps (Nielsen Norman Group)" duration="4 min" />
             <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
             <Accordion title="How to Run an Empathy Map Exercise" accent={phaseColors.empathy.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
