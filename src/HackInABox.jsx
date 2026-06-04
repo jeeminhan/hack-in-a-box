@@ -1,6 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 import { color, font, pill } from "./theme.js";
 
+// Textured-gouache illustration set (Indigitous orange accent). See
+// assets/illustrations/PLACEMENT.md for the full mapping.
+import artHeroTable from "./assets/illustrations/hero-sprint-table.webp";
+import artHeroBox from "./assets/illustrations/hero-kit-box.webp";
+import artEmpathize from "./assets/illustrations/phase-1-empathize.webp";
+import artDefine from "./assets/illustrations/phase-2-define.webp";
+import artIdeate from "./assets/illustrations/phase-3-ideate.webp";
+import artPrototype from "./assets/illustrations/phase-4-prototype.webp";
+import artPitch from "./assets/illustrations/phase-5-pitch.webp";
+import artAfter from "./assets/illustrations/phase-6-after-sprint.webp";
+import artEmpathyMap from "./assets/illustrations/worksheet-empathy-map.webp";
+import artPersonaCard from "./assets/illustrations/worksheet-persona-card.webp";
+import artProblemStatement from "./assets/illustrations/worksheet-problem-statement.webp";
+import artSprintSummary from "./assets/illustrations/worksheet-sprint-summary.webp";
+import artCommunity from "./assets/illustrations/concept-community-network.webp";
+import artLightbulb from "./assets/illustrations/concept-insight-lightbulb.webp";
+import artStopwatch from "./assets/illustrations/concept-stopwatch.webp";
+import artHandsCards from "./assets/illustrations/concept-hands-cards.webp";
+
 // Five-phase spine. Each phase has an id, label, and the section ids it contains.
 // eslint-disable-next-line react-refresh/only-export-components
 export const PHASES = [
@@ -29,36 +48,6 @@ export const phaseOf = (sectionId) =>
 const phaseColors = new Proxy({}, { get: () => ({ bg: color.rail, accent: color.accent, light: color.accentSoft }) });
 
 const AI_ENDPOINT = import.meta.env.VITE_HIAB_AI_ENDPOINT || "/api/chat";
-
-const WORKSHEET_KEYS = {
-  empathy: "hiab-empathy-map-v1",
-  persona: "hiab-persona-v1",
-  problem: "hiab-problem-v1",
-  crazy8s: "hiab-crazy8s-v1",
-  feedback: "hiab-feedback-v1",
-  summary: "hiab-summary-v1",
-  proposal: "hiab-proposal-v1",
-  plan: "hiab-30-60-90-v1",
-  impact: "hiab-impact-v1",
-};
-
-function readStoredJson(key, fallback = {}) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? { ...fallback, ...JSON.parse(raw) } : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeStoredJson(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 function readStoredString(key, fallback) {
   try {
@@ -99,33 +88,6 @@ async function requestAiCoach(payload) {
   return response.json();
 }
 
-function buildHmw(problem) {
-  if (!problem?.action && !problem?.who && !problem?.outcome) return "";
-  return `How might we ${problem.action || "..."} for ${problem.who || "..."} so that ${problem.outcome || "..."}?`;
-}
-
-function loadSprintSummarySources() {
-  const problem = readStoredJson(WORKSHEET_KEYS.problem);
-  const crazy8s = readStoredJson(WORKSHEET_KEYS.crazy8s, { panels: [] });
-  const empathy = readStoredJson(WORKSHEET_KEYS.empathy);
-  return {
-    hmw: buildHmw(problem),
-    topPanels: (crazy8s.panels || []).filter((x) => x.starred && x.text).map((x) => x.text),
-    empathySubject: empathy.subject || "",
-    insights: empathy.insights || "",
-  };
-}
-
-function loadFeedbackSources() {
-  const problem = readStoredJson(WORKSHEET_KEYS.problem);
-  const crazy8s = readStoredJson(WORKSHEET_KEYS.crazy8s, { panels: [] });
-  return {
-    hmw: buildHmw(problem),
-    starredIdeas: (crazy8s.panels || []).filter((x) => x.starred && x.text).map((x) => x.text),
-    allIdeas: (crazy8s.panels || []).filter((x) => x.text).map((x) => x.text),
-  };
-}
-
 const PROTOTYPE_FORMATS = [
   { key: "storyboard",   label: "Storyboard",            instructions: "Produce 6 frames. For each: a one-sentence caption describing what's on screen and how the user feels. End with the moment they realize the value." },
   { key: "landing",      label: "Sketched landing page", instructions: "Produce a headline, a one-sentence subhead, 3 benefit bullets, a primary call-to-action button label, and a short FAQ of 3 questions with answers." },
@@ -156,24 +118,6 @@ Constraints:
 - Concrete enough that someone can react in 60 seconds.
 - Honest about the rough edges — this is a sketch, not a finished product.
 - End with 3 specific questions I should ask my testers to draw out useful feedback.`;
-}
-
-function loadWorksheetSnapshot() {
-  return {
-    empathy: readStoredJson(WORKSHEET_KEYS.empathy, { says: [], thinks: [], does: [], feels: [] }),
-    persona: readStoredJson(WORKSHEET_KEYS.persona),
-    problem: readStoredJson(WORKSHEET_KEYS.problem, { pains: [], drafts: [] }),
-    crazy8s: readStoredJson(WORKSHEET_KEYS.crazy8s, { panels: [] }),
-    feedback: readStoredJson(WORKSHEET_KEYS.feedback, { likes: [], wishes: [], whatifs: [] }),
-    summary: readStoredJson(WORKSHEET_KEYS.summary),
-    proposal: readStoredJson(WORKSHEET_KEYS.proposal),
-    plan: readStoredJson(WORKSHEET_KEYS.plan, {
-      "30": { tasks: [] },
-      "60": { tasks: [] },
-      "90": { tasks: [] },
-    }),
-    impact: readStoredJson(WORKSHEET_KEYS.impact),
-  };
 }
 
 const SCIPAB_STEPS = [
@@ -340,9 +284,30 @@ function PhaseHeader({ icon, title, subtitle, accent }) {
   );
 }
 
-function TemplateCard({ title, desc, items, accent, onLaunch, launchLabel = "Open interactive worksheet" }) {
+// Reusable framed illustration. Warm-cream backing, rounded, lazy-loaded.
+// `ratio` keeps space reserved so images never cause layout shift.
+function SectionArt({ src, alt, ratio = "16 / 9", max = 680, style }) {
+  return (
+    <div style={{
+      maxWidth: max, margin: "0 0 24px", borderRadius: 14, overflow: "hidden",
+      background: color.rail, border: `1px solid ${color.line}`, ...style,
+    }}>
+      <img
+        src={src} alt={alt} loading="lazy" decoding="async"
+        style={{ display: "block", width: "100%", aspectRatio: ratio, objectFit: "cover" }}
+      />
+    </div>
+  );
+}
+
+function TemplateCard({ title, desc, items, accent, onLaunch, image, launchLabel = "Open interactive worksheet" }) {
   return (
     <div style={{ background: "#fff", borderRadius: 14, padding: 24, border: `1px solid ${accent}18`, boxShadow: `0 2px 12px ${accent}08`, display: "flex", flexDirection: "column" }}>
+      {image && (
+        <div style={{ margin: "-24px -24px 16px", background: color.rail, borderBottom: `1px solid ${accent}12` }}>
+          <img src={image} alt="" loading="lazy" decoding="async" style={{ display: "block", width: "100%", aspectRatio: "16 / 9", objectFit: "cover" }} />
+        </div>
+      )}
       <h4 style={{ margin: "0 0 8px", fontFamily: font.sans, fontSize: 18, color: color.ink }}>{title}</h4>
       <p style={{ margin: "0 0 16px", fontSize: 14, color: color.muted, lineHeight: 1.6 }}>{desc}</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
@@ -361,27 +326,6 @@ function TemplateCard({ title, desc, items, accent, onLaunch, launchLabel = "Ope
           display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
         }}>{launchLabel} →</button>
       )}
-    </div>
-  );
-}
-
-function OpenInSprint({ stepLabel, description, onOpen, accent = color.accent }) {
-  return (
-    <div style={{
-      background: "#fff", borderRadius: 14, padding: "20px 22px",
-      border: `1px solid ${accent}25`, boxShadow: `0 2px 12px ${accent}08`,
-      display: "flex", alignItems: "center", gap: 18, marginTop: 24, marginBottom: 24, flexWrap: "wrap",
-    }}>
-      <div style={{ flex: 1, minWidth: 220 }}>
-        <div style={{ fontSize: 11, color: accent, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 4 }}>Solo Sprint</div>
-        <div style={{ fontFamily: font.sans, fontSize: 17, fontWeight: 700, color: color.ink, marginBottom: 4 }}>Ready to fill this in?</div>
-        <div style={{ fontSize: 14, color: color.muted, lineHeight: 1.55 }}>{description}</div>
-      </div>
-      <button onClick={onOpen} style={{
-        background: accent, color: "#fff", border: "none", borderRadius: 8,
-        padding: "10px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer",
-        fontFamily: font.sans, display: "flex", alignItems: "center", gap: 6,
-      }}>Open {stepLabel} in Solo Sprint →</button>
     </div>
   );
 }
@@ -420,415 +364,54 @@ function VideoPlaceholder({ title, duration }) {
   );
 }
 
-function EmpathyMapWorksheet() {
-  const STORAGE_KEY = WORKSHEET_KEYS.empathy;
-  const quadrants = [
-    { key: "says", title: "SAYS", tint: "#A5D9E7", prompt: "Direct quotes, key phrases" },
-    { key: "thinks", title: "THINKS", tint: "#EFE974", prompt: "Beliefs, worries, hopes" },
-    { key: "does", title: "DOES", tint: "#CBD3EB", prompt: "Actions, behaviors" },
-    { key: "feels", title: "FEELS", tint: "#B86B78", prompt: "Emotions, frustrations, joys" },
-  ];
-
-  const empty = { subject: "", says: [], thinks: [], does: [], feels: [], insights: "" };
-
-  const [data, setData] = useState(() => readStoredJson(STORAGE_KEY, empty));
-
-  useEffect(() => {
-    writeStoredJson(STORAGE_KEY, data);
-  }, [STORAGE_KEY, data]);
-
-  const addNote = (key) => {
-    setData((d) => ({ ...d, [key]: [...d[key], { id: Date.now() + Math.random(), text: "" }] }));
-  };
-
-  const updateNote = (key, id, text) => {
-    setData((d) => ({ ...d, [key]: d[key].map((n) => (n.id === id ? { ...n, text } : n)) }));
-  };
-
-  const deleteNote = (key, id) => {
-    setData((d) => ({ ...d, [key]: d[key].filter((n) => n.id !== id) }));
-  };
-
-  const reset = () => {
-    if (confirm("Clear this empathy map? This can't be undone.")) setData(empty);
-  };
-
-  const noteCount = quadrants.reduce((sum, q) => sum + data[q.key].length, 0);
-
+// Lazy click-to-play YouTube embed — loads the iframe only on click to keep the page light.
+function VideoEmbed({ videoId, title, duration }) {
+  const [playing, setPlaying] = useState(false);
+  const thumb = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
   return (
-    <div style={{ background: "#fff", border: `1px solid ${color.line}`, borderRadius: 16, padding: 24, marginTop: 24, marginBottom: 24 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
-        <div>
-          <div style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, color: color.ink }}>
-            Interactive Empathy Map
-          </div>
-          <div style={{ fontSize: 13, color: color.muted, marginTop: 2 }}>
-            {noteCount} note{noteCount === 1 ? "" : "s"} · auto-saves to this browser
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => window.print()} style={btnStyleSecondary}>Print</button>
-          <button onClick={reset} style={btnStyleDanger}>Reset</button>
-        </div>
+    <div style={{ marginBottom: 20, maxWidth: 560 }}>
+      <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 12, overflow: "hidden", background: "#000", border: `1px solid ${color.line}` }}>
+        {playing ? (
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            loading="lazy"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+          />
+        ) : (
+          <button
+            onClick={() => setPlaying(true)}
+            aria-label={`Play video: ${title}`}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none", padding: 0, cursor: "pointer", backgroundImage: `url(${thumb})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          >
+            <span style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.28)" }} />
+            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 56, height: 56, borderRadius: "50%", background: color.accent, display: "grid", placeItems: "center", boxShadow: "0 4px 14px rgba(0,0,0,0.35)" }}>
+              <span style={{ width: 0, height: 0, borderTop: "10px solid transparent", borderBottom: "10px solid transparent", borderLeft: "16px solid #fff", marginLeft: 4 }} />
+            </span>
+          </button>
+        )}
       </div>
-
-      <label style={{ display: "block", marginBottom: 16 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: color.body, display: "block", marginBottom: 6 }}>
-          Who are we empathizing with?
-        </span>
-        <input
-          type="text"
-          value={data.subject}
-          onChange={(e) => setData((d) => ({ ...d, subject: e.target.value }))}
-          placeholder='e.g. "Maria, 28, young professional new to the neighborhood"'
-          style={{
-            width: "100%", padding: "10px 14px", fontSize: 14, borderRadius: 8,
-            border: `1px solid ${color.line}`, fontFamily: "inherit",
-          }}
-        />
-      </label>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }} className="hiab-empathy-grid">
-        {quadrants.map((q) => (
-          <div key={q.key} style={{
-            background: `${q.tint}22`, border: `1px solid ${color.line}`,
-            borderRadius: 12, padding: 14, minHeight: 220, display: "flex", flexDirection: "column",
-          }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontFamily: font.sans, fontWeight: 700, fontSize: 14, color: color.ink, letterSpacing: 1 }}>
-                {q.title}
-              </span>
-              <span style={{ fontSize: 11, color: color.muted }}>{data[q.key].length}</span>
-            </div>
-            <div style={{ fontSize: 11, color: color.muted, marginBottom: 10 }}>{q.prompt}</div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-              {data[q.key].map((note) => (
-                <div key={note.id} style={{
-                  background: color.rail, borderRadius: 6, padding: "6px 8px",
-                  display: "flex", alignItems: "flex-start", gap: 6,
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-                }}>
-                  <textarea
-                    autoFocus={note.text === ""}
-                    value={note.text}
-                    onChange={(e) => updateNote(q.key, note.id, e.target.value)}
-                    placeholder="Type observation..."
-                    rows={2}
-                    style={{
-                      flex: 1, border: "none", background: "transparent", resize: "none",
-                      fontFamily: "inherit", fontSize: 13, lineHeight: 1.4, color: color.ink,
-                      outline: "none", padding: 0,
-                    }}
-                  />
-                  <button
-                    onClick={() => deleteNote(q.key, note.id)}
-                    style={{ background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 14, lineHeight: 1, padding: 2 }}
-                    aria-label="Delete note"
-                  >×</button>
-                </div>
-              ))}
-            </div>
-
-            <button onClick={() => addNote(q.key)} style={{
-              marginTop: 10, background: "transparent", border: `1px dashed ${color.accent}55`,
-              color: color.accent, borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 600,
-              cursor: "pointer", fontFamily: "inherit",
-            }}>+ Add sticky note</button>
-          </div>
-        ))}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 12, color: color.muted }}>
+        <Icon name="film" size={12} color={color.muted} />
+        <span>{title}{duration ? ` · ${duration}` : ""}</span>
       </div>
-
-      <label style={{ display: "block", marginTop: 16 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: color.body, display: "block", marginBottom: 6 }}>
-          Key insights & patterns
-        </span>
-        <textarea
-          value={data.insights}
-          onChange={(e) => setData((d) => ({ ...d, insights: e.target.value }))}
-          placeholder="What surprised you? What tensions or unmet needs emerged?"
-          rows={3}
-          style={{
-            width: "100%", padding: "10px 14px", fontSize: 14, borderRadius: 8,
-            border: `1px solid ${color.line}`, fontFamily: "inherit", resize: "vertical",
-          }}
-        />
-      </label>
     </div>
   );
 }
-
-const btnStyleSecondary = {
-  background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
-  padding: "8px 14px", fontSize: 13, fontWeight: 500, color: color.body,
-  cursor: "pointer", fontFamily: "inherit",
-};
-
-const btnStyleDanger = {
-  background: "#fff", border: "1px solid #fca5a5", borderRadius: 8,
-  padding: "8px 14px", fontSize: 13, fontWeight: 500, color: "#b91c1c",
-  cursor: "pointer", fontFamily: "inherit",
-};
 
 const inputStyle = {
   width: "100%", padding: "10px 14px", fontSize: 14, borderRadius: 8,
   border: `1px solid ${color.line}`, fontFamily: "inherit", outline: "none",
 };
 
-const textareaStyle = { ...inputStyle, resize: "vertical", lineHeight: 1.55 };
-
 const fieldLabel = { fontSize: 13, fontWeight: 600, color: color.body, display: "block", marginBottom: 6 };
 
-function useWorksheet(storageKey, empty) {
-  const [data, setData] = useState(() => readStoredJson(storageKey, empty));
-  useEffect(() => {
-    writeStoredJson(storageKey, data);
-  }, [storageKey, data]);
-  const reset = (msg = "Clear this worksheet? This can't be undone.") => {
-    if (confirm(msg)) setData(empty);
-  };
-  return [data, setData, reset];
-}
-
-function WorksheetHeader({ title, subtitle, onReset, accent = color.ink }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
-      <div>
-        <div style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, color: accent }}>{title}</div>
-        {subtitle && <div style={{ fontSize: 13, color: color.muted, marginTop: 2 }}>{subtitle}</div>}
-      </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={() => window.print()} style={btnStyleSecondary}>Print</button>
-        {onReset && <button onClick={onReset} style={btnStyleDanger}>Reset</button>}
-      </div>
-    </div>
-  );
-}
-
-function WorksheetShell({ children }) {
-  return (
-    <div style={{ background: "#fff", border: `1px solid ${color.line}`, borderRadius: 16, padding: 24, marginTop: 24, marginBottom: 24 }}>
-      {children}
-    </div>
-  );
-}
-
-// ========== PERSONA CARD WORKSHEET ==========
-function PersonaCardWorksheet() {
-  const empty = {
-    avatar: "👤", name: "", age: "", role: "", backstory: "",
-    goals: "", pains: "", faith: "", needs: "", dayInLife: "",
-  };
-  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.persona, empty);
-  const avatars = ["👤","👩","👨","🧑","👵","👴","👧","👦","🧕","👳","👨‍🦱","👩‍🦰"];
-  const sections = [
-    { key: "goals", label: "Goals & Motivations", color: color.accent, placeholder: "What do they want? What drives them?" },
-    { key: "pains", label: "Pain Points & Frustrations", color: color.accent, placeholder: "What's hard, frustrating, or unmet?" },
-    { key: "faith", label: "Faith Journey", color: color.accent, placeholder: "Where are they on their faith journey? What's their history with church?" },
-    { key: "needs", label: "Needs from the Church", color: color.accent, placeholder: "What would actually help them? What do they wish existed?" },
-  ];
-
-  return (
-    <WorksheetShell>
-      <WorksheetHeader title="Persona Card" subtitle="A vivid picture of someone you're designing for · auto-saves" onReset={reset} />
-
-      <div style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 80, height: 80, borderRadius: "50%", background: color.accentSoft, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>{data.avatar}</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 4, maxWidth: 120, justifyContent: "center" }}>
-            {avatars.map((a) => (
-              <button key={a} onClick={() => setData((d) => ({ ...d, avatar: a }))} style={{
-                background: data.avatar === a ? `${color.accent}20` : "transparent", border: "none",
-                borderRadius: 6, padding: 2, fontSize: 18, cursor: "pointer",
-              }}>{a}</button>
-            ))}
-          </div>
-        </div>
-        <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column", gap: 10 }}>
-          <input value={data.name} onChange={(e) => setData((d) => ({ ...d, name: e.target.value }))} placeholder="Name (e.g. Maria Chen)" style={{ ...inputStyle, fontFamily: font.sans, fontSize: 18, fontWeight: 700 }} />
-          <div style={{ display: "flex", gap: 10 }}>
-            <input value={data.age} onChange={(e) => setData((d) => ({ ...d, age: e.target.value }))} placeholder="Age" style={{ ...inputStyle, width: 80 }} />
-            <input value={data.role} onChange={(e) => setData((d) => ({ ...d, role: e.target.value }))} placeholder="Role / occupation" style={inputStyle} />
-          </div>
-          <textarea value={data.backstory} onChange={(e) => setData((d) => ({ ...d, backstory: e.target.value }))} placeholder="Backstory — 2-3 sentences about who they are" rows={2} style={textareaStyle} />
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }} className="hiab-grid-2">
-        {sections.map((s) => (
-          <div key={s.key} style={{ background: `${s.color}06`, border: `1px solid ${s.color}25`, borderRadius: 12, padding: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: s.color, marginBottom: 8, letterSpacing: 0.3 }}>{s.label}</div>
-            <textarea value={data[s.key]} onChange={(e) => setData((d) => ({ ...d, [s.key]: e.target.value }))} placeholder={s.placeholder} rows={4} style={{ ...textareaStyle, background: "#fff", border: "none" }} />
-          </div>
-        ))}
-      </div>
-
-      <label style={{ display: "block", marginTop: 16 }}>
-        <span style={fieldLabel}>A day in their life</span>
-        <textarea value={data.dayInLife} onChange={(e) => setData((d) => ({ ...d, dayInLife: e.target.value }))} placeholder="Walk through a typical day or week — wake up, work, family, church involvement, free time..." rows={3} style={textareaStyle} />
-      </label>
-    </WorksheetShell>
-  );
-}
-
-// ========== PROBLEM STATEMENT WORKSHEET ==========
-function ProblemStatementWorksheet() {
-  const empty = { pains: [], action: "", who: "", outcome: "", drafts: [] };
-  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.problem, empty);
-
-  const addPain = () => setData((d) => ({ ...d, pains: [...d.pains, { id: Date.now() + Math.random(), text: "", starred: false }] }));
-  const updatePain = (id, text) => setData((d) => ({ ...d, pains: d.pains.map((p) => p.id === id ? { ...p, text } : p) }));
-  const toggleStar = (id) => setData((d) => ({ ...d, pains: d.pains.map((p) => p.id === id ? { ...p, starred: !p.starred } : p) }));
-  const removePain = (id) => setData((d) => ({ ...d, pains: d.pains.filter((p) => p.id !== id) }));
-
-  const hmw = `How might we ${data.action || "[action]"} for ${data.who || "[who]"} so that ${data.outcome || "[desired outcome]"}?`;
-
-  const saveDraft = () => {
-    if (!data.action && !data.who && !data.outcome) return;
-    setData((d) => ({ ...d, drafts: [...d.drafts, { id: Date.now(), text: hmw }] }));
-  };
-
-  return (
-    <WorksheetShell>
-      <WorksheetHeader title="Problem Statement Worksheet" subtitle="Capture pains → cluster → write a How Might We" onReset={reset} accent={color.accent} />
-
-      <div style={{ marginBottom: 20 }}>
-        <div style={fieldLabel}>1. Capture the pains you observe (one per note)</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
-          {data.pains.map((p) => (
-            <div key={p.id} style={{ display: "flex", gap: 8, alignItems: "center", background: p.starred ? `${color.accent}08` : color.rail, borderRadius: 8, padding: "6px 10px", border: p.starred ? `1px solid ${color.accent}` : `1px solid ${color.line}` }}>
-              <button onClick={() => toggleStar(p.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: p.starred ? color.accent : color.line }}>★</button>
-              <input value={p.text} onChange={(e) => updatePain(p.id, e.target.value)} placeholder="What's the frustration or gap?" style={{ flex: 1, border: "none", background: "transparent", fontSize: 14, outline: "none", fontFamily: "inherit" }} />
-              <button onClick={() => removePain(p.id)} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 16 }}>×</button>
-            </div>
-          ))}
-        </div>
-        <button onClick={addPain} style={{ background: "transparent", border: `1px dashed ${color.line}`, color: color.accent, borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>+ Add pain point</button>
-        <div style={{ fontSize: 12, color: color.muted, marginTop: 6 }}>Star the most urgent and actionable ones — those drive your HMW question.</div>
-      </div>
-
-      <div style={{ background: color.rail, borderRadius: 12, padding: 16, marginBottom: 16, border: `1px solid ${color.line}` }}>
-        <div style={{ fontSize: 12, color: color.accent, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>2. Live HMW Preview</div>
-        <div style={{ fontFamily: font.sans, fontSize: 18, lineHeight: 1.5, color: color.ink, fontWeight: 600 }}>"{hmw}"</div>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }} className="hiab-grid-3">
-        <label><span style={fieldLabel}>Action</span><input value={data.action} onChange={(e) => setData((d) => ({ ...d, action: e.target.value }))} placeholder="create, help, support..." style={inputStyle} /></label>
-        <label><span style={fieldLabel}>Who</span><input value={data.who} onChange={(e) => setData((d) => ({ ...d, who: e.target.value }))} placeholder="young families, new visitors..." style={inputStyle} /></label>
-        <label><span style={fieldLabel}>So that</span><input value={data.outcome} onChange={(e) => setData((d) => ({ ...d, outcome: e.target.value }))} placeholder="they feel welcomed..." style={inputStyle} /></label>
-      </div>
-
-      <button onClick={saveDraft} style={{ background: color.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Save this version</button>
-
-      {data.drafts.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <div style={fieldLabel}>Saved versions</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {data.drafts.map((d) => (
-              <div key={d.id} style={{ fontSize: 14, padding: "8px 12px", background: color.rail, borderRadius: 8, color: color.body, fontStyle: "italic" }}>"{d.text}"</div>
-            ))}
-          </div>
-        </div>
-      )}
-    </WorksheetShell>
-  );
-}
-
-// ========== CRAZY 8s WORKSHEET ==========
-function Crazy8sWorksheet() {
-  const empty = { hmw: "", panels: Array.from({ length: 8 }, () => ({ text: "", starred: false })) };
-  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.crazy8s, empty);
-  const [timeLeft, setTimeLeft] = useState(0); // seconds remaining
-  const [running, setRunning] = useState(false);
-  const currentPanel = running || timeLeft > 0 ? Math.min(7, Math.floor((480 - timeLeft) / 60)) : -1;
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(WORKSHEET_KEYS.problem);
-      if (saved && !data.hmw) {
-        const p = JSON.parse(saved);
-        const hmw = `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
-        if (p.action || p.who || p.outcome) setData((d) => ({ ...d, hmw }));
-      }
-    } catch {
-      return;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!running) return;
-    const t = setTimeout(() => {
-      setTimeLeft((s) => {
-        if (s <= 1) {
-          setRunning(false);
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
-    return () => clearTimeout(t);
-  }, [running, timeLeft]);
-
-  const start = () => { setTimeLeft(480); setRunning(true); };
-  const pause = () => setRunning(false);
-  const resume = () => setRunning(true);
-  const stop = () => { setRunning(false); setTimeLeft(0); };
-
-  const updatePanel = (i, patch) => setData((d) => ({
-    ...d, panels: d.panels.map((p, j) => j === i ? { ...p, ...patch } : p),
-  }));
-
-  const mm = String(Math.floor(timeLeft / 60)).padStart(1, "0");
-  const ss = String(timeLeft % 60).padStart(2, "0");
-
-  return (
-    <WorksheetShell>
-      <WorksheetHeader title="Crazy 8s" subtitle="8 ideas in 8 minutes — 1 minute per panel" onReset={reset} accent={color.accent} />
-
-      <div style={{ marginBottom: 16 }}>
-        <span style={fieldLabel}>Your How Might We question</span>
-        <input value={data.hmw} onChange={(e) => setData((d) => ({ ...d, hmw: e.target.value }))} placeholder="How might we ... ?" style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16 }} />
-      </div>
-
-      <div style={{ background: color.rail, border: `1px solid ${color.line}`, borderRadius: 12, padding: 16, marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ fontFamily: font.sans, fontSize: 32, fontWeight: 800, color: color.accent, lineHeight: 1 }}>{mm}:{ss}</div>
-          <div style={{ fontSize: 12, color: color.accent, marginTop: 4 }}>
-            {currentPanel >= 0 && timeLeft > 0 ? `Panel ${currentPanel + 1} of 8` : "Ready to start"}
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {timeLeft === 0 && <button onClick={start} style={{ ...btnStyleSecondary, background: color.accent, color: "#fff", border: "none" }}>Start 8 min</button>}
-          {timeLeft > 0 && running && <button onClick={pause} style={btnStyleSecondary}>Pause</button>}
-          {timeLeft > 0 && !running && <button onClick={resume} style={btnStyleSecondary}>Resume</button>}
-          {timeLeft > 0 && <button onClick={stop} style={btnStyleDanger}>Stop</button>}
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-        {data.panels.map((p, i) => (
-          <div key={i} style={{
-            border: currentPanel === i ? `2px solid ${color.accent}` : `1px solid ${color.line}`,
-            background: p.starred ? `${color.accent}08` : "#fff", borderRadius: 10, padding: 10, minHeight: 140,
-            display: "flex", flexDirection: "column", gap: 6,
-            boxShadow: currentPanel === i ? `0 0 0 4px ${color.accent}22` : "none",
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 11, color: color.muted, fontWeight: 600 }}>#{i + 1}</span>
-              <button onClick={() => updatePanel(i, { starred: !p.starred })} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: p.starred ? color.accent : color.line }}>★</button>
-            </div>
-            <textarea value={p.text} onChange={(e) => updatePanel(i, { text: e.target.value })} placeholder="Sketch or write one idea..." rows={5} style={{ ...textareaStyle, flex: 1, border: "none", padding: 0, fontSize: 13, background: "transparent" }} />
-          </div>
-        ))}
-      </div>
-      <div style={{ fontSize: 12, color: color.muted, marginTop: 8 }}>Tip: on paper, sketch instead of typing. Star your top 2 when the timer ends.</div>
-    </WorksheetShell>
-  );
-}
-
 // ========== PROTOTYPE PROMPT BUILDER ==========
-function PrototypePromptBuilder({ hmw, idea }) {
+function PrototypePromptBuilder({ hmw: hmwProp = "", idea: ideaProp = "" }) {
+  const [hmw, setHmw] = useState(hmwProp);
+  const [idea, setIdea] = useState(ideaProp);
   const [open, setOpen] = useState(false);
   const [formatKey, setFormatKey] = useState(PROTOTYPE_FORMATS[0].key);
   const [audience, setAudience] = useState("");
@@ -879,6 +462,14 @@ function PrototypePromptBuilder({ hmw, idea }) {
 
   return (
     <div style={{ marginBottom: 16, borderRadius: 14, border: `1.5px solid ${color.accent}40`, background: `linear-gradient(135deg, ${color.accent}10, ${color.accent}05)`, padding: "16px 18px" }}>
+      <label style={{ display: "block", marginBottom: 10 }}>
+        <span style={fieldLabel}>Your "How might we…" question</span>
+        <input value={hmw} onChange={(e) => setHmw(e.target.value)} placeholder="How might we …?" style={inputStyle} />
+      </label>
+      <label style={{ display: "block", marginBottom: 14 }}>
+        <span style={fieldLabel}>The idea you want to prototype</span>
+        <input value={idea} onChange={(e) => setIdea(e.target.value)} placeholder="Describe your starred idea" style={inputStyle} />
+      </label>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
         <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 10, background: color.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name="chat" size={18} color="#fff" />
@@ -921,284 +512,6 @@ function PrototypePromptBuilder({ hmw, idea }) {
         <span style={{ fontSize: 12, color: color.muted }}>Paste into ChatGPT, Claude, or any AI assistant to draft your prototype.</span>
       </div>
     </div>
-  );
-}
-
-// ========== FEEDBACK CARDS WORKSHEET ==========
-function FeedbackCardsWorksheet() {
-  const empty = { prototype: "", likes: [], wishes: [], whatifs: [], notes: "" };
-  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.feedback, empty);
-  const [sources] = useState(loadFeedbackSources);
-  const ideaOptions = sources.starredIdeas.length ? sources.starredIdeas : sources.allIdeas;
-  const isCustom = !ideaOptions.includes(data.prototype);
-
-  const cols = [
-    { key: "likes", label: "I like...", desc: "What's working?", color: color.accent },
-    { key: "wishes", label: "I wish...", desc: "What would you change?", color: color.accent },
-    { key: "whatifs", label: "What if...", desc: "New possibilities?", color: color.accent },
-  ];
-
-  const addNote = (key) => setData((d) => ({ ...d, [key]: [...d[key], { id: Date.now() + Math.random(), text: "" }] }));
-  const updateNote = (key, id, text) => setData((d) => ({ ...d, [key]: d[key].map((n) => n.id === id ? { ...n, text } : n) }));
-  const removeNote = (key, id) => setData((d) => ({ ...d, [key]: d[key].filter((n) => n.id !== id) }));
-
-  return (
-    <WorksheetShell>
-      <WorksheetHeader title="Feedback Cards" subtitle="Structured feedback for one prototype" onReset={reset} accent={color.accent} />
-
-      <div style={{ marginBottom: 16 }}>
-        <div style={fieldLabel}>Which prototype is this feedback for?</div>
-        {ideaOptions.length > 0 ? (
-          <>
-            <select
-              value={isCustom ? "__custom" : data.prototype}
-              onChange={(e) => {
-                const v = e.target.value;
-                setData((d) => ({ ...d, prototype: v === "__custom" ? "" : v }));
-              }}
-              style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16, marginBottom: isCustom ? 8 : 0 }}
-            >
-              <option value="">— pick a starred idea from Crazy 8s —</option>
-              {ideaOptions.map((idea, i) => (
-                <option key={i} value={idea}>{idea.length > 80 ? `${idea.slice(0, 80)}…` : idea}</option>
-              ))}
-              <option value="__custom">Other (type your own)</option>
-            </select>
-            {isCustom && (
-              <input
-                value={data.prototype}
-                onChange={(e) => setData((d) => ({ ...d, prototype: e.target.value }))}
-                placeholder="Describe the prototype"
-                style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16 }}
-              />
-            )}
-            {sources.starredIdeas.length === 0 && (
-              <div style={{ fontSize: 12, color: color.muted, marginTop: 6 }}>Tip: star your top ideas in Crazy 8s to highlight them here.</div>
-            )}
-          </>
-        ) : (
-          <input
-            value={data.prototype}
-            onChange={(e) => setData((d) => ({ ...d, prototype: e.target.value }))}
-            placeholder="Which prototype is this feedback for?"
-            style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16 }}
-          />
-        )}
-      </div>
-
-      <PrototypePromptBuilder hmw={sources.hmw} idea={data.prototype} />
-
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }} className="hiab-grid-3">
-        {cols.map((c) => (
-          <div key={c.key} style={{ background: `${c.color}08`, border: `1px solid ${c.color}25`, borderRadius: 12, padding: 12, display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-              <div>
-                <div style={{ fontWeight: 700, color: c.color, fontSize: 14 }}>{c.label}</div>
-                <div style={{ fontSize: 11, color: color.muted }}>{c.desc}</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-              {data[c.key].map((n) => (
-                <div key={n.id} style={{ background: "#fff", borderRadius: 6, padding: "6px 8px", display: "flex", gap: 4 }}>
-                  <textarea value={n.text} onChange={(e) => updateNote(c.key, n.id, e.target.value)} placeholder="..." rows={2} style={{ flex: 1, border: "none", outline: "none", resize: "none", fontSize: 13, fontFamily: "inherit", padding: 0 }} />
-                  <button onClick={() => removeNote(c.key, n.id)} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer" }}>×</button>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => addNote(c.key)} style={{ marginTop: 8, background: "transparent", border: `1px dashed ${c.color}55`, color: c.color, borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>+ Add</button>
-          </div>
-        ))}
-      </div>
-
-      <label style={{ display: "block", marginTop: 16 }}>
-        <span style={fieldLabel}>Overall notes</span>
-        <textarea value={data.notes} onChange={(e) => setData((d) => ({ ...d, notes: e.target.value }))} rows={3} style={textareaStyle} placeholder="Anything else worth capturing?" />
-      </label>
-    </WorksheetShell>
-  );
-}
-
-// ========== SPRINT SUMMARY ONE-PAGER ==========
-function SprintSummaryWorksheet() {
-  const empty = { sprintName: "", date: "", topIdea: "", insights: "", nextSteps: "", owner: "" };
-  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.summary, empty);
-  const [sources] = useState(loadSprintSummarySources);
-
-  return (
-    <WorksheetShell>
-      <WorksheetHeader title="Sprint Summary One-Pager" subtitle="Auto-pulls from your other worksheets" onReset={reset} accent={color.accent} />
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }} className="hiab-grid-2">
-        <label><span style={fieldLabel}>Sprint name</span><input value={data.sprintName} onChange={(e) => setData((d) => ({ ...d, sprintName: e.target.value }))} placeholder="e.g. Young Adults Sprint" style={inputStyle} /></label>
-        <label><span style={fieldLabel}>Date</span><input type="date" value={data.date} onChange={(e) => setData((d) => ({ ...d, date: e.target.value }))} style={inputStyle} /></label>
-      </div>
-
-      <div style={{ background: color.rail, borderRadius: 12, padding: 14, marginBottom: 14, border: `1px solid ${color.line}` }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: color.accent, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>From your Problem Statement</div>
-        <div style={{ fontFamily: font.sans, fontSize: 16, color: color.ink }}>{sources.hmw || "— write a problem statement to pull in your HMW —"}</div>
-      </div>
-
-      <div style={{ background: color.rail, borderRadius: 12, padding: 14, marginBottom: 14, border: `1px solid ${color.line}` }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: color.accent, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>Starred ideas from Crazy 8s</div>
-        {sources.topPanels.length === 0 ? (
-          <div style={{ fontSize: 14, color: color.accent, fontStyle: "italic" }}>— star your top ideas in Crazy 8s to pull them in —</div>
-        ) : (
-          <ul style={{ margin: "4px 0 0", paddingLeft: 18, color: color.ink, fontSize: 14 }}>
-            {sources.topPanels.map((t, i) => <li key={i} style={{ marginBottom: 4 }}>{t}</li>)}
-          </ul>
-        )}
-      </div>
-
-      <label style={{ display: "block", marginBottom: 14 }}>
-        <span style={fieldLabel}>Top idea (the one you're moving forward with)</span>
-        <textarea value={data.topIdea} onChange={(e) => setData((d) => ({ ...d, topIdea: e.target.value }))} rows={3} style={textareaStyle} placeholder="Describe the idea in 2-3 sentences." />
-      </label>
-
-      <label style={{ display: "block", marginBottom: 14 }}>
-        <span style={fieldLabel}>Three key insights</span>
-        <textarea
-          value={data.insights}
-          onChange={(e) => setData((d) => ({ ...d, insights: e.target.value }))}
-          rows={3}
-          style={textareaStyle}
-          placeholder={sources.insights || "What did you learn? What surprised you?"}
-        />
-      </label>
-
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }} className="hiab-grid-2">
-        <label><span style={fieldLabel}>Immediate next steps</span><textarea value={data.nextSteps} onChange={(e) => setData((d) => ({ ...d, nextSteps: e.target.value }))} rows={3} style={textareaStyle} placeholder="What happens in the next 2 weeks?" /></label>
-        <label><span style={fieldLabel}>Owner</span><input value={data.owner} onChange={(e) => setData((d) => ({ ...d, owner: e.target.value }))} placeholder="Who's driving this?" style={inputStyle} /></label>
-      </div>
-    </WorksheetShell>
-  );
-}
-
-// ========== LEADERSHIP PROPOSAL WORKSHEET ==========
-function LeadershipProposalWorksheet() {
-  const empty = { title: "", problem: "", evidence: "", solution: "", served: "", impact: "", resources: "", timeline: "", success: "", ask: "" };
-  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.proposal, empty);
-
-  const sections = [
-    { key: "problem", label: "The problem", placeholder: "What real human need are we addressing?", color: color.accent },
-    { key: "evidence", label: "Evidence", placeholder: "Quotes, stories, observations from your empathy work.", color: color.accent },
-    { key: "solution", label: "Proposed solution", placeholder: "What are we proposing to do?", color: color.accent },
-    { key: "served", label: "Who it serves", placeholder: "Which people specifically benefit?", color: color.accent },
-    { key: "impact", label: "Expected impact", placeholder: "If this works, what changes?", color: color.accent },
-    { key: "resources", label: "Resources needed", placeholder: "Time, money, people, space.", color: color.accent },
-    { key: "timeline", label: "Timeline", placeholder: "When would this happen and over what period?", color: color.accent },
-    { key: "success", label: "What success looks like", placeholder: "How will we know it's working?", color: color.accent },
-    { key: "ask", label: "The specific ask", placeholder: "Be concrete. 'Approve a 6-week pilot with $200 budget.'", color: color.accent },
-  ];
-
-  return (
-    <WorksheetShell>
-      <WorksheetHeader title="Leadership Proposal" subtitle="A structured pitch for pastors and elder boards" onReset={reset} accent={color.accent} />
-
-      <input value={data.title} onChange={(e) => setData((d) => ({ ...d, title: e.target.value }))} placeholder="Proposal title" style={{ ...inputStyle, marginBottom: 14, fontFamily: font.sans, fontSize: 18, fontWeight: 700 }} />
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {sections.map((s) => (
-          <label key={s.key} style={{ display: "block" }}>
-            <span style={{ ...fieldLabel, color: s.color }}>{s.label}</span>
-            <textarea value={data[s.key]} onChange={(e) => setData((d) => ({ ...d, [s.key]: e.target.value }))} placeholder={s.placeholder} rows={2} style={textareaStyle} />
-          </label>
-        ))}
-      </div>
-    </WorksheetShell>
-  );
-}
-
-// ========== 30-60-90 DAY PLAN WORKSHEET ==========
-function ThirtySixtyNinetyWorksheet() {
-  const empty = {
-    "30": { goal: "", tasks: [], checkIn: "" },
-    "60": { goal: "", tasks: [], checkIn: "" },
-    "90": { goal: "", tasks: [], checkIn: "" },
-  };
-  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.plan, empty);
-  const phases = [
-    { key: "30", label: "Day 1–30", subtitle: "Research, plan, assemble team", color: color.accent },
-    { key: "60", label: "Day 31–60", subtitle: "Pilot or prototype in real setting", color: color.accent },
-    { key: "90", label: "Day 61–90", subtitle: "Evaluate, refine, decide next", color: color.accent },
-  ];
-
-  const updatePhase = (key, patch) => setData((d) => ({ ...d, [key]: { ...d[key], ...patch } }));
-  const addTask = (key) => updatePhase(key, { tasks: [...data[key].tasks, { id: Date.now() + Math.random(), text: "", done: false }] });
-  const updateTask = (key, id, patch) => updatePhase(key, { tasks: data[key].tasks.map((t) => t.id === id ? { ...t, ...patch } : t) });
-  const removeTask = (key, id) => updatePhase(key, { tasks: data[key].tasks.filter((t) => t.id !== id) });
-
-  return (
-    <WorksheetShell>
-      <WorksheetHeader title="30-60-90 Day Plan" subtitle="Break your idea into monthly milestones" onReset={reset} accent={color.accent} />
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }} className="hiab-grid-3">
-        {phases.map((p) => (
-          <div key={p.key} style={{ background: `${p.color}06`, border: `1px solid ${p.color}25`, borderRadius: 12, padding: 14 }}>
-            <div style={{ fontWeight: 700, color: p.color, fontSize: 14 }}>{p.label}</div>
-            <div style={{ fontSize: 11, color: color.muted, marginBottom: 10 }}>{p.subtitle}</div>
-
-            <span style={fieldLabel}>Goal</span>
-            <textarea value={data[p.key].goal} onChange={(e) => updatePhase(p.key, { goal: e.target.value })} rows={2} style={{ ...textareaStyle, background: "#fff", border: "none", marginBottom: 10 }} placeholder="What does done look like?" />
-
-            <span style={fieldLabel}>Tasks</span>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 6 }}>
-              {data[p.key].tasks.map((t) => (
-                <div key={t.id} style={{ display: "flex", gap: 6, alignItems: "center", background: "#fff", borderRadius: 6, padding: "4px 8px", textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.6 : 1 }}>
-                  <input type="checkbox" checked={t.done} onChange={(e) => updateTask(p.key, t.id, { done: e.target.checked })} />
-                  <input value={t.text} onChange={(e) => updateTask(p.key, t.id, { text: e.target.value })} placeholder="Task..." style={{ flex: 1, border: "none", background: "transparent", fontSize: 13, outline: "none", fontFamily: "inherit" }} />
-                  <button onClick={() => removeTask(p.key, t.id)} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer" }}>×</button>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => addTask(p.key)} style={{ background: "transparent", border: `1px dashed ${p.color}55`, color: p.color, borderRadius: 6, padding: "4px 8px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>+ Add task</button>
-
-            <span style={fieldLabel}>Check-in date</span>
-            <input type="date" value={data[p.key].checkIn} onChange={(e) => updatePhase(p.key, { checkIn: e.target.value })} style={inputStyle} />
-          </div>
-        ))}
-      </div>
-    </WorksheetShell>
-  );
-}
-
-// ========== IMPACT STORY WORKSHEET ==========
-function ImpactStoryWorksheet() {
-  const empty = { title: "", date: "", challenge: "", built: "", outcomes: "", lessons: "", whatNext: "", photoUrl: "" };
-  const [data, setData, reset] = useWorksheet(WORKSHEET_KEYS.impact, empty);
-
-  const sections = [
-    { key: "challenge", label: "The original challenge", placeholder: "What problem were we trying to solve when we started?" },
-    { key: "built", label: "What the team built/launched", placeholder: "Describe what actually happened in the real world." },
-    { key: "outcomes", label: "Measurable outcomes & stories", placeholder: "Numbers, quotes, stories. What changed for real people?" },
-    { key: "lessons", label: "Lessons learned", placeholder: "What surprised us? What would we do differently?" },
-    { key: "whatNext", label: "What's next", placeholder: "Where do we go from here?" },
-  ];
-
-  return (
-    <WorksheetShell>
-      <WorksheetHeader title="Impact Story" subtitle="6-month retrospective for future inspiration" onReset={reset} accent={color.accent} />
-
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10, marginBottom: 14 }} className="hiab-grid-2">
-        <label><span style={fieldLabel}>Story title</span><input value={data.title} onChange={(e) => setData((d) => ({ ...d, title: e.target.value }))} placeholder='e.g. "How we built community for young professionals"' style={{ ...inputStyle, fontFamily: font.sans, fontSize: 16, fontWeight: 700 }} /></label>
-        <label><span style={fieldLabel}>Date</span><input type="date" value={data.date} onChange={(e) => setData((d) => ({ ...d, date: e.target.value }))} style={inputStyle} /></label>
-      </div>
-
-      <label style={{ display: "block", marginBottom: 14 }}>
-        <span style={fieldLabel}>Photo URL (optional)</span>
-        <input value={data.photoUrl} onChange={(e) => setData((d) => ({ ...d, photoUrl: e.target.value }))} placeholder="Paste a link to a photo from the work" style={inputStyle} />
-        {data.photoUrl && <img src={data.photoUrl} alt="" style={{ maxWidth: "100%", maxHeight: 200, borderRadius: 8, marginTop: 8, objectFit: "cover" }} onError={(e) => e.currentTarget.style.display = "none"} />}
-      </label>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {sections.map((s) => (
-          <label key={s.key}>
-            <span style={{ ...fieldLabel, color: color.accent }}>{s.label}</span>
-            <textarea value={data[s.key]} onChange={(e) => setData((d) => ({ ...d, [s.key]: e.target.value }))} placeholder={s.placeholder} rows={3} style={textareaStyle} />
-          </label>
-        ))}
-      </div>
-    </WorksheetShell>
   );
 }
 
@@ -1495,6 +808,7 @@ function SCIPABChatbot() {
   return (
     <div>
       <PhaseHeader icon="chat" title="Submit a Problem" subtitle="Use our AI-guided SCIPAB tool to articulate your church's challenge" accent={phaseColors.submit.accent} />
+      <SectionArt src={artLightbulb} alt="A lightbulb with a glowing orange filament, representing an insight" max={560} />
 
       {/* Hackable Problem Reminder */}
       <div style={{
@@ -2111,188 +1425,38 @@ function ProposalChatbot({ autoStart = false }) {
   );
 }
 
-// ========== MAIN APP ==========
-const GUIDED_STEPS = [
-  {
-    key: "welcome",
-    title: "Welcome",
-    time: "1 min",
-    accent: color.accent,
-  },
-  {
-    key: "empathize",
-    title: "Empathize",
-    time: "~8 min",
-    accent: color.accent,
-    intro: "Before you can solve a problem, you need to understand the person living it. Pick one real person in your community and capture what they say, think, do, and feel.",
-    Worksheet: EmpathyMapWorksheet,
-    deeper: [
-      "Choose someone specific, not a category. 'Maria, age 28, new to the neighborhood' beats 'young professionals.'",
-      "Listen first, write second. If you have a quote or story, capture exact words.",
-      "Look for tensions — places where what they say and what they do don't match. That's where insight lives.",
-    ],
-  },
-  {
-    key: "persona",
-    title: "Persona",
-    time: "~5 min",
-    accent: color.accent,
-    intro: "Now turn what you learned into a vivid character. A persona makes 'the people we serve' specific enough that you can ask 'would this work for them?' before every decision.",
-    Worksheet: PersonaCardWorksheet,
-    deeper: [
-      "Give them a name, age, and one detail that makes them real (their job, where they live, their week).",
-      "Goals and pain points come from your empathy work — don't invent new ones.",
-      "Keep this card visible during the rest of the sprint.",
-    ],
-    optional: true,
-  },
-  {
-    key: "define",
-    title: "Define",
-    time: "~5 min",
-    accent: color.accent,
-    intro: "The most common reason innovation fails is solving the wrong problem. Capture the pains you observed, then reframe them as one 'How might we' question.",
-    Worksheet: ProblemStatementWorksheet,
-    deeper: [
-      "Add pain points first, one per sticky note. Star the most urgent and actionable.",
-      "Your HMW should be specific enough to act on but open enough to allow creative solutions.",
-      "Bad: 'How might we leverage intergenerational mentorship frameworks…' Good: 'How might we help new visitors build real friendships in their first month?'",
-    ],
-  },
-  {
-    key: "ideate",
-    title: "Ideate",
-    time: "~10 min",
-    accent: color.accent,
-    intro: "Quantity over quality. Wild ideas often lead to breakthroughs. Hit the timer and sketch one idea per minute — don't go back, don't judge.",
-    Worksheet: Crazy8sWorksheet,
-    deeper: [
-      "On paper, sketch with stick figures and arrows. On screen, type fast and short.",
-      "Defer judgment. The 'bad' ideas often become stepping stones to the breakthrough.",
-      "When the timer ends, star your top 2 — those carry forward to the next step.",
-    ],
-  },
-  {
-    key: "prototype",
-    title: "Prototype",
-    time: "~10 min",
-    accent: color.accent,
-    intro: "Pick one starred idea and make it tangible. A prototype isn't perfect — it's just real enough that someone can react to it. Then collect honest feedback in three columns.",
-    Worksheet: FeedbackCardsWorksheet,
-    deeper: [
-      "Prototype formats: storyboard (6 panels), mock flyer, role-play, sketched landing page, schedule, or paper model.",
-      "'I like' affirms what's working. 'I wish' surfaces what's not. 'What if' opens new doors.",
-      "Show it to at least 2-3 people outside the team.",
-    ],
-  },
-  {
-    key: "pitch",
-    title: "Pitch",
-    time: "~5 min",
-    accent: color.accent,
-    intro: "Your idea needs a champion. Pull everything together into a one-pager for your pastor — then refine it into a structured proposal you can present.",
-    tabs: [
-      { label: "Sprint Summary", Worksheet: SprintSummaryWorksheet },
-      { label: "Leadership Proposal", Worksheet: LeadershipProposalWorksheet },
-    ],
-    deeper: [
-      "Lead with the problem and a human story, not the solution.",
-      "Ask for something small and concrete: 'a 6-week pilot,' '$200 to test this,' '5 minutes on Sunday.'",
-      "Small asks get faster yeses.",
-    ],
-  },
-  {
-    key: "done",
-    title: "Done!",
-    time: "",
-    accent: color.accent,
-  },
-];
-
-function StepIntro({ accent, intro }) {
-  return (
-    <p style={{ fontSize: 15, lineHeight: 1.6, color: color.muted, margin: "0 0 20px", paddingLeft: 12, borderLeft: `2px solid ${accent}55` }}>
-      {intro}
-    </p>
-  );
-}
-
-function readWorksheet(key) {
-  try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch { return {}; }
-}
 
 function AIHelper({ stepKey, accent }) {
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [demo, setDemo] = useState(false);
   const [open, setOpen] = useState(false);
+  const [context, setContext] = useState("");
 
   const presets = {
     empathize: [
-      { label: "Critique my empathy map", build: () => {
-        const e = readWorksheet("hiab-empathy-map-v1");
-        return `Here's my empathy map for "${e.subject || "an unnamed subject"}":\n\nSAYS: ${(e.says || []).map((n) => n.text).join("; ") || "(empty)"}\nTHINKS: ${(e.thinks || []).map((n) => n.text).join("; ") || "(empty)"}\nDOES: ${(e.does || []).map((n) => n.text).join("; ") || "(empty)"}\nFEELS: ${(e.feels || []).map((n) => n.text).join("; ") || "(empty)"}\n\nAct as a design thinking coach. Tell me where I'm making assumptions vs. genuinely observing. What's missing? What surprises do I see?`;
-      }},
-      { label: "Process an interview transcript", build: () => "Paste an interview or testimony below, then ask AI to break it into the Says/Thinks/Does/Feels quadrants for an empathy map.\n\n(Replace this with your actual transcript and edit the request.)" },
+      { label: "Critique my empathy notes", build: (c) => `Here are my empathy notes about the person/group I'm designing for:\n\n${c}\n\nAct as a design thinking coach. Tell me where I'm making assumptions vs. genuinely observing. What's missing? What surprises should I dig into?` },
+      { label: "Turn a transcript into Says/Thinks/Does/Feels", build: (c) => `Here is an interview or testimony:\n\n${c}\n\nBreak it into an empathy map with four quadrants — Says, Thinks, Does, Feels. Short bullet points under each.` },
     ],
     persona: [
-      { label: "Generate 2 alternative personas", build: () => {
-        const e = readWorksheet("hiab-empathy-map-v1");
-        const p = readWorksheet("hiab-persona-v1");
-        return `Based on this empathy map and persona, generate 2 alternative personas that represent different segments I might be missing:\n\nEMPATHY: subject=${e.subject || "(none)"}; insights=${e.insights || "(none)"}\nMY PERSONA: ${p.name || "(unnamed)"}, ${p.age || "?"} — ${p.role || "no role"}. Goals: ${p.goals || "(none)"}; Pains: ${p.pains || "(none)"}\n\nGive each alternative a name, age, role, top goal, top pain, and one concrete habit that would surprise me.`;
-      }},
+      { label: "Draft a persona", build: (c) => `Based on what I know about the people I'm designing for:\n\n${c}\n\nDraft a vivid persona: name, age, role, a 2-sentence backstory, top goals, top pain points, and their likely relationship with church. Then suggest one detail I probably haven't considered.` },
+      { label: "Generate alternative personas", build: (c) => `Here's my current persona / audience:\n\n${c}\n\nGenerate 2 alternative personas representing different segments I might be missing. Give each a name, age, role, top goal, top pain, and one concrete habit that would surprise me.` },
     ],
     define: [
-      { label: "Sharpen my How Might We", build: () => {
-        const p = readWorksheet("hiab-problem-v1");
-        const hmw = `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
-        return `My current HMW: "${hmw}"\n\nGive me 3 sharper variations. Make each one specific enough to act on in a 3-hour sprint but open enough for creative solutions. Avoid jargon. Then tell me which of the 3 you'd pick and why.`;
-      }},
-      { label: "Is this a good problem to solve?", build: () => {
-        const p = readWorksheet("hiab-problem-v1");
-        const hmw = `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
-        const pains = (p.pains || []).map((x) => x.text).filter(Boolean).join("; ");
-        return `Evaluate my problem statement for a church design thinking sprint:\n\nHMW: "${hmw}"\nPains observed: ${pains || "(none listed)"}\n\nIs this a problem worth a 3-hour sprint? Score it 1-5 on: specificity, actionability, human-centeredness, and whether it leaves room for creative solutions. Be honest. If it's weak, tell me how to sharpen it.`;
-      }},
+      { label: "Sharpen my How Might We", build: (c) => `Here's my situation and rough problem:\n\n${c}\n\nWrite 3 sharper "How might we..." statements. Each specific enough to act on in a short sprint but open enough for creative solutions. Avoid jargon. Then tell me which one you'd pick and why.` },
+      { label: "Is this a good problem to solve?", build: (c) => `Here's my problem statement and what I've observed:\n\n${c}\n\nScore it 1-5 on specificity, actionability, human-centeredness, and room for creative solutions. Be honest. If weak, tell me how to sharpen it.` },
     ],
     ideate: [
-      { label: "Generate 10 more ideas", build: () => {
-        const p = readWorksheet("hiab-problem-v1");
-        const c = readWorksheet("hiab-crazy8s-v1");
-        const hmw = c.hmw || `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
-        const mine = (c.panels || []).map((x) => x.text).filter(Boolean);
-        return `HMW: "${hmw}"\n\nMy current ideas:\n${mine.length ? mine.map((x, i) => `${i + 1}. ${x}`).join("\n") : "(none yet)"}\n\nGenerate 10 NEW ideas I haven't thought of. Push for wild, unexpected combinations. Include at least 2 that sound impossible at first.`;
-      }},
-      { label: "Combine ideas in fresh ways", build: () => {
-        const c = readWorksheet("hiab-crazy8s-v1");
-        const starred = (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text);
-        return `My starred Crazy 8s ideas:\n${starred.length ? starred.map((x, i) => `${i + 1}. ${x}`).join("\n") : "(none starred yet — star some first)"}\n\nSuggest 3 hybrid ideas that combine elements of two or more of mine. What's the strongest combination, and why?`;
-      }},
+      { label: "Generate 10 more ideas", build: (c) => `Here's my challenge and the ideas I have so far:\n\n${c}\n\nGenerate 10 NEW ideas I haven't thought of. Push for wild, unexpected combinations. Include at least 2 that sound impossible at first.` },
+      { label: "Combine ideas in fresh ways", build: (c) => `Here are my favorite ideas:\n\n${c}\n\nSuggest 3 hybrid ideas that combine elements of two or more. Tell me the strongest combination and why.` },
     ],
     prototype: [
-      { label: "Suggest a prototype format", build: () => {
-        const c = readWorksheet("hiab-crazy8s-v1");
-        const starred = (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text);
-        const top = starred[0] || "(nothing starred yet)";
-        return `My top idea: "${top}"\n\nWhich prototype format would I learn the most from in 30 minutes? Options: storyboard, mock flyer, role-play, sketched landing page, schedule plan, or paper model. Recommend one and tell me exactly what to build.`;
-      }},
-      { label: "Stress-test the idea", build: () => {
-        const c = readWorksheet("hiab-crazy8s-v1");
-        const starred = (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text);
-        const top = starred[0] || "(nothing starred yet)";
-        return `My top idea: "${top}"\n\nAct as a skeptical 60-year-old long-time member of my church. What concerns would you raise? What's likely to go wrong? Where might this fail? Be specific and respectful.`;
-      }},
+      { label: "Suggest a prototype format", build: (c) => `Here's my top idea:\n\n${c}\n\nWhich prototype format would I learn the most from in 30 minutes? Options: storyboard, mock flyer, role-play, sketched landing page, schedule plan, paper model. Recommend one and tell me exactly what to build.` },
+      { label: "Stress-test the idea", build: (c) => `Here's my idea:\n\n${c}\n\nAct as a skeptical long-time member of my church. What concerns would you raise? Where might this fail? Be specific and respectful.` },
     ],
     pitch: [
-      { label: "Critique my proposal", build: () => {
-        const prop = readWorksheet("hiab-proposal-v1");
-        return `Critique my leadership proposal as if you were a pastor with limited time and a healthy skepticism toward new programs:\n\nTitle: ${prop.title || "(none)"}\nProblem: ${prop.problem || "(empty)"}\nEvidence: ${prop.evidence || "(empty)"}\nSolution: ${prop.solution || "(empty)"}\nThe ask: ${prop.ask || "(empty)"}\n\nWhere is this weak? What would make me say yes faster? Be direct.`;
-      }},
-      { label: "Write the elevator pitch", build: () => {
-        const sum = readWorksheet("hiab-summary-v1");
-        const prop = readWorksheet("hiab-proposal-v1");
-        return `Based on this sprint summary, write a 60-second elevator pitch I could deliver to my pastor in the hallway:\n\nTop idea: ${sum.topIdea || "(empty)"}\nProblem: ${prop.problem || "(empty)"}\nAsk: ${prop.ask || "(empty)"}\n\nFormat as something a normal person would say out loud. No jargon. Lead with a human story or concrete observation.`;
-      }},
+      { label: "Critique my proposal", build: (c) => `Here's my proposal to leadership:\n\n${c}\n\nCritique it as a busy pastor with healthy skepticism toward new programs. Where is it weak? What would make me say yes faster? Be direct.` },
+      { label: "Write the elevator pitch", build: (c) => `Here's my idea and the ask:\n\n${c}\n\nWrite a 60-second elevator pitch for my pastor in the hallway. Plain spoken, no jargon, lead with a human story or concrete observation.` },
     ],
   };
 
@@ -2303,7 +1467,8 @@ function AIHelper({ stepKey, accent }) {
   const expanded = open || hasResponses;
 
   const ask = async (build) => {
-    const userMessage = build();
+    const c = context.trim() || "(I haven't written my notes yet — give me general guidance for this step.)";
+    const userMessage = build(c);
     setLoading(true);
     const result = await callAI({
       system: "You are a sharp, kind design thinking coach for church lay leaders. Be concrete, specific, and brief. Use plain English. Never preachy. Bullet points and short paragraphs only.",
@@ -2341,6 +1506,13 @@ function AIHelper({ stepKey, accent }) {
           <button onClick={() => setOpen(false)} aria-label="Close" style={{ marginLeft: "auto", background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 16, lineHeight: 1, fontFamily: "inherit" }}>×</button>
         )}
       </div>
+      <textarea
+        value={context}
+        onChange={(e) => setContext(e.target.value)}
+        placeholder="Tell the AI about your situation for this step — your notes, your audience, your idea…"
+        rows={3}
+        style={{ width: "100%", boxSizing: "border-box", border: `1px solid ${color.line}`, borderRadius: 8, padding: "8px 10px", fontSize: 13, fontFamily: "inherit", resize: "vertical", marginBottom: 10, background: "#fff" }}
+      />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {stepPresets.map((p, i) => (
           <button key={i} onClick={() => ask(p.build)} disabled={loading} style={{
@@ -2350,401 +1522,12 @@ function AIHelper({ stepKey, accent }) {
           }}>{p.label}</button>
         ))}
       </div>
-      {loading && <div style={{ marginTop: 12, fontSize: 13, color: color.muted }}>Thinking...</div>}
+      {loading && <div style={{ marginTop: 12, fontSize: 13, color: color.muted }}>Thinking…</div>}
       {responses.map((r, i) => (
         <div key={i} style={{ marginTop: 14, padding: "12px 14px", background: "#fff", borderRadius: 10, border: `1px solid ${color.line}` }}>
           <div style={{ fontSize: 14, lineHeight: 1.6, color: color.ink, whiteSpace: "pre-wrap" }}>{r.a}</div>
         </div>
       ))}
-    </div>
-  );
-}
-
-function DeeperGuidance({ items, accent }) {
-  const [open, setOpen] = useState(false);
-  if (!items || items.length === 0) return null;
-  return (
-    <div style={{ marginTop: 12, marginBottom: 8 }}>
-      <button onClick={() => setOpen(!open)} style={{
-        background: "none", border: "none", padding: 0,
-        cursor: "pointer", fontFamily: "inherit",
-        color: color.muted, fontWeight: 500, fontSize: 13,
-        textDecoration: "underline", textUnderlineOffset: 3,
-      }}>
-        {open ? "Hide tips" : "More tips"}
-      </button>
-      {open && (
-        <ul style={{ margin: "10px 0 0", padding: "0 0 0 20px", color: color.muted, fontSize: 13, lineHeight: 1.65 }}>
-          {items.map((it, i) => <li key={i} style={{ marginBottom: 4 }}>{it}</li>)}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function PrintableSection({ title, children }) {
-  return (
-    <section style={{ breakInside: "avoid", marginBottom: 24 }}>
-      <h2 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 10px", color: color.ink }}>{title}</h2>
-      <div style={{ border: `1px solid ${color.line}`, borderRadius: 10, padding: 16, background: "#fff" }}>{children}</div>
-    </section>
-  );
-}
-
-function PrintableValue({ label, value }) {
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: color.body, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontSize: 14, lineHeight: 1.6, color: color.ink, whiteSpace: "pre-wrap" }}>{value || "Not captured yet."}</div>
-    </div>
-  );
-}
-
-function PrintableLabel({ children }) {
-  return (
-    <div style={{ fontSize: 11, fontWeight: 700, color: color.body, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
-      {children}
-    </div>
-  );
-}
-
-function PrintableList({ items }) {
-  const visible = (items || []).filter(Boolean);
-  if (visible.length === 0) return <div style={{ fontSize: 14, color: color.body }}>Not captured yet.</div>;
-  return (
-    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.6, color: color.ink }}>
-      {visible.map((item, i) => <li key={i}>{item}</li>)}
-    </ul>
-  );
-}
-
-function PrintPacket({ onClose }) {
-  const [snapshot] = useState(loadWorksheetSnapshot);
-  const hmw = buildHmw(snapshot.problem);
-  const starredIdeas = (snapshot.crazy8s.panels || []).filter((p) => p.starred && p.text).map((p) => p.text);
-  const painPoints = (snapshot.problem.pains || []).filter((p) => p.text).map((p) => `${p.starred ? "★ " : ""}${p.text}`);
-
-  useEffect(() => {
-    document.body.classList.add("hiab-printing");
-    return () => document.body.classList.remove("hiab-printing");
-  }, []);
-
-  return (
-    <div className="hiab-print-packet" style={{
-      position: "fixed", inset: 0, zIndex: 200, overflowY: "auto",
-      background: color.rail, padding: "24px 20px 48px",
-    }}>
-      <style>{`
-        @media print {
-          body.hiab-printing * { visibility: hidden !important; }
-          body.hiab-printing .hiab-print-packet,
-          body.hiab-printing .hiab-print-packet * { visibility: visible !important; }
-          body.hiab-printing .hiab-print-packet {
-            position: absolute !important;
-            inset: 0 !important;
-            overflow: visible !important;
-            background: #fff !important;
-            padding: 0 !important;
-          }
-          .hiab-print-actions { display: none !important; }
-        }
-      `}</style>
-      <div style={{ maxWidth: 820, margin: "0 auto" }}>
-        <div className="hiab-print-actions" style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-          <button onClick={onClose} style={btnStyleSecondary}>Close</button>
-          <button onClick={() => window.print()} style={{ ...btnStyleSecondary, background: color.accent, color: "#fff", border: "none" }}>Print packet</button>
-        </div>
-
-        <header style={{ marginBottom: 24, borderBottom: `2px solid ${color.line}`, paddingBottom: 16 }}>
-          <div style={{ fontSize: 12, color: color.accent, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Hack In A Box Sprint Packet</div>
-          <h1 style={{ fontFamily: font.sans, fontSize: 36, margin: "4px 0", color: color.ink }}>
-            {snapshot.summary.sprintName || "Sprint Summary"}
-          </h1>
-          <div style={{ fontSize: 14, color: color.body }}>{snapshot.summary.date || "Date not captured"}</div>
-        </header>
-
-        <PrintableSection title="Empathy Map">
-          <PrintableValue label="Subject" value={snapshot.empathy.subject} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            {["says", "thinks", "does", "feels"].map((key) => (
-              <div key={key}>
-                <PrintableLabel>{key}</PrintableLabel>
-                <PrintableList items={(snapshot.empathy[key] || []).map((n) => n.text).filter(Boolean)} />
-              </div>
-            ))}
-          </div>
-          <PrintableValue label="Insights" value={snapshot.empathy.insights} />
-        </PrintableSection>
-
-        <PrintableSection title="Persona">
-          <PrintableValue label="Name" value={snapshot.persona.name} />
-          <PrintableValue label="Role / Age" value={[snapshot.persona.role, snapshot.persona.age].filter(Boolean).join(" · ")} />
-          <PrintableValue label="Backstory" value={snapshot.persona.backstory} />
-          <PrintableValue label="Goals & Motivations" value={snapshot.persona.goals} />
-          <PrintableValue label="Pain Points & Frustrations" value={snapshot.persona.pains} />
-          <PrintableValue label="Faith Journey" value={snapshot.persona.faith} />
-          <PrintableValue label="Needs from the Church" value={snapshot.persona.needs} />
-          <PrintableValue label="A Day in Their Life" value={snapshot.persona.dayInLife} />
-        </PrintableSection>
-
-        <PrintableSection title="Problem Statement">
-          <PrintableLabel>Pain Points</PrintableLabel>
-          <PrintableList items={painPoints} />
-          <PrintableValue label="How Might We" value={hmw} />
-        </PrintableSection>
-
-        <PrintableSection title="Crazy 8s — Ideas">
-          <PrintableLabel>Starred Ideas</PrintableLabel>
-          <PrintableList items={starredIdeas} />
-        </PrintableSection>
-
-        <PrintableSection title="Prototype Feedback">
-          <PrintableValue label="Prototype" value={snapshot.feedback.prototype} />
-          <PrintableLabel>I Like</PrintableLabel>
-          <PrintableList items={(snapshot.feedback.likes || []).map((n) => n.text).filter(Boolean)} />
-          <PrintableLabel>I Wish</PrintableLabel>
-          <PrintableList items={(snapshot.feedback.wishes || []).map((n) => n.text).filter(Boolean)} />
-          <PrintableLabel>What If</PrintableLabel>
-          <PrintableList items={(snapshot.feedback.whatifs || []).map((n) => n.text).filter(Boolean)} />
-          <PrintableValue label="Overall Notes" value={snapshot.feedback.notes} />
-        </PrintableSection>
-
-        <PrintableSection title="Sprint Summary">
-          <PrintableValue label="Top Idea" value={snapshot.summary.topIdea} />
-          <PrintableValue label="Three Key Insights" value={snapshot.summary.insights || snapshot.empathy.insights} />
-          <PrintableValue label="Immediate Next Steps" value={snapshot.summary.nextSteps} />
-          <PrintableValue label="Owner" value={snapshot.summary.owner} />
-        </PrintableSection>
-
-        <PrintableSection title="Leadership Proposal">
-          <PrintableValue label="Title" value={snapshot.proposal.title} />
-          <PrintableValue label="The Problem" value={snapshot.proposal.problem} />
-          <PrintableValue label="Evidence" value={snapshot.proposal.evidence} />
-          <PrintableValue label="Proposed Solution" value={snapshot.proposal.solution} />
-          <PrintableValue label="Who It Serves" value={snapshot.proposal.served} />
-          <PrintableValue label="Expected Impact" value={snapshot.proposal.impact} />
-          <PrintableValue label="Resources Needed" value={snapshot.proposal.resources} />
-          <PrintableValue label="Timeline" value={snapshot.proposal.timeline} />
-          <PrintableValue label="What Success Looks Like" value={snapshot.proposal.success} />
-          <PrintableValue label="The Specific Ask" value={snapshot.proposal.ask} />
-        </PrintableSection>
-
-      </div>
-    </div>
-  );
-}
-
-function StepTabs({ tabs, accent, stepKey }) {
-  const storageKey = `hiab-step-tab-${stepKey}`;
-  const [active, setActive] = useState(() => {
-    const saved = parseInt(readStoredString(storageKey, "0"), 10);
-    return Number.isNaN(saved) ? 0 : Math.min(saved, tabs.length - 1);
-  });
-  useEffect(() => { writeStoredString(storageKey, String(active)); }, [storageKey, active]);
-  const ActiveWorksheet = tabs[active].Worksheet;
-  return (
-    <div>
-      <div role="tablist" style={{
-        display: "inline-flex", background: "#fff", border: `1px solid ${color.line}`,
-        borderRadius: 10, padding: 4, marginBottom: 8, gap: 2,
-      }}>
-        {tabs.map((t, i) => {
-          const isActive = i === active;
-          return (
-            <button key={i} role="tab" aria-selected={isActive} onClick={() => setActive(i)} style={{
-              background: isActive ? accent : "transparent",
-              color: isActive ? "#fff" : color.body,
-              border: "none", borderRadius: 7, padding: "7px 14px",
-              fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              transition: "background 0.15s",
-            }}>{t.label}</button>
-          );
-        })}
-      </div>
-      <ActiveWorksheet />
-    </div>
-  );
-}
-
-function GuidedFlow({ setMode }) {
-  const [stepIdx, setStepIdx] = useState(() => {
-    const saved = parseInt(readStoredString("hiab-guided-step", "0"), 10);
-    return Number.isNaN(saved) ? 0 : saved;
-  });
-  const [printPacketOpen, setPrintPacketOpen] = useState(false);
-  useEffect(() => {
-    writeStoredString("hiab-guided-step", String(stepIdx));
-  }, [stepIdx]);
-
-  const step = GUIDED_STEPS[stepIdx];
-  const scrollRef = useRef(null);
-  const goTo = (i) => {
-    setStepIdx(i);
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  };
-  const next = () => stepIdx < GUIDED_STEPS.length - 1 && goTo(stepIdx + 1);
-  const back = () => stepIdx > 0 && goTo(stepIdx - 1);
-
-  const isWelcome = step.key === "welcome";
-  const isDone = step.key === "done";
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: color.rail }}>
-      {/* Header */}
-      <div style={{
-        background: "#fff", borderBottom: `1px solid ${color.line}`, padding: "12px 20px",
-        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => setMode("picker")} title="Home" style={{
-            background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
-            width: 36, height: 36, fontSize: 16, cursor: "pointer", fontFamily: "inherit",
-          }}>←</button>
-          <div>
-            <div style={{ fontFamily: font.sans, fontSize: 16, fontWeight: 900, color: color.ink, lineHeight: 1 }}>Hack In A Box</div>
-            <div style={{ fontSize: 10, color: color.accent, fontWeight: 600, letterSpacing: 0.5, marginTop: 2 }}>SOLO SPRINT</div>
-          </div>
-        </div>
-        <button onClick={() => setMode("reference")} style={{
-          background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
-          padding: "6px 12px", fontSize: 12, color: color.muted, cursor: "pointer", fontFamily: "inherit",
-        }}>Switch to Reference Mode ↗</button>
-      </div>
-
-      {/* Stepper */}
-      <div style={{ background: "#fff", borderBottom: `1px solid ${color.line}`, padding: "10px 20px", overflowX: "auto" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: "max-content" }}>
-          {GUIDED_STEPS.map((s, i) => {
-            const active = i === stepIdx;
-            const done = i < stepIdx;
-            const dotColor = active ? s.accent : done ? color.muted : color.line;
-            return (
-              <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <button onClick={() => goTo(i)} title={s.title} style={{
-                  display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", padding: "2px 4px", fontFamily: "inherit",
-                }}>
-                  <div style={{
-                    width: 20, height: 20, borderRadius: "50%",
-                    background: active ? s.accent : done ? color.muted : "#fff",
-                    border: `2px solid ${dotColor}`,
-                    color: active || done ? "#fff" : color.muted,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 10, fontWeight: 700, fontFamily: font.sans,
-                    transition: "all 0.2s",
-                  }}>{done ? "✓" : i + 1}</div>
-                  {active && (
-                    <span style={{
-                      fontSize: 12, fontWeight: 700, color: s.accent, whiteSpace: "nowrap",
-                    }}>{s.title}</span>
-                  )}
-                </button>
-                {i < GUIDED_STEPS.length - 1 && <div style={{ width: 16, height: 2, background: done ? color.muted : color.line }} />}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Step content */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "32px 20px 100px" }}>
-        <div style={{ maxWidth: 740, margin: "0 auto" }}>
-          {isWelcome && (
-            <div style={{ textAlign: "center", padding: "20px 0" }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: `${color.accent}12`, padding: "6px 16px", borderRadius: 40, color: color.accent, fontSize: 12, fontWeight: 600, letterSpacing: 0.5, marginBottom: 20, textTransform: "uppercase" }}>
-                A 40-minute journey
-              </div>
-              <h1 style={{ fontFamily: font.sans, fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 900, color: color.ink, lineHeight: 1.1, margin: "0 0 16px" }}>
-                Let's run your sprint, together.
-              </h1>
-              <p style={{ fontSize: 17, lineHeight: 1.7, color: color.body, maxWidth: 560, margin: "0 auto 32px" }}>
-                We'll walk through six steps. Each one has a short intro and a worksheet you fill out as you go. Everything auto-saves — close the tab and come back anytime. By the end, you'll have a pitch ready to hand to your pastor.
-              </p>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, maxWidth: 640, margin: "0 auto 32px", textAlign: "left" }}>
-                {GUIDED_STEPS.slice(1, -1).map((s, i) => (
-                  <div key={s.key} style={{ padding: "12px 14px", background: "#fff", borderRadius: 10, borderLeft: `3px solid ${s.accent}` }}>
-                    <div style={{ fontSize: 11, color: color.muted, fontWeight: 600 }}>STEP {i + 1}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: color.ink, marginTop: 2 }}>{s.title}</div>
-                    <div style={{ fontSize: 12, color: s.accent, marginTop: 2 }}>{s.time}</div>
-                  </div>
-                ))}
-              </div>
-
-              <button onClick={next} style={{
-                background: color.accent, color: "#fff", border: "none", borderRadius: 12,
-                padding: "14px 32px", fontSize: 16, fontWeight: 600, cursor: "pointer",
-                fontFamily: "inherit", boxShadow: "0 4px 16px rgba(232, 137, 12, 0.3)",
-              }}>Start with Empathize →</button>
-              <div style={{ fontSize: 12, color: color.muted, marginTop: 12 }}>
-                Prefer to browse the full playbook? <button onClick={() => setMode("reference")} style={{ background: "none", border: "none", color: color.accent, textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0, fontFamily: "inherit" }}>Switch to Reference Mode</button>
-              </div>
-            </div>
-          )}
-
-          {isDone && (
-            <div style={{ textAlign: "center", padding: "40px 20px" }}>
-              <div style={{ marginBottom: 16 }}><Icon name="check" size={56} color={color.accent} /></div>
-              <h1 style={{ fontFamily: font.sans, fontSize: 36, fontWeight: 900, color: color.ink, margin: "0 0 12px" }}>
-                You did it.
-              </h1>
-              <p style={{ fontSize: 17, lineHeight: 1.7, color: color.body, maxWidth: 520, margin: "0 auto 32px" }}>
-                You just ran a complete design thinking sprint. Your pitch, plan, and worksheets are all saved. Print your Sprint Summary, share it with leadership, and start the real work.
-              </p>
-              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
-                <button onClick={() => setPrintPacketOpen(true)} style={{ background: color.accent, color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Print everything</button>
-                <button onClick={() => goTo(0)} style={{ background: "#fff", color: color.ink, border: `1px solid ${color.line}`, borderRadius: 12, padding: "12px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Start over</button>
-              </div>
-              <div style={{ fontSize: 14, color: color.muted, marginTop: 24 }}>
-                Want to revisit a step? <button onClick={() => setMode("reference")} style={{ background: "none", border: "none", color: color.accent, textDecoration: "underline", cursor: "pointer", fontSize: 14, padding: 0, fontFamily: "inherit" }}>Open the full Reference</button>
-              </div>
-            </div>
-          )}
-
-          {!isWelcome && !isDone && (
-            <div>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
-                <h1 style={{ fontFamily: font.sans, fontSize: 32, fontWeight: 800, color: color.ink, margin: 0 }}>
-                  {step.title}
-                  {step.optional && <span style={{ fontSize: 12, color: color.muted, fontWeight: 500, marginLeft: 10, letterSpacing: 0.5 }}>OPTIONAL</span>}
-                </h1>
-                <div style={{ fontSize: 13, color: color.muted }}>{step.time}</div>
-              </div>
-
-              <StepIntro accent={step.accent} intro={step.intro} />
-
-              {step.tabs ? <StepTabs tabs={step.tabs} accent={step.accent} stepKey={step.key} /> : step.Worksheet && <step.Worksheet />}
-
-              <AIHelper stepKey={step.key} accent={step.accent} />
-              <DeeperGuidance items={step.deeper} accent={step.accent} />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Bottom nav */}
-      {!isWelcome && (
-        <div style={{
-          background: "#fff", borderTop: `1px solid ${color.line}`, padding: "12px 20px",
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-        }}>
-          <button onClick={back} style={{
-            background: "#fff", border: `1px solid ${color.line}`, borderRadius: 10,
-            padding: "10px 18px", fontSize: 14, color: color.body, cursor: "pointer", fontFamily: "inherit",
-          }}>← Back</button>
-          <div style={{ fontSize: 12, color: color.muted }}>
-            {step.optional && <button onClick={next} style={{ background: "none", border: "none", color: color.muted, textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0, fontFamily: "inherit" }}>Skip this step</button>}
-          </div>
-          {!isDone ? (
-            <button onClick={next} style={{
-              background: step.accent, color: "#fff", border: "none", borderRadius: 10,
-              padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-            }}>
-              {stepIdx === GUIDED_STEPS.length - 2 ? "Finish" : "Next"} →
-            </button>
-          ) : <div />}
-        </div>
-      )}
-      {printPacketOpen && <PrintPacket onClose={() => setPrintPacketOpen(false)} />}
     </div>
   );
 }
@@ -2790,7 +1573,7 @@ function ModeTopBar({ title, subtitle, accent, onHome }) {
 }
 
 // ========== HOME ==========
-function Home({ onStartSprint, onBrowse }) {
+function Home({ onTryAI, onBrowse }) {
   return (
     <div style={{ minHeight: "100vh", background: color.bg, fontFamily: font.sans, overflowY: "auto" }}>
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "64px 24px 80px", textAlign: "center" }}>
@@ -2804,8 +1587,9 @@ function Home({ onStartSprint, onBrowse }) {
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={onBrowse} style={pill("primary")}>Browse the playbook →</button>
-          <button onClick={onStartSprint} style={pill("secondary")}>Start a Solo Sprint</button>
+          <button onClick={onTryAI} style={pill("secondary")}>Try the AI Thinking Partner</button>
         </div>
+        <SectionArt src={artHeroTable} alt="A team gathered around a table covered in sticky notes during a design sprint" max={620} style={{ margin: "44px auto 0" }} />
         <p style={{ fontSize: 13, color: color.faint, marginTop: 40 }}>Auto-saves to this browser · come back anytime</p>
       </div>
     </div>
@@ -3165,7 +1949,7 @@ export default function HackInABox() {
   const [isMobile, setIsMobile] = useState(false);
   const contentRef = useRef(null);
 
-  const [view, setView] = useState(() => readStoredString("hiab-view", "home")); // "home" | "solo" | <sectionId>
+  const [view, setView] = useState(() => readStoredString("hiab-view", "home")); // "home" | "partner" | <sectionId>
   useEffect(() => { writeStoredString("hiab-view", view); }, [view]);
   const [navOpen, setNavOpen] = useState(false);
   const navigate = (id) => { setView(id); if (contentRef.current) contentRef.current.scrollTop = 0; };
@@ -3185,19 +1969,13 @@ export default function HackInABox() {
     return () => document.head.removeChild(link);
   }, []);
 
-  // GuidedFlow internally calls setMode("picker") and setMode("reference"). Map them:
-  const fromGuided = (m) => setView(m === "picker" ? "home" : m === "reference" ? "overview" : m);
 
-  if (view === "home") return <Home onStartSprint={() => setView("solo")} onBrowse={() => navigate("overview")} />;
-  if (view === "solo") return <GuidedFlow setMode={fromGuided} />;
+  if (view === "home") return <Home onTryAI={() => setView("partner")} onBrowse={() => navigate("overview")} />;
+
 
   const activePhase = phaseOf(view);
   const inRun = activePhase === "run";
 
-  const openSoloAt = (stepIdx) => {
-    writeStoredString("hiab-guided-step", String(stepIdx));
-    setView("solo");
-  };
 
   const renderContent = (active) => {
     switch (active) {
@@ -3318,6 +2096,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="book" title="What is HIAB?" subtitle="Understanding Design Thinking Brainstorm Sprints for faith-based organizations" accent={color.accent} />
+            <SectionArt src={artHeroBox} alt="An open box with a lightbulb and tools lifting out, like a sprint kit being unpacked" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>
               A <strong>Hack In A Box (HIAB)</strong> is a Design Thinking Brainstorm Sprint created by <strong>Indigitous US</strong>, specifically tailored for churches and faith-based organizations. Think of it as a focused retreat where your church's leaders and members come together to pray, brainstorm, and collaborate on solutions to real challenges your ministry faces.
             </p>
@@ -3360,12 +2139,13 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="heart" title="Heart of Innovation" subtitle="Why creativity matters in ministry — and the values that guide our approach" accent={phaseColors.foundation.accent} />
+            <SectionArt src={artCommunity} alt="Houses and people connected in a community network" />
 
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               Before we dive into tools and techniques, it's worth pausing to reflect on <em>why</em> we do this. Innovation in the church isn't about chasing trends or copying Silicon Valley. It's rooted in something much deeper — the belief that the God who created the universe invites us to be creative partners in His work.
             </p>
 
-            <VideoPlaceholder title="Introduction: The Heart of Innovation" description="A short film on why creativity matters in ministry and what drives the HIAB approach." duration="5–8 min" />
+            <VideoEmbed videoId="16p9YRF0l-g" title="How to build your creative confidence — David Kelley (TED)" duration="12 min" />
 
             <FacilitatorNote title="Facilitator Note: How to Present This Section">
               <p>This section works well as an opening devotional or reflection before the sprint begins. You can read the key passages aloud, discuss the reflection questions as a group, or simply share the core ideas in your own words. The goal is to set a tone of humility, curiosity, and faith-driven creativity before the practical work begins.</p>
@@ -3418,7 +2198,7 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <VideoPlaceholder title="Stories of Innovation in the Church" description="Real examples of churches that ran HIAB sprints and what happened next." duration="10 min" />
+            <VideoEmbed videoId="teyWls_oQTc" title="Expressions Church Story — creative ministry in action" duration="5 min" />
 
             <FacilitatorNote title="Facilitator Note: Presentation Mode">
               <p>If you want to present this content to your group, walk through each section at a comfortable pace. Pause after each reflection question and give people 2–3 minutes to discuss at their tables. End with the guiding values and ask: "Which of these values resonates most with you? Which one do you think our church needs most right now?"</p>
@@ -3431,6 +2211,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="clipboard" title="Prepare Your Sprint" subtitle="Everything you need to plan and organize a successful HIAB event" accent={phaseColors.prepare.accent} />
+            <SectionArt src={artStopwatch} alt="A stopwatch marking a short timeboxed sprint" />
 
             <FacilitatorNote title="First-Time Facilitator? Start Here">
               <p>If you've never facilitated a sprint before, here's what to know:</p>
@@ -3449,7 +2230,7 @@ export default function HackInABox() {
                   <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}><Icon name="check" size={16} color={phaseColors.prepare.accent} /><span style={{ fontSize: 15 }}>{item}</span></div>
                 ))}
               </div>
-              <VideoPlaceholder title="Prayer Guide for Innovation Sprints" description="A guided prayer exercise you can use with your team before the event." duration="5 min" />
+              <VideoEmbed videoId="TyawcHXj56M" title="Morning Creativity — a guided prayer before you create" duration="6 min" />
             </Accordion>
 
             <Accordion title="How to Pitch HIAB to Your Pastor or Leadership" accent={phaseColors.prepare.accent}>
@@ -3487,7 +2268,7 @@ export default function HackInABox() {
                   </div>
                 ))}
               </div>
-              <VideoPlaceholder title="Sample Recruitment Video" description="A customizable promo video template you can adapt for your church." duration="2 min" />
+              <VideoEmbed videoId="K-nlw1G8i6o" title="Sample church event invite promo (template inspiration)" duration="90 sec" />
             </Accordion>
 
             <Accordion title="Week-by-Week Planning Timeline" accent={phaseColors.prepare.accent}>
@@ -3658,7 +2439,7 @@ export default function HackInABox() {
               </FacilitatorNote>
             </Accordion>
 
-            <VideoPlaceholder title="Watch a Real HIAB Sprint" description="A behind-the-scenes look at a church running a full sprint from start to finish." duration="15 min" />
+            <VideoEmbed videoId="K2vSQPh6MCE" title="GV's Sprint Process in 90 Seconds (with Jake Knapp)" duration="90 sec" />
           </div>
         );
 
@@ -3666,8 +2447,9 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="target" title="Writing Problem Statements" subtitle="Clearly define the challenge before you start solving it" accent={phaseColors.problem.accent} />
+            <SectionArt src={artDefine} alt="A hand placing one orange sticky note at the center of a cluster, narrowing to one problem" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>The most common reason innovation efforts fail is that teams solve the <em>wrong problem</em>. A well-crafted problem statement focuses your sprint and makes sure solutions address a real need.</p>
-            <VideoPlaceholder title="How to Write a Great Problem Statement" description="A walkthrough of the HMW framework with real church examples." duration="8 min" />
+            <VideoEmbed videoId="sRGk5oKXgCk" title="How Might We — framing the problem (AJ&Smart)" duration="6 min" />
             <FacilitatorNote>
               <p><strong>Process order flexibility:</strong> Some facilitators prefer to do empathy mapping <em>before</em> writing problem statements, so the team understands the people involved before defining the challenge. Others prefer to start with a rough problem statement and then refine it after empathy work. Both approaches work — see the Facilitation Guide for detailed agendas for each path.</p>
             </FacilitatorNote>
@@ -3692,12 +2474,7 @@ export default function HackInABox() {
                 <StepCard number={4} title='Reframe as "How Might We..."' duration="10 min" accent={phaseColors.problem.accent} description='Craft a "How might we..." question that captures the problem. Write several versions and refine until it feels both inspiring and specific.' />
               </div>
             </Accordion>
-            <OpenInSprint
-              stepLabel="Define"
-              description="Capture the pains you observed and reframe them as a How Might We question — inside the guided Solo Sprint flow."
-              accent={phaseColors.problem.accent}
-              onOpen={() => openSoloAt(3)}
-            />
+            <AIHelper stepKey="define" accent={phaseColors.problem.accent} />
             <Accordion title="Common Pitfalls to Avoid" accent={phaseColors.problem.accent}>
               {[
                 { bad: "We need a new website.", why: "This jumps to a solution. What's the underlying problem?" },
@@ -3724,14 +2501,10 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
+            <SectionArt src={artEmpathize} alt="Two people sitting in conversation, one listening closely" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
-            <VideoPlaceholder title="Empathy Mapping in Action" description="Watch a team run through a full empathy map exercise with a real missionary story." duration="10 min" />
-            <OpenInSprint
-              stepLabel="Empathize"
-              description="Capture what your subject says, thinks, does, and feels — inside the guided Solo Sprint flow."
-              accent={phaseColors.empathy.accent}
-              onOpen={() => openSoloAt(1)}
-            />
+            <VideoEmbed videoId="Tz0dpeqcO60" title="How to Use Empathy Maps (Nielsen Norman Group)" duration="4 min" />
+            <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
             <Accordion title="How to Run an Empathy Map Exercise" accent={phaseColors.empathy.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Choose Your Subject" duration="5 min" accent={phaseColors.empathy.accent} description="Decide who you're empathizing with — a real person, a type of person, or a community member affected by your challenge." />
@@ -3746,12 +2519,7 @@ export default function HackInABox() {
 
             <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "32px 0 8px", color: color.ink }}>Personas</h3>
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable.</p>
-            <OpenInSprint
-              stepLabel="Persona"
-              description="Build a vivid character from your empathy work — inside the guided Solo Sprint flow."
-              accent={phaseColors.personas.accent}
-              onOpen={() => openSoloAt(2)}
-            />
+            <AIHelper stepKey="persona" accent={phaseColors.personas.accent} />
             <Accordion title="How to Create Personas" accent={phaseColors.personas.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Review Your Empathy Map" duration="5 min" accent={phaseColors.personas.accent} description="Look at patterns from empathy mapping. Who are the distinct types of people that emerged? You'll typically identify 2–3 key personas." />
@@ -3768,8 +2536,9 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="lightbulb" title="Ideation & Brainstorming" subtitle="Generate wild, creative, God-inspired ideas — then refine them" accent={phaseColors.ideate.accent} />
+            <SectionArt src={artIdeate} alt="Sketches and arrows radiating outward, representing divergent ideas" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Now it's time to generate as many ideas as possible. The goal is <strong>quantity over quality</strong> — wild ideas often lead to breakthroughs.</p>
-            <VideoPlaceholder title="How to Run Crazy 8s" description="A quick demo of the Crazy 8s exercise so you know exactly what to expect." duration="4 min" />
+            <VideoEmbed videoId="xpC_pqlmlEM" title="Crazy 8s & sketching — Design Sprint walkthrough" duration="demo" />
             <Accordion title="Ground Rules for Brainstorming" defaultOpen accent={phaseColors.ideate.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
                 {[
@@ -3787,12 +2556,7 @@ export default function HackInABox() {
                 ))}
               </div>
             </Accordion>
-            <OpenInSprint
-              stepLabel="Ideate"
-              description="Run the 8-minute Crazy 8s timer and star your top ideas — inside the guided Solo Sprint flow."
-              accent={phaseColors.ideate.accent}
-              onOpen={() => openSoloAt(4)}
-            />
+            <AIHelper stepKey="ideate" accent={phaseColors.ideate.accent} />
             <Accordion title="Exercise: Crazy 8s (Recommended!)" accent={phaseColors.ideate.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
                 <StepCard number={1} title="Fold your paper into 8 panels" duration="1 min" accent={phaseColors.ideate.accent} description="Fold a blank sheet into 8 equal rectangles." />
@@ -3808,6 +2572,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="cube" title="Prototyping" subtitle="Make your best ideas tangible so you can test them" accent={phaseColors.prototype.accent} />
+            <SectionArt src={artPrototype} alt="Hands building a rough paper-and-tape mockup of a phone screen" />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>A prototype is a quick, rough version of your idea. It doesn't have to be perfect — the goal is to make it concrete enough for feedback.</p>
             <Accordion title="What Can a Prototype Look Like?" defaultOpen accent={phaseColors.prototype.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, marginTop: 12 }}>
@@ -3839,12 +2604,8 @@ export default function HackInABox() {
               ))}
             </Accordion>
 
-            <OpenInSprint
-              stepLabel="Prototype"
-              description="Pick a starred idea, make it tangible, and collect like / wish / what-if feedback — inside the guided Solo Sprint flow."
-              accent={phaseColors.prototype.accent}
-              onOpen={() => openSoloAt(5)}
-            />
+            <PrototypePromptBuilder />
+            <AIHelper stepKey="prototype" accent={phaseColors.prototype.accent} />
             <ProposalAccordion />
           </div>
         );
@@ -3855,19 +2616,18 @@ export default function HackInABox() {
             <PhaseHeader icon="download" title="Templates & Resources" subtitle="Printable templates and quick-reference cards for your sprint" accent={phaseColors.templates.accent} />
             <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
-              <TemplateCard title="Empathy Map Template" accent={color.accent} desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
-              <TemplateCard title="Persona Card Template" accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("empathy")} />
-              <TemplateCard title="Problem Statement Worksheet" accent={color.accent} desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
+              <TemplateCard title="Empathy Map Template" image={artEmpathyMap} accent={color.accent} desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
+              <TemplateCard title="Persona Card Template" image={artPersonaCard} accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("empathy")} />
+              <TemplateCard title="Problem Statement Worksheet" image={artProblemStatement} accent={color.accent} desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
               <TemplateCard title="SCIPAB Submission Template" accent={color.accent} desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("problem")} launchLabel="Open AI-guided chatbot" />
-              <TemplateCard title="Crazy 8s Sheet" accent={color.accent} desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("ideate")} />
+              <TemplateCard title="Crazy 8s Sheet" image={artHandsCards} accent={color.accent} desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("ideate")} />
               <TemplateCard title="Feedback Cards" accent={color.accent} desc="Structured feedback for prototyping." items={["I like...", "I wish...", "What if...", "Overall notes"]} onLaunch={() => navigate("prototype")} />
             </div>
 
             <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Post-Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
-              <TemplateCard title="Sprint Summary One-Pager" accent={color.accent} desc="Auto-pulls from your other worksheets so the summary writes itself." items={["HMW problem statement", "Starred ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
+              <TemplateCard title="Sprint Summary One-Pager" image={artSprintSummary} accent={color.accent} desc="Auto-pulls from your other worksheets so the summary writes itself." items={["HMW problem statement", "Starred ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Leadership Proposal Card" accent={color.accent} desc="A structured pitch card for presenting ideas to pastors and elder boards." items={["The problem (with evidence)", "The proposed solution", "Who it serves and expected impact", "Resources needed and timeline", "What success looks like"]} onLaunch={() => navigate("after")} />
-              <TemplateCard title="30-60-90 Day Action Plan" accent={color.accent} desc="Break your idea into achievable monthly milestones." items={["Day 1–30: Research, plan, and assemble team", "Day 31–60: Pilot or prototype in real setting", "Day 61–90: Evaluate, refine, and expand", "Key metrics and check-in dates"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Impact Story Template" accent={color.accent} desc="Document what happened 6 months after your sprint for future inspiration." items={["The original challenge", "What the team built/launched", "Measurable outcomes and stories", "Lessons learned and what's next"]} onLaunch={() => navigate("after")} />
             </div>
 
@@ -3881,6 +2641,7 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="star" title="After the Sprint" subtitle="How to capture momentum, share results, and keep your ideas alive" accent={phaseColors.after.accent} />
+            <SectionArt src={artAfter} alt="A winding path with milestone flags leading toward the horizon" />
 
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               The sprint is over — but the real work is just beginning. The energy, ideas, and connections from your HIAB are incredibly valuable, but they fade fast without intentional follow-through. This section walks you through three critical phases: capturing what happened, sharing it with leadership, and building a sustainable plan to keep going.
@@ -3900,12 +2661,6 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <OpenInSprint
-              stepLabel="Pitch"
-              description="The Sprint Summary one-pager lives in the Solo Sprint Pitch step — fill it in there."
-              accent={phaseColors.after.accent}
-              onOpen={() => openSoloAt(6)}
-            />
             <Accordion title="Phase 2: Share with Leadership (Week 1–2)" accent={phaseColors.after.accent}>
               <p>Your ideas need champions and buy-in from church leadership to move forward. Here's how to make a compelling case:</p>
 
@@ -3929,31 +2684,21 @@ export default function HackInABox() {
               </TipBox>
             </Accordion>
 
-            <OpenInSprint
-              stepLabel="Pitch"
-              description="The Leadership Proposal lives in the Solo Sprint Pitch step — fill it in there."
-              accent={phaseColors.after.accent}
-              onOpen={() => openSoloAt(6)}
-            />
             <Accordion title="Phase 3: Keep It Alive (Month 1–3)" accent={phaseColors.after.accent}>
               <p>The biggest risk after any sprint is losing momentum. Here's how to build a sustainable path forward:</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Appoint an Innovation Champion" accent={phaseColors.after.accent}
                   description="For each idea moving forward, identify one person who owns it. This person doesn't do all the work — they keep the conversation alive, schedule check-ins, and make sure things don't slip through the cracks. Ideally someone with energy and organizational skills." />
-                <StepCard number={2} title="Create a 30-60-90 Day Plan" accent={phaseColors.after.accent}
-                  description="Break the idea into three monthly phases. Month 1: research, plan, and assemble your team. Month 2: pilot or prototype in a real setting with real people. Month 3: evaluate results, refine, and decide whether to expand, pivot, or pause. (See Templates section for the template)" />
-                <StepCard number={3} title="Schedule Bi-Weekly Check-Ins" accent={phaseColors.after.accent}
+                <StepCard number={2} title="Schedule Bi-Weekly Check-Ins" accent={phaseColors.after.accent}
                   description="Put 30-minute check-ins on the calendar every two weeks. These can be brief — just go around and share: What did you do? What did you learn? What's blocking you? What's next? Consistency matters more than length." />
-                <StepCard number={4} title="Run a Follow-Up Mini-Sprint" duration="2 hours at week 6" accent={phaseColors.after.accent}
+                <StepCard number={3} title="Run a Follow-Up Mini-Sprint" duration="2 hours at week 6" accent={phaseColors.after.accent}
                   description="Schedule a 2-hour reunion at the 6-week mark. Teams share what they've tried, what they've learned, and what surprised them. Then do a quick ideation round to iterate on the original idea based on real-world feedback. This keeps the design thinking muscle active." />
-                <StepCard number={5} title="Document Your Impact Story" accent={phaseColors.after.accent}
+                <StepCard number={4} title="Document Your Impact Story" accent={phaseColors.after.accent}
                   description="At the 6-month mark, write up what happened. Use the Impact Story Template to document the original challenge, what the team built, measurable outcomes, and lessons learned. These stories inspire future sprints and build a culture of innovation." />
               </div>
             </Accordion>
 
-            <ThirtySixtyNinetyWorksheet />
-            <ImpactStoryWorksheet />
             <Accordion title="Building a Culture of Innovation" accent={phaseColors.after.accent}>
               <p>One sprint is a great start. But the real power of HIAB comes from making innovation a regular practice in your church:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -3993,12 +2738,8 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="send" title="Pitch to leadership" subtitle="Turn your prototype into a one-page proposal you can hand to your pastor or leadership" accent={phaseColors.proposal.accent} />
-            <OpenInSprint
-              stepLabel="Pitch"
-              description="Build your Sprint Summary one-pager and Leadership Proposal — inside the guided Solo Sprint flow."
-              accent={phaseColors.proposal.accent}
-              onOpen={() => openSoloAt(6)}
-            />
+            <SectionArt src={artPitch} alt="A person presenting at an easel to a small seated group" />
+            <AIHelper stepKey="pitch" accent={phaseColors.proposal.accent} />
           </div>
         );
 
@@ -4016,8 +2757,6 @@ export default function HackInABox() {
       <style>{`
         @media (max-width: 767px) {
           .hiab-grid-2 { grid-template-columns: 1fr !important; }
-          .hiab-grid-3 { grid-template-columns: 1fr !important; }
-          .hiab-empathy-grid { grid-template-columns: 1fr !important; }
         }
         html { -webkit-text-size-adjust: 100%; }
       `}</style>
