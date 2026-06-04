@@ -2204,73 +2204,32 @@ function AIHelper({ stepKey, accent }) {
   const [loading, setLoading] = useState(false);
   const [demo, setDemo] = useState(false);
   const [open, setOpen] = useState(false);
+  const [context, setContext] = useState("");
 
   const presets = {
     empathize: [
-      { label: "Critique my empathy map", build: () => {
-        const e = readWorksheet("hiab-empathy-map-v1");
-        return `Here's my empathy map for "${e.subject || "an unnamed subject"}":\n\nSAYS: ${(e.says || []).map((n) => n.text).join("; ") || "(empty)"}\nTHINKS: ${(e.thinks || []).map((n) => n.text).join("; ") || "(empty)"}\nDOES: ${(e.does || []).map((n) => n.text).join("; ") || "(empty)"}\nFEELS: ${(e.feels || []).map((n) => n.text).join("; ") || "(empty)"}\n\nAct as a design thinking coach. Tell me where I'm making assumptions vs. genuinely observing. What's missing? What surprises do I see?`;
-      }},
-      { label: "Process an interview transcript", build: () => "Paste an interview or testimony below, then ask AI to break it into the Says/Thinks/Does/Feels quadrants for an empathy map.\n\n(Replace this with your actual transcript and edit the request.)" },
+      { label: "Critique my empathy notes", build: (c) => `Here are my empathy notes about the person/group I'm designing for:\n\n${c}\n\nAct as a design thinking coach. Tell me where I'm making assumptions vs. genuinely observing. What's missing? What surprises should I dig into?` },
+      { label: "Turn a transcript into Says/Thinks/Does/Feels", build: (c) => `Here is an interview or testimony:\n\n${c}\n\nBreak it into an empathy map with four quadrants — Says, Thinks, Does, Feels. Short bullet points under each.` },
     ],
     persona: [
-      { label: "Generate 2 alternative personas", build: () => {
-        const e = readWorksheet("hiab-empathy-map-v1");
-        const p = readWorksheet("hiab-persona-v1");
-        return `Based on this empathy map and persona, generate 2 alternative personas that represent different segments I might be missing:\n\nEMPATHY: subject=${e.subject || "(none)"}; insights=${e.insights || "(none)"}\nMY PERSONA: ${p.name || "(unnamed)"}, ${p.age || "?"} — ${p.role || "no role"}. Goals: ${p.goals || "(none)"}; Pains: ${p.pains || "(none)"}\n\nGive each alternative a name, age, role, top goal, top pain, and one concrete habit that would surprise me.`;
-      }},
+      { label: "Draft a persona", build: (c) => `Based on what I know about the people I'm designing for:\n\n${c}\n\nDraft a vivid persona: name, age, role, a 2-sentence backstory, top goals, top pain points, and their likely relationship with church. Then suggest one detail I probably haven't considered.` },
+      { label: "Generate alternative personas", build: (c) => `Here's my current persona / audience:\n\n${c}\n\nGenerate 2 alternative personas representing different segments I might be missing. Give each a name, age, role, top goal, top pain, and one concrete habit that would surprise me.` },
     ],
     define: [
-      { label: "Sharpen my How Might We", build: () => {
-        const p = readWorksheet("hiab-problem-v1");
-        const hmw = `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
-        return `My current HMW: "${hmw}"\n\nGive me 3 sharper variations. Make each one specific enough to act on in a 3-hour sprint but open enough for creative solutions. Avoid jargon. Then tell me which of the 3 you'd pick and why.`;
-      }},
-      { label: "Is this a good problem to solve?", build: () => {
-        const p = readWorksheet("hiab-problem-v1");
-        const hmw = `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
-        const pains = (p.pains || []).map((x) => x.text).filter(Boolean).join("; ");
-        return `Evaluate my problem statement for a church design thinking sprint:\n\nHMW: "${hmw}"\nPains observed: ${pains || "(none listed)"}\n\nIs this a problem worth a 3-hour sprint? Score it 1-5 on: specificity, actionability, human-centeredness, and whether it leaves room for creative solutions. Be honest. If it's weak, tell me how to sharpen it.`;
-      }},
+      { label: "Sharpen my How Might We", build: (c) => `Here's my situation and rough problem:\n\n${c}\n\nWrite 3 sharper "How might we..." statements. Each specific enough to act on in a short sprint but open enough for creative solutions. Avoid jargon. Then tell me which one you'd pick and why.` },
+      { label: "Is this a good problem to solve?", build: (c) => `Here's my problem statement and what I've observed:\n\n${c}\n\nScore it 1-5 on specificity, actionability, human-centeredness, and room for creative solutions. Be honest. If weak, tell me how to sharpen it.` },
     ],
     ideate: [
-      { label: "Generate 10 more ideas", build: () => {
-        const p = readWorksheet("hiab-problem-v1");
-        const c = readWorksheet("hiab-crazy8s-v1");
-        const hmw = c.hmw || `How might we ${p.action || "..."} for ${p.who || "..."} so that ${p.outcome || "..."}?`;
-        const mine = (c.panels || []).map((x) => x.text).filter(Boolean);
-        return `HMW: "${hmw}"\n\nMy current ideas:\n${mine.length ? mine.map((x, i) => `${i + 1}. ${x}`).join("\n") : "(none yet)"}\n\nGenerate 10 NEW ideas I haven't thought of. Push for wild, unexpected combinations. Include at least 2 that sound impossible at first.`;
-      }},
-      { label: "Combine ideas in fresh ways", build: () => {
-        const c = readWorksheet("hiab-crazy8s-v1");
-        const starred = (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text);
-        return `My starred Crazy 8s ideas:\n${starred.length ? starred.map((x, i) => `${i + 1}. ${x}`).join("\n") : "(none starred yet — star some first)"}\n\nSuggest 3 hybrid ideas that combine elements of two or more of mine. What's the strongest combination, and why?`;
-      }},
+      { label: "Generate 10 more ideas", build: (c) => `Here's my challenge and the ideas I have so far:\n\n${c}\n\nGenerate 10 NEW ideas I haven't thought of. Push for wild, unexpected combinations. Include at least 2 that sound impossible at first.` },
+      { label: "Combine ideas in fresh ways", build: (c) => `Here are my favorite ideas:\n\n${c}\n\nSuggest 3 hybrid ideas that combine elements of two or more. Tell me the strongest combination and why.` },
     ],
     prototype: [
-      { label: "Suggest a prototype format", build: () => {
-        const c = readWorksheet("hiab-crazy8s-v1");
-        const starred = (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text);
-        const top = starred[0] || "(nothing starred yet)";
-        return `My top idea: "${top}"\n\nWhich prototype format would I learn the most from in 30 minutes? Options: storyboard, mock flyer, role-play, sketched landing page, schedule plan, or paper model. Recommend one and tell me exactly what to build.`;
-      }},
-      { label: "Stress-test the idea", build: () => {
-        const c = readWorksheet("hiab-crazy8s-v1");
-        const starred = (c.panels || []).filter((x) => x.starred && x.text).map((x) => x.text);
-        const top = starred[0] || "(nothing starred yet)";
-        return `My top idea: "${top}"\n\nAct as a skeptical 60-year-old long-time member of my church. What concerns would you raise? What's likely to go wrong? Where might this fail? Be specific and respectful.`;
-      }},
+      { label: "Suggest a prototype format", build: (c) => `Here's my top idea:\n\n${c}\n\nWhich prototype format would I learn the most from in 30 minutes? Options: storyboard, mock flyer, role-play, sketched landing page, schedule plan, paper model. Recommend one and tell me exactly what to build.` },
+      { label: "Stress-test the idea", build: (c) => `Here's my idea:\n\n${c}\n\nAct as a skeptical long-time member of my church. What concerns would you raise? Where might this fail? Be specific and respectful.` },
     ],
     pitch: [
-      { label: "Critique my proposal", build: () => {
-        const prop = readWorksheet("hiab-proposal-v1");
-        return `Critique my leadership proposal as if you were a pastor with limited time and a healthy skepticism toward new programs:\n\nTitle: ${prop.title || "(none)"}\nProblem: ${prop.problem || "(empty)"}\nEvidence: ${prop.evidence || "(empty)"}\nSolution: ${prop.solution || "(empty)"}\nThe ask: ${prop.ask || "(empty)"}\n\nWhere is this weak? What would make me say yes faster? Be direct.`;
-      }},
-      { label: "Write the elevator pitch", build: () => {
-        const sum = readWorksheet("hiab-summary-v1");
-        const prop = readWorksheet("hiab-proposal-v1");
-        return `Based on this sprint summary, write a 60-second elevator pitch I could deliver to my pastor in the hallway:\n\nTop idea: ${sum.topIdea || "(empty)"}\nProblem: ${prop.problem || "(empty)"}\nAsk: ${prop.ask || "(empty)"}\n\nFormat as something a normal person would say out loud. No jargon. Lead with a human story or concrete observation.`;
-      }},
+      { label: "Critique my proposal", build: (c) => `Here's my proposal to leadership:\n\n${c}\n\nCritique it as a busy pastor with healthy skepticism toward new programs. Where is it weak? What would make me say yes faster? Be direct.` },
+      { label: "Write the elevator pitch", build: (c) => `Here's my idea and the ask:\n\n${c}\n\nWrite a 60-second elevator pitch for my pastor in the hallway. Plain spoken, no jargon, lead with a human story or concrete observation.` },
     ],
   };
 
@@ -2281,7 +2240,8 @@ function AIHelper({ stepKey, accent }) {
   const expanded = open || hasResponses;
 
   const ask = async (build) => {
-    const userMessage = build();
+    const c = context.trim() || "(I haven't written my notes yet — give me general guidance for this step.)";
+    const userMessage = build(c);
     setLoading(true);
     const result = await callAI({
       system: "You are a sharp, kind design thinking coach for church lay leaders. Be concrete, specific, and brief. Use plain English. Never preachy. Bullet points and short paragraphs only.",
@@ -2319,6 +2279,13 @@ function AIHelper({ stepKey, accent }) {
           <button onClick={() => setOpen(false)} aria-label="Close" style={{ marginLeft: "auto", background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 16, lineHeight: 1, fontFamily: "inherit" }}>×</button>
         )}
       </div>
+      <textarea
+        value={context}
+        onChange={(e) => setContext(e.target.value)}
+        placeholder="Tell the AI about your situation for this step — your notes, your audience, your idea…"
+        rows={3}
+        style={{ width: "100%", boxSizing: "border-box", border: `1px solid ${color.line}`, borderRadius: 8, padding: "8px 10px", fontSize: 13, fontFamily: "inherit", resize: "vertical", marginBottom: 10, background: "#fff" }}
+      />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {stepPresets.map((p, i) => (
           <button key={i} onClick={() => ask(p.build)} disabled={loading} style={{
@@ -2328,7 +2295,7 @@ function AIHelper({ stepKey, accent }) {
           }}>{p.label}</button>
         ))}
       </div>
-      {loading && <div style={{ marginTop: 12, fontSize: 13, color: color.muted }}>Thinking...</div>}
+      {loading && <div style={{ marginTop: 12, fontSize: 13, color: color.muted }}>Thinking…</div>}
       {responses.map((r, i) => (
         <div key={i} style={{ marginTop: 14, padding: "12px 14px", background: "#fff", borderRadius: 10, border: `1px solid ${color.line}` }}>
           <div style={{ fontSize: 14, lineHeight: 1.6, color: color.ink, whiteSpace: "pre-wrap" }}>{r.a}</div>
