@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     userAgent: String(req.headers["user-agent"] || "").slice(0, 300),
   };
 
-  const webhook = process.env.FEEDBACK_WEBHOOK_URL;
+  const webhook = resolveWebhook(process.env.FEEDBACK_WEBHOOK_URL);
   if (!webhook) {
     // No sheet wired yet — accept it so the UI works, and log for inspection.
     console.log("[feedback] (no FEEDBACK_WEBHOOK_URL set)", JSON.stringify(record));
@@ -41,25 +41,23 @@ export default async function handler(req, res) {
     if (!upstream.ok) {
       const detail = await upstream.text().catch(() => "");
       console.error("[feedback] webhook error", upstream.status, detail.slice(0, 300));
-      // Surface the upstream status for diagnosis (the Apps Script is the user's own).
-      res.status(502).json({
-        ok: false,
-        error: "Could not record feedback",
-        upstreamStatus: upstream.status,
-        upstreamSnippet: detail.slice(0, 160),
-        finalUrlWasRedirected: upstream.redirected || false,
-      });
+      res.status(502).json({ ok: false, error: "Could not record feedback", upstreamStatus: upstream.status });
       return;
     }
     res.status(200).json({ ok: true, stored: true });
   } catch (err) {
     console.error("[feedback] forward failed", err?.message);
-    res.status(502).json({
-      ok: false,
-      error: "Could not record feedback",
-      forwardError: String(err?.message || err),
-      urlLen: webhook.length,
-      urlTrimmedDiffers: webhook !== webhook.trim(),
-    });
+    res.status(502).json({ ok: false, error: "Could not record feedback" });
   }
+}
+
+// Accepts either a full Apps Script web-app URL or just the bare deployment id
+// (the "AKfyc…" string), and normalizes it to a working /exec URL. This makes the
+// env var forgiving of the most common paste mistake.
+function resolveWebhook(raw) {
+  const v = String(raw || "").trim();
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^AKfyc[A-Za-z0-9_-]+$/.test(v)) return `https://script.google.com/macros/s/${v}/exec`;
+  return v;
 }
