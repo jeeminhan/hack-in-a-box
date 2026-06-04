@@ -2082,24 +2082,31 @@ function FlowNav({ view, navigate, isMobile }) {
 // corner; it auto-opens once per page, and after dismiss/submit it collapses back to the
 // pill (never fully disappears) so testers can always reopen it. Posts to /api/feedback.
 const FEEDBACK_DONE_KEY = "hiab-feedback-done";
+const FEEDBACK_SNOOZE_KEY = "hiab-feedback-snooze";
 
 function FeedbackWidget({ section, isMobile }) {
   const [done, setDone] = useState(() => new Set(readStoredString(FEEDBACK_DONE_KEY, "").split(",").filter(Boolean)));
   const answered = done.has(section);
+  const [snoozed, setSnoozed] = useState(() => readStoredString(FEEDBACK_SNOOZE_KEY, "no") === "yes");
   const [expanded, setExpanded] = useState(false);
   const [helpful, setHelpful] = useState(null);
   const [wouldUse, setWouldUse] = useState(null);
   const [comment, setComment] = useState("");
   const [status, setStatus] = useState("idle"); // idle | sending | done | error
 
-  // Mounted fresh per section via key={view}. Auto-open once on a page we haven't
-  // answered yet; otherwise it just sits collapsed in the corner until clicked.
+  // Auto-open at most once per visit: only if the user hasn't snoozed it and hasn't
+  // already answered this page. Mounted fresh per section via key={view}, so a snooze
+  // set on an earlier page is read here on mount and prevents it re-popping everywhere.
   useEffect(() => {
-    if (!section || section === "home" || section === "partner" || answered) return;
+    if (!section || section === "home" || section === "partner" || answered || snoozed) return;
     const t = setTimeout(() => setExpanded(true), 1400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Persistent dismiss — once minimized, it won't auto-pop on later pages.
+  const snooze = () => { setSnoozed(true); writeStoredString(FEEDBACK_SNOOZE_KEY, "yes"); };
+  const minimize = () => { setExpanded(false); snooze(); };
 
   const markDone = () => {
     const next = new Set(done); next.add(section);
@@ -2118,6 +2125,7 @@ function FeedbackWidget({ section, isMobile }) {
       });
       setStatus("done");
       markDone();
+      snooze();
       setTimeout(() => setExpanded(false), 2200);
     } catch {
       setStatus("error");
@@ -2126,22 +2134,33 @@ function FeedbackWidget({ section, isMobile }) {
 
   if (!section || section === "home") return null;
 
-  const corner = { right: isMobile ? 12 : 24, bottom: isMobile ? 12 : 24 };
+  const label = SECTION_LABELS[section] || "this page";
+  // Sit above the sticky Prev/Next bar (and the partner chat input) so the pill and
+  // card never cover the Next button in the bottom-right.
+  const corner = { right: isMobile ? 12 : 24, bottom: isMobile ? 80 : 92 };
 
-  // Collapsed launcher pill — always available in the corner.
+  // Collapsed launcher pill — always available, and shows which page it's for so it's
+  // clear the feedback is page-specific (and which pages you've already answered).
   if (!expanded) {
     return (
-      <button onClick={() => setExpanded(true)} aria-label="Give feedback on this page" style={{
+      <button onClick={() => setExpanded(true)} aria-label={`Give feedback on the ${label} page`} style={{
         position: "fixed", zIndex: 60, ...corner,
-        display: "flex", alignItems: "center", gap: 8,
-        background: color.accent, color: "#fff", border: "none",
-        borderRadius: 999, padding: isMobile ? "10px 14px" : "11px 18px",
-        fontFamily: font.sans, fontSize: 13.5, fontWeight: 700, cursor: "pointer",
-        boxShadow: "0 6px 20px rgba(124,58,237,0.35)",
+        display: "flex", alignItems: "center", gap: 7, maxWidth: isMobile ? "72vw" : 280,
+        background: answered ? "#fff" : color.accent,
+        color: answered ? color.muted : "#fff",
+        border: answered ? `1px solid ${color.line}` : "none",
+        borderRadius: 999, padding: isMobile ? "9px 13px" : "10px 16px",
+        fontFamily: font.sans, fontSize: 13, fontWeight: 700, cursor: "pointer",
+        boxShadow: answered ? "0 4px 14px rgba(15,23,42,0.12)" : "0 6px 20px rgba(124,58,237,0.35)",
       }}>
-        <Icon name="chat" size={17} color="#fff" />
-        Feedback
-        {answered && <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: "50%", background: "rgba(255,255,255,0.25)", alignItems: "center", justifyContent: "center" }}><Icon name="check" size={11} color="#fff" /></span>}
+        <Icon name={answered ? "check" : "chat"} size={16} color={answered ? color.accent : "#fff"} />
+        <span style={{ flexShrink: 0 }}>{answered ? "Sent" : "Feedback"}</span>
+        <span style={{
+          fontWeight: 600, fontSize: 12, padding: "2px 8px", borderRadius: 999,
+          background: answered ? color.rail : "rgba(255,255,255,0.2)",
+          color: answered ? color.muted : "#fff",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0,
+        }}>{label}</span>
       </button>
     );
   }
@@ -2169,7 +2188,7 @@ function FeedbackWidget({ section, isMobile }) {
       boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: 18,
       fontFamily: font.sans,
     }}>
-      <button onClick={() => setExpanded(false)} aria-label="Minimize feedback" style={{
+      <button onClick={minimize} aria-label="Dismiss feedback" style={{
         position: "absolute", top: 10, right: 10, background: "none", border: "none",
         cursor: "pointer", color: color.muted, padding: 4,
       }}><Icon name="x" size={16} color={color.muted} /></button>
@@ -2210,7 +2229,7 @@ function FeedbackWidget({ section, isMobile }) {
           {status === "error" && <p style={{ margin: "8px 0 0", fontSize: 12, color: "#dc2626" }}>Couldn't send — please try again.</p>}
 
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button onClick={() => setExpanded(false)} style={{
+            <button onClick={minimize} style={{
               padding: "9px 14px", borderRadius: 8, border: `1px solid ${color.line}`, background: "#fff",
               color: color.muted, fontFamily: font.sans, fontSize: 13, fontWeight: 600, cursor: "pointer",
             }}>Not now</button>
