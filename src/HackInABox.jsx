@@ -115,7 +115,7 @@ export const SECTION_LABELS = {
   "after-sustain": "Keep It Alive",
   templates: "Sprint Templates",
   "templates-post": "Post-Sprint Templates",
-  ai: "AI in your sprint",
+  ai: "AI in Your Sprint",
   partner: "AI Thinking Partner",
 };
 
@@ -173,8 +173,8 @@ const PROTOTYPE_FORMATS = [
 
 function buildPrototypePrompt({ hmw, idea, formatKey, audience }) {
   const fmt = PROTOTYPE_FORMATS.find((f) => f.key === formatKey) || PROTOTYPE_FORMATS[0];
-  const hmwLine = hmw && hmw.trim() ? hmw.trim() : "(not captured yet — fill out the Problem Statement worksheet)";
-  const ideaLine = idea && idea.trim() ? idea.trim() : "(not captured yet — star a Crazy 8s idea, or write one in below)";
+  const hmwLine = hmw && hmw.trim() ? hmw.trim() : "(write your How Might We question here)";
+  const ideaLine = idea && idea.trim() ? idea.trim() : "(describe the idea you want to prototype here)";
   const audienceLine = audience && audience.trim() ? audience.trim() : "lay leaders and members of a local church";
   return `You are helping me prototype an idea from a church design-thinking sprint. Produce a draft I can show to 5 people for honest, 60-second reactions.
 
@@ -364,7 +364,7 @@ function PhaseHeader({ icon, title, subtitle, accent }) {
 function SectionArt({ src, alt, ratio = "16 / 9", max = 680, style }) {
   return (
     <div style={{
-      maxWidth: max, margin: "0 0 24px", borderRadius: 14, overflow: "hidden",
+      maxWidth: max, margin: "0 auto 24px", borderRadius: 14, overflow: "hidden",
       background: color.rail, border: `1px solid ${color.line}`, ...style,
     }}>
       <img
@@ -376,11 +376,12 @@ function SectionArt({ src, alt, ratio = "16 / 9", max = 680, style }) {
 }
 
 // Illustration shown inside an accordion body or under an h3. Centered and width-capped so it
-// stays a modest focal image (never huge on wide screens). No border or matting — the art fills
-// a soft 3:2 frame (objectFit cover) so its painted cream bleeds to the rounded edges.
+// stays a modest focal image (never huge on wide screens). The hairline border matters: the
+// art's painted cream is close to the page/card cream, so without it the frame disappears and
+// the image reads as a stretch of unexplained whitespace.
 function IllustrationBanner({ src, ratio = "3 / 2", max = 300 }) {
   return (
-    <div style={{ maxWidth: max, margin: "0 auto 18px", borderRadius: 12, overflow: "hidden" }}>
+    <div style={{ maxWidth: max, margin: "0 auto 18px", borderRadius: 12, overflow: "hidden", border: `1px solid ${color.line}`, background: "#fff" }}>
       <img
         src={src} alt="" loading="lazy" decoding="async"
         style={{ display: "block", width: "100%", aspectRatio: ratio, objectFit: "cover" }}
@@ -389,7 +390,7 @@ function IllustrationBanner({ src, ratio = "3 / 2", max = 300 }) {
   );
 }
 
-function TemplateCard({ title, desc, items, accent, onLaunch, image, launchLabel = "Open interactive worksheet" }) {
+function TemplateCard({ title, desc, items, accent, onLaunch, image, launchLabel = "Go to this step" }) {
   return (
     <div style={{ background: "#fff", borderRadius: 14, padding: 24, border: `1px solid ${accent}18`, boxShadow: `0 2px 12px ${accent}08`, display: "flex", flexDirection: "column" }}>
       {image && (
@@ -434,61 +435,6 @@ function FacilitatorNote({ children, title = "Facilitator Note" }) {
         </span>
       </button>
       {open && <div style={{ padding: "4px 16px 14px", fontSize: 14, lineHeight: 1.6, color: color.body, borderTop: `1px dashed ${color.line}` }}>{children}</div>}
-    </div>
-  );
-}
-
-function VideoPlaceholder({ title, duration }) {
-  return (
-    <div style={{
-      display: "inline-flex", alignItems: "center", gap: 8,
-      background: "transparent", border: `1px dashed ${color.line}`,
-      borderRadius: 20, padding: "4px 12px", marginBottom: 20,
-      fontSize: 12, color: color.muted, fontFamily: "inherit",
-    }}>
-      <Icon name="film" size={12} color={color.muted} />
-      <span>Video: {title}{duration ? ` · ${duration}` : ""}</span>
-      <span style={{ color: color.accent, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", fontSize: 10 }}>Coming soon</span>
-    </div>
-  );
-}
-
-// Lazy click-to-play YouTube embed — loads the iframe only on click to keep the page light.
-function VideoEmbed({ videoId, title, duration }) {
-  const [playing, setPlaying] = useState(false);
-  // Reset to the thumbnail whenever the section (and thus the video) changes, so a
-  // video the user played on one page doesn't auto-play when they navigate to another.
-  useEffect(() => { setPlaying(false); }, [videoId]);
-  const thumb = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-  return (
-    <div style={{ marginBottom: 20, maxWidth: 560 }}>
-      <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 12, overflow: "hidden", background: "#000", border: `1px solid ${color.line}` }}>
-        {playing ? (
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
-            title={title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            loading="lazy"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
-          />
-        ) : (
-          <button
-            onClick={() => setPlaying(true)}
-            aria-label={`Play video: ${title}`}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none", padding: 0, cursor: "pointer", backgroundImage: `url(${thumb})`, backgroundSize: "cover", backgroundPosition: "center" }}
-          >
-            <span style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.28)" }} />
-            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 56, height: 56, borderRadius: "50%", background: color.accent, display: "grid", placeItems: "center", boxShadow: "0 4px 14px rgba(0,0,0,0.35)" }}>
-              <span style={{ width: 0, height: 0, borderTop: "10px solid transparent", borderBottom: "10px solid transparent", borderLeft: "16px solid #fff", marginLeft: 4 }} />
-            </span>
-          </button>
-        )}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 12, color: color.muted }}>
-        <Icon name="film" size={12} color={color.muted} />
-        <span>{title}{duration ? ` · ${duration}` : ""}</span>
-      </div>
     </div>
   );
 }
@@ -544,7 +490,7 @@ function PrototypePromptBuilder({ hmw: hmwProp = "", idea: ideaProp = "" }) {
             <span style={{ background: color.accent, color: "#fff", fontSize: 10, fontWeight: 700, letterSpacing: 0.5, padding: "2px 7px", borderRadius: 4, textTransform: "uppercase" }}>New</span>
           </div>
           <div style={{ fontSize: 13, color: color.body, lineHeight: 1.45 }}>
-            We'll bundle your HMW and starred Crazy 8s idea into a ready-to-paste prompt for ChatGPT, Claude, or any AI — so you can get a real draft to show people in minutes.
+            Enter your HMW question and your favorite Crazy 8s idea, and we'll turn them into a ready-to-paste prompt for ChatGPT, Claude, or any AI — so you can get a real draft to show people in minutes.
           </div>
         </div>
         <div style={{ flexShrink: 0, color: color.accent, fontWeight: 700, fontSize: 13 }}>Open →</div>
@@ -889,7 +835,7 @@ function SCIPABChatbot() {
               fontFamily: font.sans, fontSize: 14, fontWeight: 500, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}>
-              <Icon name="refresh" size={16} color={color.body} /> Submit Another Problem
+              <Icon name="refresh" size={16} color={color.body} /> Start Another Problem Statement
             </button>
           </div>
         )}
@@ -899,7 +845,7 @@ function SCIPABChatbot() {
 
   return (
     <div>
-      <PhaseHeader icon="chat" title="Submit a Problem" subtitle="Use our AI-guided SCIPAB tool to articulate your church's challenge" accent={phaseColors.submit.accent} />
+      <PhaseHeader icon="chat" title="Build Your Problem Statement" subtitle="Use our AI-guided SCIPAB tool to articulate your church's challenge" accent={phaseColors.submit.accent} />
       <SectionArt src={artLightbulb} alt="A lightbulb with a glowing orange filament, representing an insight" max={560} />
 
       {/* Hackable Problem Reminder */}
@@ -939,7 +885,7 @@ function SCIPABChatbot() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[
                 { icon: "users", title: "Human-Centered", desc: "The problem is about real people with real needs — not abstract organizational goals. Think about who is affected and what they experience." },
-                { icon: "target", title: "Specific & Scoped", desc: "It's narrow enough to make meaningful progress in 3–6 hours. \"Fix our church\" is too broad. \"Help newcomers feel welcome in their first month\" is hackable." },
+                { icon: "target", title: "Specific & Scoped", desc: "It's narrow enough to make meaningful progress in a single sprint session. \"Fix our church\" is too broad. \"Help newcomers feel welcome in their first month\" is hackable." },
                 { icon: "lightbulb", title: "Open to Creative Solutions", desc: "The problem doesn't already have an obvious answer. If you already know the solution, you don't need a sprint — you need an action plan." },
                 { icon: "zap", title: "Actionable", desc: "Your church has the ability (or could develop it) to actually implement solutions. Don't hack on things completely outside your control." },
                 { icon: "heart", title: "Meaningful & Motivating", desc: "People care about this problem. It touches hearts. When you describe it, team members lean in rather than tune out." },
@@ -1627,7 +1573,7 @@ function AIHelper({ stepKey, accent }) {
 // ========== SHARED: AI call helper ==========
 async function callAI({ system, messages, max_tokens = 800 }) {
   try {
-    const res = await fetch("/api/chat", {
+    const res = await fetch(AI_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ system, messages, max_tokens }),
@@ -1635,9 +1581,9 @@ async function callAI({ system, messages, max_tokens = 800 }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data?.error || "AI request failed");
     return { text: data.content || "", demo: !!data.demo };
-  } catch (err) {
+  } catch {
     return {
-      text: `_AI is unavailable right now (${err.message}). Once you deploy this to Vercel and set GEMINI_API_KEY, this will return live responses._`,
+      text: "AI is unavailable right now — please try again in a moment.",
       demo: true,
     };
   }
@@ -1651,7 +1597,7 @@ function ModeTopBar({ title, subtitle, accent, onHome }) {
       display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={onHome} title="Back to mode picker" style={{
+        <button onClick={onHome} title="Back to home" style={{
           background: "#fff", border: `1px solid ${color.line}`, borderRadius: 8,
           width: 36, height: 36, fontSize: 16, cursor: "pointer", fontFamily: "inherit",
         }}>←</button>
@@ -1672,10 +1618,10 @@ function Home({ onTryAI, onBrowse }) {
         <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
           <BrandMark size={30} /><span style={{ fontWeight: 700, fontSize: 16, color: color.ink }}>Hack In A Box</span>
         </div>
-        <div style={{ fontSize: 11, letterSpacing: 2.5, textTransform: "uppercase", color: color.accent, fontWeight: 700, marginBottom: 18 }}>For hack champions</div>
+        <div style={{ fontSize: 11, letterSpacing: 2.5, textTransform: "uppercase", color: color.accent, fontWeight: 700, marginBottom: 18 }}>For hack champions & first-time facilitators</div>
         <h1 style={{ fontSize: "clamp(34px, 6vw, 52px)", fontWeight: 800, letterSpacing: -1.5, lineHeight: 1.04, color: color.ink, margin: "0 0 18px" }}>Run your own design sprint.</h1>
         <p style={{ fontSize: 17, lineHeight: 1.6, color: color.muted, maxWidth: 520, margin: "0 auto 36px" }}>
-          A packaged playbook for leading a 2–6 hour mini-hackathon at your church or organization — even if you've never facilitated one.
+          A packaged playbook for leading a short mini-hackathon — 90 minutes to half a day — at your church or organization, even if you've never facilitated one.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={onBrowse} style={pill("primary")}>Browse the playbook →</button>
@@ -1689,17 +1635,38 @@ function Home({ onTryAI, onBrowse }) {
 }
 
 // ========== MODE: AI THINKING PARTNER ==========
+// PCM helpers for Gemini TTS playback (adapted from open-language's AudioManager).
+// /api/tts returns base64 16-bit signed little-endian PCM at 24 kHz mono.
+function base64ToInt16(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Int16Array(bytes.buffer);
+}
+
+function int16ToFloat32(int16) {
+  const float32 = new Float32Array(int16.length);
+  for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+  return float32;
+}
+
 // ========== VOICE: speech recognition + synthesis hook ==========
+// Speech-to-text uses the browser's SpeechRecognition. Text-to-speech prefers
+// Gemini TTS via /api/tts (natural voice) and falls back to the browser's
+// speechSynthesis when the endpoint is unavailable (e.g. local dev without a key).
 function useVoice({ onTranscript, onSpeakEnd } = {}) {
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [supported, setSupported] = useState({ recog: false, synth: false });
   const recogRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const sourceRef = useRef(null);
+  const abortRef = useRef(null);
 
   useEffect(() => {
     const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
-    const synth = typeof window !== "undefined" && window.speechSynthesis;
-    setSupported({ recog: !!SR, synth: !!synth });
+    const canPlay = typeof window !== "undefined" && !!(window.AudioContext || window.webkitAudioContext || window.speechSynthesis);
+    setSupported({ recog: !!SR, synth: canPlay });
   }, []);
 
   const startListening = () => {
@@ -1735,15 +1702,26 @@ function useVoice({ onTranscript, onSpeakEnd } = {}) {
     setListening(false);
   };
 
-  const speak = (text) => {
-    if (!window.speechSynthesis) return;
+  // Stops any in-flight TTS fetch and any playing audio, without firing onSpeakEnd
+  // (so a deliberate stop doesn't restart hands-free listening).
+  const cancelPlayback = () => {
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    if (sourceRef.current) {
+      const s = sourceRef.current;
+      sourceRef.current = null;
+      s.onended = null;
+      try { s.stop(); } catch { /* already stopped */ }
+    }
+    if (window.speechSynthesis) { try { window.speechSynthesis.cancel(); } catch { /* not speaking */ } }
+  };
+
+  // Browser speechSynthesis — fallback when Gemini TTS is unavailable.
+  const speakWithBrowser = (clean) => {
+    if (!window.speechSynthesis) { setSpeaking(false); if (onSpeakEnd) onSpeakEnd(); return; }
     try {
-      window.speechSynthesis.cancel();
-      const clean = String(text || "").replace(/[*_`#]/g, "").replace(/✦|🤖|🎯|💡|👤|❤️|📝|🧩|🧭|💬|📚/g, "");
       const u = new SpeechSynthesisUtterance(clean);
       u.rate = 1.0;
       u.pitch = 1.0;
-      u.onstart = () => setSpeaking(true);
       u.onend = () => { setSpeaking(false); if (onSpeakEnd) onSpeakEnd(); };
       u.onerror = () => setSpeaking(false);
       window.speechSynthesis.speak(u);
@@ -1752,10 +1730,57 @@ function useVoice({ onTranscript, onSpeakEnd } = {}) {
     }
   };
 
-  const stopSpeaking = () => {
-    if (window.speechSynthesis) {
-      try { window.speechSynthesis.cancel(); } catch {}
+  const playPcm = async (base64, sampleRate) => {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!audioCtxRef.current || audioCtxRef.current.state === "closed") audioCtxRef.current = new AC();
+    const ctx = audioCtxRef.current;
+    if (ctx.state === "suspended") await ctx.resume();
+    const float32 = int16ToFloat32(base64ToInt16(base64));
+    const buffer = ctx.createBuffer(1, float32.length, sampleRate || 24000);
+    buffer.getChannelData(0).set(float32);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    sourceRef.current = source;
+    source.onended = () => {
+      if (sourceRef.current === source) sourceRef.current = null;
+      setSpeaking(false);
+      if (onSpeakEnd) onSpeakEnd();
+    };
+    source.start();
+  };
+
+  const speak = async (text) => {
+    cancelPlayback();
+    const clean = String(text || "").replace(/[*_`#]/g, "").replace(/✦|🤖|🎯|💡|👤|❤️|📝|🧩|🧭|💬|📚/g, "");
+    if (!clean.trim()) return;
+    setSpeaking(true);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: clean }),
+        signal: controller.signal,
+      });
+      const data = await res.json();
+      if (controller.signal.aborted) return;
+      abortRef.current = null;
+      if (res.ok && data.audio) {
+        await playPcm(data.audio, data.sampleRate);
+      } else {
+        speakWithBrowser(clean);
+      }
+    } catch (err) {
+      if (err?.name === "AbortError") return;
+      abortRef.current = null;
+      speakWithBrowser(clean);
     }
+  };
+
+  const stopSpeaking = () => {
+    cancelPlayback();
     setSpeaking(false);
   };
 
@@ -1886,7 +1911,7 @@ function ThinkingPartner({ setMode }) {
 
       {demo && (
         <div style={{ background: color.rail, borderBottom: `1px solid ${color.line}`, padding: "8px 20px", fontSize: 12, color: color.accent, textAlign: "center" }}>
-          Running in <strong>demo mode</strong> — responses are canned examples. Deploy to Vercel with <code>GEMINI_API_KEY</code> for live AI.
+          Running in <strong>demo mode</strong> — responses are example answers, not live AI.
         </div>
       )}
 
@@ -1979,7 +2004,7 @@ function ThinkingPartner({ setMode }) {
         </div>
         <div style={{ maxWidth: 720, margin: "8px auto 0", display: "flex", justifyContent: "space-between", fontSize: 12, color: color.muted }}>
           <button onClick={reset} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>Start over</button>
-          <span>{messages.length - 1} exchanges</span>
+          <span>{Math.max(0, Math.floor((messages.length - 1) / 2))} exchanges</span>
         </div>
       </div>
     </div>
@@ -2083,6 +2108,7 @@ function FlowNav({ view, navigate, isMobile }) {
 // pill (never fully disappears) so testers can always reopen it. Posts to /api/feedback.
 const FEEDBACK_DONE_KEY = "hiab-feedback-done";
 const FEEDBACK_SNOOZE_KEY = "hiab-feedback-snooze";
+const FEEDBACK_NAME_KEY = "hiab-feedback-name";
 
 function FeedbackWidget({ section, isMobile }) {
   const [done, setDone] = useState(() => new Set(readStoredString(FEEDBACK_DONE_KEY, "").split(",").filter(Boolean)));
@@ -2092,6 +2118,8 @@ function FeedbackWidget({ section, isMobile }) {
   const [helpful, setHelpful] = useState(null);
   const [wouldUse, setWouldUse] = useState(null);
   const [comment, setComment] = useState("");
+  // Remembered across pages so a tester types their name once, not per page.
+  const [name, setName] = useState(() => readStoredString(FEEDBACK_NAME_KEY, ""));
   const [status, setStatus] = useState("idle"); // idle | sending | done | error
 
   // Auto-open at most once per visit: only if the user hasn't snoozed it and hasn't
@@ -2117,11 +2145,19 @@ function FeedbackWidget({ section, isMobile }) {
   const submit = async () => {
     if (helpful === null && wouldUse === null && !comment.trim()) return;
     setStatus("sending");
+    writeStoredString(FEEDBACK_NAME_KEY, name.trim());
     try {
       await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ section, helpful, wouldUse, comment: comment.trim() }),
+        body: JSON.stringify({
+          section,
+          page: SECTION_LABELS[section] || section,
+          name: name.trim(),
+          helpful,
+          wouldUse,
+          comment: comment.trim(),
+        }),
       });
       setStatus("done");
       markDone();
@@ -2207,6 +2243,19 @@ function FeedbackWidget({ section, isMobile }) {
           <p style={{ margin: "0 0 14px", fontSize: 13, color: color.muted, lineHeight: 1.5 }}>
             On the <strong style={{ color: color.body }}>{SECTION_LABELS[section] || "this"}</strong> page —
           </p>
+
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: color.ink, marginBottom: 6 }}>Your name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="So we know who this is from"
+            style={{
+              width: "100%", padding: "9px 11px", borderRadius: 8, marginBottom: 14,
+              border: `1px solid ${color.line}`, fontFamily: font.sans, fontSize: 13,
+              outline: "none", boxSizing: "border-box", color: color.ink,
+            }}
+          />
 
           <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: color.ink, marginBottom: 6 }}>Is this helpful?</label>
           {yesNo(helpful, setHelpful)}
@@ -2303,11 +2352,16 @@ export default function HackInABox() {
   const navigate = (id) => {
     setView(id);
     setNavOpen(false);
-    if (contentRef.current) contentRef.current.scrollTop = 0;
     if (typeof window !== "undefined" && window.history.state?.hiabView !== id) {
       window.history.pushState({ hiabView: id }, "");
     }
   };
+
+  // Reset scroll to the top whenever the page changes, after the new content
+  // has rendered (doing it inside navigate runs against the old/unmounted DOM).
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [view]);
 
   // Make the browser / Android hardware back button move between views.
   useEffect(() => {
@@ -2316,7 +2370,6 @@ export default function HackInABox() {
     const onPop = (e) => {
       const next = e.state?.hiabView ?? "home";
       setView(next);
-      if (contentRef.current) contentRef.current.scrollTop = 0;
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -2383,9 +2436,9 @@ export default function HackInABox() {
               You don't need to be technical to put AI to work in a sprint. Used well, it's a tireless thinking partner — it helps you prepare faster, hear your community more clearly, and turn rough ideas into plans you can act on. Think of it as a tool that <strong>amplifies</strong> your team's discernment, never replaces it.
             </p>
 
+            <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>Why use AI in a Hack In A Box?</h3>
+            <SectionArt src={artAiWhy} alt="" max={560} />
             <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${ai.accent}20`, marginBottom: 28 }}>
-              <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 12px", color: color.ink }}>Why use AI in a Hack In A Box?</h3>
-              <IllustrationBanner src={artAiWhy} />
               {[
                 { title: "Prep in a fraction of the time", desc: "Draft agendas, prompts, and participant invites in minutes so you can focus on the people in the room." },
                 { title: "Hear your community more clearly", desc: "Synthesize interviews and survey notes into themes and empathy maps — without losing the human details." },
@@ -2452,8 +2505,7 @@ export default function HackInABox() {
             ))}
 
             <div style={{ marginTop: 24, padding: "18px 22px", borderRadius: 12, background: color.rail, border: `1px dashed ${color.line}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                
+              <div style={{ marginBottom: 6 }}>
                 <strong style={{ fontSize: 14, color: color.accent }}>Keep it human (and prayerful)</strong>
               </div>
               <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: color.body }}>
@@ -2475,9 +2527,9 @@ export default function HackInABox() {
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               This isn't about technology or complicated tools. It's about guiding your team through creative discussions and hands-on activities to produce clear, actionable plans that work for your unique church family.
             </p>
+            <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>What Makes HIAB Different?</h3>
+            <SectionArt src={artOverviewDifferent} alt="" max={560} />
             <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${color.line}`, marginBottom: 28 }}>
-              <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 12px", color: color.ink }}>What Makes HIAB Different?</h3>
-              <IllustrationBanner src={artOverviewDifferent} />
               {[
                 { title: "Faith at the Center", desc: "Every idea explored is rooted in your church's mission and values. We begin and end with prayer." },
                 { title: "Custom for Your Church", desc: "Every sprint is designed to reflect your congregation's unique strengths, challenges, and context." },
@@ -2506,6 +2558,9 @@ export default function HackInABox() {
                 </div>
               ))}
             </div>
+            <p style={{ fontSize: 14, lineHeight: 1.65, color: color.muted, marginTop: -12, marginBottom: 28 }}>
+              In this playbook, testing happens as part of Prototyping (see "Getting Feedback"), and the final step is <strong>pitching</strong> your idea to leadership so it lives on after the sprint.
+            </p>
           </div>
         );
 
@@ -2518,8 +2573,6 @@ export default function HackInABox() {
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               Before we dive into tools and techniques, it's worth pausing to reflect on <em>why</em> we do this. Innovation in the church isn't about chasing trends or copying Silicon Valley. It's rooted in something much deeper — the belief that the God who created the universe invites us to be creative partners in His work.
             </p>
-
-            <VideoEmbed videoId="16p9YRF0l-g" title="How to build your creative confidence — David Kelley (TED)" duration="12 min" />
 
             <FacilitatorNote title="Facilitator Note: How to Present This Section">
               <p>This section works well as an opening devotional or reflection before the sprint begins. You can read the key passages aloud, discuss the reflection questions as a group, or simply share the core ideas in your own words. The goal is to set a tone of humility, curiosity, and faith-driven creativity before the practical work begins.</p>
@@ -2572,8 +2625,6 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <VideoEmbed videoId="teyWls_oQTc" title="Expressions Church Story — creative ministry in action" duration="5 min" />
-
             <FacilitatorNote title="Facilitator Note: Presentation Mode">
               <p>If you want to present this content to your group, walk through each section at a comfortable pace. Pause after each reflection question and give people 2–3 minutes to discuss at their tables. End with the guiding values and ask: "Which of these values resonates most with you? Which one do you think our church needs most right now?"</p>
               <p>Total facilitation time: approximately 20–30 minutes including discussion.</p>
@@ -2587,6 +2638,31 @@ export default function HackInABox() {
             <PhaseHeader icon="clipboard" title="Prepare Your Sprint" subtitle="Everything you need to plan and organize a successful HIAB event" accent={phaseColors.prepare.accent} />
             <SectionArt src={artStopwatch} alt="A stopwatch marking a short timeboxed sprint" />
 
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>
+              Preparation is four steps, and the next four pages walk you through them in order:
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+              {[
+                { id: "prepare-buyin", title: "Leadership Buy-In", desc: "Lay a spiritual foundation and bring your pastor or leadership on board." },
+                { id: "prepare-recruit", title: "Recruit & Plan", desc: "Get the right people in the room and map your countdown to sprint day." },
+                { id: "prepare-team", title: "Team & Materials", desc: "Assign roles and gather the supplies you'll need." },
+                { id: "prepare-agendas", title: "Sprint Formats", desc: "Pick a ready-to-print agenda (90 minutes to half a day) — and decide whether you're starting from a specific challenge or from empathy work." },
+              ].map((step, i) => (
+                <button key={step.id} onClick={() => navigate(step.id)} style={{
+                  display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", textAlign: "left",
+                  background: `${phaseColors.prepare.accent}06`, borderRadius: 12, cursor: "pointer",
+                  border: `1px solid ${phaseColors.prepare.accent}18`, fontFamily: font.sans, width: "100%",
+                }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${phaseColors.prepare.accent}18`, color: phaseColors.prepare.accent, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, flexShrink: 0 }}>{i + 1}</div>
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ color: color.ink, fontSize: 15 }}>{step.title}</strong>
+                    <p style={{ margin: "3px 0 0", fontSize: 14, color: color.muted, lineHeight: 1.5 }}>{step.desc}</p>
+                  </div>
+                  <Icon name="chevronRight" size={18} color={phaseColors.prepare.accent} />
+                </button>
+              ))}
+            </div>
+
             <FacilitatorNote title="First-Time Facilitator? Start Here">
               <p>If you've never facilitated a sprint before, here's what to know:</p>
               <p><strong>Your job is to guide, not contribute.</strong> You keep time, transition between activities, and make sure every voice is heard. You don't need to be an expert on the topic — the participants are the experts.</p>
@@ -2594,7 +2670,7 @@ export default function HackInABox() {
               <p><strong>Trust the process.</strong> It will feel messy in the middle. That's normal. The best ideas often emerge in the last 30 minutes when things start clicking.</p>
               <p><strong>Take photos of everything.</strong> Sticky notes fall off walls. Whiteboards get erased. Your phone camera is your best friend.</p>
               <p><strong>Celebrate generously.</strong> Clap for presentations, thank people for sharing, affirm wild ideas. A positive atmosphere unlocks creativity.</p>
-              <p>If this is your first HIAB, start with the <strong>Express Sprint (2 hours)</strong> or <strong>Standard Sprint (3 hours)</strong>. You can always run a longer format next time.</p>
+              <p>If this is your first HIAB, start with the <strong>Quick Sprint (90 minutes)</strong> or <strong>Express Sprint (2 hours)</strong>. You can always run a longer format next time.</p>
             </FacilitatorNote>
           </div>
         );
@@ -2610,9 +2686,7 @@ export default function HackInABox() {
                 {["Pray for God to reveal the right challenge to focus on", "Ask for open hearts and minds among participants", "Pray for creative, Spirit-led ideas to come forward", "Commission the event during a Sunday service to build support"].map((item, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}><Icon name="check" size={16} color={phaseColors.prepare.accent} /><span style={{ fontSize: 15 }}>{item}</span></div>
                 ))}
-              </div>
-              <VideoEmbed videoId="TyawcHXj56M" title="Morning Creativity — a guided prayer before you create" duration="6 min" />
-            </Accordion>
+              </div>            </Accordion>
 
             <Accordion title="How to Pitch HIAB to Your Pastor or Leadership" accent={phaseColors.prepare.accent}>
               <p>Getting leadership support is the most important first step. Here's a practical approach:</p>
@@ -2624,12 +2698,12 @@ export default function HackInABox() {
                 <StepCard number={3} title="Make a Small Ask" accent={phaseColors.prepare.accent}
                   description="Don't ask for a huge commitment. Ask for permission to run one sprint on one topic with a small group. 'Can we try this with 20 people on a Saturday morning?' is much easier to say yes to than 'Can we overhaul our innovation process?'" />
                 <StepCard number={4} title="Address Concerns Upfront" accent={phaseColors.prepare.accent}
-                  description="Pastors may worry about: time commitment (it's 3–5 hours, not weeks), cost (minimal — paper, markers, snacks), or that ideas might bypass leadership (reassure them that ideas go through proper channels). Be ready with honest answers." />
+                  description="Pastors may worry about: time commitment (it's a single 2–3 hour session for most groups, not weeks), cost (minimal — paper, markers, snacks), or that ideas might bypass leadership (reassure them that ideas go through proper channels). Be ready with honest answers." />
                 <StepCard number={5} title="Invite Them to Participate" accent={phaseColors.prepare.accent}
                   description="The best way to get buy-in is to have leadership in the room. Invite your pastor to open with prayer and stay for the first exercise. Once they see the energy and quality of ideas, they'll be your biggest champion." />
               </div>
               <FacilitatorNote>
-                <p>If you're having trouble getting a meeting with leadership, try writing a brief email using the SCIPAB framework from this playbook. It's designed to communicate problems and proposals clearly and persuasively.</p>
+                <p>If you're having trouble getting a meeting with leadership, try writing a brief email using the SCIPAB framework — a simple six-part outline for communicating a problem and proposal persuasively. You'll find an AI-guided SCIPAB builder at the bottom of the <strong>Define</strong> page.</p>
               </FacilitatorNote>
             </Accordion>
           </div>
@@ -2655,9 +2729,7 @@ export default function HackInABox() {
                     <p style={{ margin: "4px 0 0", fontSize: 14, color: color.muted, lineHeight: 1.6 }}>{item.desc}</p>
                   </div>
                 ))}
-              </div>
-              <VideoEmbed videoId="K-nlw1G8i6o" title="Sample church event invite promo (template inspiration)" duration="90 sec" />
-            </Accordion>
+              </div>            </Accordion>
 
             <Accordion spot={artPrepareTimeline} title="Week-by-Week Planning Timeline" accent={phaseColors.prepare.accent}>
               <p>Use this countdown to stay on track. Adjust dates based on when your sprint is scheduled.</p>
@@ -2713,7 +2785,7 @@ export default function HackInABox() {
                 ))}
               </div>
               <FacilitatorNote>
-                <p>Multi-org sprints work best as full-day events (6+ hours) because you need extra time for introductions, trust-building, and coordinating follow-up. Consider the Extended Retreat format from the Facilitation Guide.</p>
+                <p>Multi-org sprints work best as full-day events (6+ hours) because you need extra time for introductions, trust-building, and coordinating follow-up. Consider stretching the Full Sprint agenda (see Sprint Formats, under Prepare) into a full-day event.</p>
               </FacilitatorNote>
             </Accordion>
 
@@ -2749,15 +2821,23 @@ export default function HackInABox() {
             <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "28px 0 8px", color: color.ink }}>Sprint Formats & Agendas</h3>
             <IllustrationBanner src={artPrepareAgendas} />
             <p style={{ fontSize: 15, lineHeight: 1.65, color: color.body, marginBottom: 16 }}>
-              Choose the format that fits your group's time and energy. Each agenda below is ready to print and follow. All use an "Empathy First" flow by default — to swap to "Problem First," just switch those two time blocks.
+              Choose the format that fits your group's time and energy. Each agenda below is ready to print and follow.
             </p>
 
-            <FacilitatorNote title="Choosing Your Process Path">
-              <p>There are two valid orderings for the core exercises:</p>
-              <p><strong>Path A — Empathy First (default):</strong> Start with empathy mapping, then use those insights to write a focused problem statement. Best when the group doesn't have a specific challenge yet.</p>
-              <p><strong>Path B — Problem First:</strong> Start with a rough problem statement, then do empathy work to deepen understanding, and refine the statement afterward. Best when the group already knows their challenge.</p>
-              <p>The agendas below use Path A. To switch, just swap the Empathy and Problem Definition time blocks.</p>
-            </FacilitatorNote>
+            <div style={{ background: `${phaseColors.prepare.accent}08`, border: `1px solid ${phaseColors.prepare.accent}25`, borderRadius: 12, padding: "18px 20px", marginBottom: 20 }}>
+              <div style={{ fontFamily: font.sans, fontSize: 15, fontWeight: 700, color: color.ink, marginBottom: 10 }}>
+                First, pick your starting point: do you already have a specific challenge?
+              </div>
+              <p style={{ margin: "0 0 10px", fontSize: 14, lineHeight: 1.6, color: color.body }}>
+                <strong>No — start with empathy (Path A, the default).</strong> Begin with empathy mapping, then use those insights to write a focused problem statement. Best when the group doesn't have a specific challenge yet.
+              </p>
+              <p style={{ margin: "0 0 10px", fontSize: 14, lineHeight: 1.6, color: color.body }}>
+                <strong>Yes — start with the problem (Path B).</strong> Begin with a rough problem statement, then do empathy work to deepen understanding, and refine the statement afterward. Best when the group already knows their challenge.
+              </p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: color.muted }}>
+                The agendas below use Path A. To switch to Path B, just swap the Empathy and Problem Definition time blocks.
+              </p>
+            </div>
 
             <Accordion title="Quick Sprint Agenda (90 min)" subtitle="Best for: first-time groups, low-capacity teams, or a quick intro" accent={phaseColors.prepare.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -2776,7 +2856,7 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <Accordion title="Express Sprint Agenda (2 hours)" subtitle="Best for: busy teams, Sunday afternoon sessions, or groups with a known challenge" accent={phaseColors.prepare.accent}>
+            <Accordion title="Express Sprint Agenda (2 hours)" subtitle="Best for: busy teams or Sunday afternoon sessions (if your challenge is already set, switch to Path B)" accent={phaseColors.prepare.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
                   { time: "0:00–0:10", title: "Welcome, Prayer & Intro", desc: "Set the tone. Brief overview of design thinking and what you'll do today." },
@@ -2840,8 +2920,6 @@ export default function HackInABox() {
                 <p>For multi-church sprints, add 15–20 minutes at the start for introductions and trust-building, and 10 minutes at the end for collaborative follow-up planning.</p>
               </FacilitatorNote>
             </Accordion>
-
-            <VideoEmbed videoId="K2vSQPh6MCE" title="GV's Sprint Process in 90 Seconds (with Jake Knapp)" duration="90 sec" />
           </div>
         );
 
@@ -2850,10 +2928,8 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="target" title="Writing Problem Statements" subtitle="Clearly define the challenge before you start solving it" accent={phaseColors.problem.accent} />
             <SectionArt src={artDefine} alt="A hand placing one orange sticky note at the center of a cluster, narrowing to one problem" />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>The most common reason innovation efforts fail is that teams solve the <em>wrong problem</em>. A well-crafted problem statement focuses your sprint and makes sure solutions address a real need.</p>
-            <VideoEmbed videoId="sRGk5oKXgCk" title="How Might We — framing the problem (AJ&Smart)" duration="6 min" />
-            <FacilitatorNote>
-              <p><strong>Process order flexibility:</strong> Some facilitators prefer to do empathy mapping <em>before</em> writing problem statements, so the team understands the people involved before defining the challenge. Others prefer to start with a rough problem statement and then refine it after empathy work. Both approaches work — see the Facilitation Guide for detailed agendas for each path.</p>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>The most common reason innovation efforts fail is that teams solve the <em>wrong problem</em>. A well-crafted problem statement focuses your sprint and makes sure solutions address a real need.</p>            <FacilitatorNote>
+              <p><strong>Process order flexibility:</strong> Some facilitators prefer to do empathy mapping <em>before</em> writing problem statements, so the team understands the people involved before defining the challenge. Others prefer to start with a rough problem statement and then refine it after empathy work. Both approaches work — see <strong>Sprint Formats</strong> (under Prepare) for the ready-made agendas and how to swap the order.</p>
             </FacilitatorNote>
             <Accordion spot={artProblemHmw} title='The "How Might We..." Framework' defaultOpen accent={phaseColors.problem.accent}>
               <p>The gold standard for problem statements in design thinking is the <strong>"How Might We" (HMW)</strong> question.</p>
@@ -2894,7 +2970,7 @@ export default function HackInABox() {
             </Accordion>
 
             <hr style={{ border: "none", borderTop: `1px solid ${color.line}`, margin: "32px 0" }} />
-            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>Submit your problem (AI-guided)</h3>
+            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>Build your problem statement (AI-guided)</h3>
             <SCIPABChatbot />
           </div>
         );
@@ -2904,9 +2980,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
             <SectionArt src={artEmpathize} alt="Two people sitting in conversation, one listening closely" />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
-            <VideoEmbed videoId="Tz0dpeqcO60" title="How to Use Empathy Maps (Nielsen Norman Group)" duration="4 min" />
-            <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>            <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
             <Accordion spot={artEmpathyExercise} title="How to Run an Empathy Map Exercise" accent={phaseColors.empathy.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Choose Your Subject" duration="5 min" accent={phaseColors.empathy.accent} description="Decide who you're empathizing with — a real person, a type of person, or a community member affected by your challenge." />
@@ -2916,7 +2990,7 @@ export default function HackInABox() {
               </div>
             </Accordion>
             <figure style={{ margin: "16px 0 8px" }}>
-              <SectionArt src={artEmpathyMap} alt="The four quadrants of an empathy map — Says, Thinks, Does, and Feels" max={560} style={{ margin: 0 }} />
+              <SectionArt src={artEmpathyMap} alt="The four quadrants of an empathy map — Says, Thinks, Does, and Feels" max={560} style={{ margin: "0 auto" }} />
               <figcaption style={{ fontSize: 13, color: color.muted, marginTop: 8, fontStyle: "italic", textAlign: "center" }}>An empathy map has four quadrants — Says, Thinks, Does, and Feels — that you fill in with observations about the person you're designing for.</figcaption>
             </figure>
             <TipBox accent={phaseColors.empathy.accent} label="Ministry connection">
@@ -2949,9 +3023,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="lightbulb" title="Ideation & Brainstorming" subtitle="Generate wild, creative, God-inspired ideas — then refine them" accent={phaseColors.ideate.accent} />
             <SectionArt src={artIdeate} alt="Sketches and arrows radiating outward, representing divergent ideas" />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Now it's time to generate as many ideas as possible. The goal is <strong>quantity over quality</strong> — wild ideas often lead to breakthroughs.</p>
-            <VideoEmbed videoId="yz4g87XapQ0" title="Crazy 8s — generate design ideas fast (AJ&Smart)" duration="2 min" />
-            <Accordion spot={artIdeateRules} title="Ground Rules for Brainstorming" defaultOpen accent={phaseColors.ideate.accent}>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Now it's time to generate as many ideas as possible. The goal is <strong>quantity over quality</strong> — wild ideas often lead to breakthroughs.</p>            <Accordion spot={artIdeateRules} title="Ground Rules for Brainstorming" defaultOpen accent={phaseColors.ideate.accent}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
                 {[
                   { rule: "Defer Judgment", desc: "No idea is too crazy. Don't evaluate yet." },
@@ -2977,7 +3049,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="zap" title="Exercise: Crazy 8s" subtitle="The fastest way to push past the obvious — eight ideas in eight minutes" accent={phaseColors.ideate.accent} />
             <SectionArt src={artHandsCards} alt="Hands sketching quick ideas on a folded eight-panel sheet" max={560} />
-            <Accordion spot={artIdeateCrazy8s} title="Exercise: Crazy 8s (Recommended!)" defaultOpen accent={phaseColors.ideate.accent}>
+            <Accordion spot={artIdeateCrazy8s} title="How to Run Crazy 8s" defaultOpen accent={phaseColors.ideate.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
                 <StepCard number={1} title="Fold your paper into 8 panels" duration="1 min" accent={phaseColors.ideate.accent} description="Fold a blank sheet into 8 equal rectangles." />
                 <StepCard number={2} title="Set the timer for 8 minutes" duration="8 min" accent={phaseColors.ideate.accent} description="1 minute per panel. Sketch ONE idea per panel. Don't go back!" />
@@ -3048,7 +3120,7 @@ export default function HackInABox() {
               <TemplateCard title="Persona Card Template" image={artPersonaCard} accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("personas")} />
               <TemplateCard title="Problem Statement Worksheet" image={artProblemStatement} accent={color.accent} desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
               <TemplateCard title="SCIPAB Submission Template" image={artTemplateScipab} accent={color.accent} desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("problem")} launchLabel="Open AI-guided chatbot" />
-              <TemplateCard title="Crazy 8s Sheet" image={artHandsCards} accent={color.accent} desc="Pre-folded 8-panel rapid ideation sheet with built-in timer." items={["8 panels for 1-minute sketches", "Auto-advancing 8-minute timer", "HMW question pulled from your problem", "Star your top 2 ideas"]} onLaunch={() => navigate("crazy8s")} />
+              <TemplateCard title="Crazy 8s Sheet" image={artHandsCards} accent={color.accent} desc="Fold one sheet of paper into 8 panels for rapid idea sketching." items={["8 panels, one sketch per panel", "1 minute per sketch — 8 minutes total", "Write your HMW question at the top", "Circle your top 2 ideas to share"]} onLaunch={() => navigate("crazy8s")} />
               <TemplateCard title="Feedback Cards" accent={color.accent} desc="Structured feedback for prototyping." items={["I like...", "I wish...", "What if...", "Overall notes"]} onLaunch={() => navigate("feedback")} />
             </div>
           </div>
@@ -3060,7 +3132,7 @@ export default function HackInABox() {
             <PhaseHeader icon="download" title="Post-Sprint Templates" subtitle="Capture results and carry momentum into leadership and follow-up" accent={phaseColors.templates.accent} />
             <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Post-Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
-              <TemplateCard title="Sprint Summary One-Pager" image={artSprintSummary} accent={color.accent} desc="Auto-pulls from your other worksheets so the summary writes itself." items={["HMW problem statement", "Starred ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
+              <TemplateCard title="Sprint Summary One-Pager" image={artSprintSummary} accent={color.accent} desc="A one-page record each table fills out before leaving the room." items={["HMW problem statement", "Top ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Leadership Proposal Card" accent={color.accent} desc="A structured pitch card for presenting ideas to pastors and elder boards." items={["The problem (with evidence)", "The proposed solution", "Who it serves and expected impact", "Resources needed and timeline", "What success looks like"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Impact Story Template" accent={color.accent} desc="Document what happened 6 months after your sprint for future inspiration." items={["The original challenge", "What the team built/launched", "Measurable outcomes and stories", "Lessons learned and what's next"]} onLaunch={() => navigate("after")} />
             </div>
@@ -3185,8 +3257,38 @@ export default function HackInABox() {
       case "pitch":
         return (
           <div>
-            <PhaseHeader icon="send" title="Pitch to leadership" subtitle="Turn your prototype into a one-page proposal you can hand to your pastor or leadership" accent={phaseColors.proposal.accent} />
+            <PhaseHeader icon="send" title="Pitch to Leadership" subtitle="Turn your prototype into a one-page proposal you can hand to your pastor or leadership" accent={phaseColors.proposal.accent} />
             <SectionArt src={artPitch} alt="A person presenting at an easel to a small seated group" />
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
+              You've built and tested a prototype — now give it a future. Close the sprint with a quick pitch round in the room, then turn the winning idea into a proposal your leadership can actually say yes to.
+            </p>
+
+            <Accordion title="Run the Pitch Round (in the room)" defaultOpen accent={phaseColors.proposal.accent}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
+                <StepCard number={1} title="Each table presents" duration="3 min per team" accent={phaseColors.proposal.accent}
+                  description="One person per table shares the HMW question, the idea, and the prototype. Keep a visible timer — 3 minutes, no exceptions, so every team gets equal airtime." />
+                <StepCard number={2} title='"I like / I wish / What if" feedback' duration="3 min per team" accent={phaseColors.proposal.accent}
+                  description='After each pitch, the room responds using only three sentence starters: "I like…" (what works), "I wish…" (what could improve), "What if…" (a new possibility). This keeps feedback constructive and fast.' />
+                <StepCard number={3} title="Vote on what moves forward" duration="5 min" accent={phaseColors.proposal.accent}
+                  description="Dot-vote across all the ideas. The top 1–2 are the ones you'll carry into a leadership proposal — don't try to advance everything." />
+              </div>
+            </Accordion>
+
+            <div style={{
+              background: color.ink, borderRadius: 16, padding: "24px 24px",
+              color: "#fff", marginTop: 20, display: "flex", alignItems: "center", gap: 20,
+              cursor: "pointer",
+            }} onClick={() => navigate("prototype")}>
+              <div style={{ width: 50, height: 50, borderRadius: 14, background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="edit" size={24} color={color.accent} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: "0 0 4px", fontFamily: font.sans, fontSize: 18 }}>Build Your Leadership Proposal</h3>
+                <p style={{ margin: 0, fontSize: 14, opacity: 0.7 }}>Use the Proposal Generator (on the Prototyping page) to turn your winning idea into a polished one-page proposal.</p>
+              </div>
+              <Icon name="chevronRight" size={20} color="rgba(255,255,255,0.5)" />
+            </div>
+
             <AIHelper stepKey="pitch" accent={phaseColors.proposal.accent} />
           </div>
         );
