@@ -390,6 +390,16 @@ function IllustrationBanner({ src, ratio = "3 / 2", max = 300 }) {
   );
 }
 
+// Standard intro paragraph directly under a page header — one spec for every page.
+function Lead({ children }) {
+  return <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>{children}</p>;
+}
+
+// Standard in-page section heading — one spec for every page.
+function SectionHeading({ children }) {
+  return <h3 style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, margin: "0 0 14px", color: color.ink }}>{children}</h3>;
+}
+
 function TemplateCard({ title, desc, items, accent, onLaunch, image, launchLabel = "Go to this step" }) {
   return (
     <div style={{ background: "#fff", borderRadius: 14, padding: 24, border: `1px solid ${accent}18`, boxShadow: `0 2px 12px ${accent}08`, display: "flex", flexDirection: "column" }}>
@@ -2432,11 +2442,11 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="sparkle" title="AI in Your Sprint" subtitle="Using AI to prep faster and run a better Hack In A Box" accent={ai.accent} />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               You don't need to be technical to put AI to work in a sprint. Used well, it's a tireless thinking partner — it helps you prepare faster, hear your community more clearly, and turn rough ideas into plans you can act on. Think of it as a tool that <strong>amplifies</strong> your team's discernment, never replaces it.
             </p>
 
-            <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>Why use AI in a Hack In A Box?</h3>
+            <SectionHeading>Why use AI in a Hack In A Box?</SectionHeading>
             <SectionArt src={artAiWhy} alt="" max={560} />
             <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${ai.accent}20`, marginBottom: 28 }}>
               {[
@@ -2471,9 +2481,9 @@ export default function HackInABox() {
               <Icon name="arrow" size={22} color="#fff" />
             </div>
 
-            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>Tools you can use</h3>
+            <SectionHeading>Tools you can use</SectionHeading>
             <IllustrationBanner src={artAiTools} />
-            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 16 }}>
               Any general AI assistant works. Most have a free tier that's plenty for a sprint — start with one you already have access to.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 32 }}>
@@ -2489,9 +2499,9 @@ export default function HackInABox() {
               ))}
             </div>
 
-            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>How to use AI at each step</h3>
+            <SectionHeading>How to use AI at each step</SectionHeading>
             <IllustrationBanner src={artAiEachStep} />
-            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 16 }}>
               Copy a prompt below, swap in your own details, and paste it into your AI tool. Always read the output with your team and keep what rings true.
             </p>
             {prompts.map((p) => (
@@ -2521,13 +2531,13 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="book" title="What is HIAB?" subtitle="Understanding Design Thinking Brainstorm Sprints for faith-based organizations" accent={color.accent} />
             <SectionArt src={artHeroBox} alt="An open box with a lightbulb and tools lifting out, like a sprint kit being unpacked" />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               A <strong>Hack In A Box (HIAB)</strong> is a Design Thinking Brainstorm Sprint created by <strong>Indigitous US</strong>, specifically tailored for churches and faith-based organizations. Think of it as a focused retreat where your church's leaders and members come together to pray, brainstorm, and collaborate on solutions to real challenges your ministry faces.
             </p>
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               This isn't about technology or complicated tools. It's about guiding your team through creative discussions and hands-on activities to produce clear, actionable plans that work for your unique church family.
             </p>
-            <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>What Makes HIAB Different?</h3>
+            <SectionHeading>What Makes HIAB Different?</SectionHeading>
             <SectionArt src={artOverviewDifferent} alt="" max={560} />
             <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${color.line}`, marginBottom: 28 }}>
               {[
@@ -2542,7 +2552,7 @@ export default function HackInABox() {
                 </div>
               ))}
             </div>
-            <h3 style={{ fontFamily: font.sans, fontSize: 20, margin: "0 0 16px", color: color.ink }}>The Design Thinking Process</h3>
+            <SectionHeading>The Design Thinking Process</SectionHeading>
             <SectionArt src={artOverviewProcess} alt="Five stepping stones — empathize, define, ideate, prototype, test — with the middle one highlighted" max={560} />
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
               {[
@@ -2638,7 +2648,7 @@ export default function HackInABox() {
             <PhaseHeader icon="clipboard" title="Prepare Your Sprint" subtitle="Everything you need to plan and organize a successful HIAB event" accent={phaseColors.prepare.accent} />
             <SectionArt src={artStopwatch} alt="A stopwatch marking a short timeboxed sprint" />
 
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               Preparation is four steps, and the next four pages walk you through them in order:
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
@@ -2970,7 +2980,7 @@ export default function HackInABox() {
             </Accordion>
 
             <hr style={{ border: "none", borderTop: `1px solid ${color.line}`, margin: "32px 0" }} />
-            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "0 0 8px", color: color.ink }}>Build your problem statement (AI-guided)</h3>
+            <SectionHeading>Build your problem statement (AI-guided)</SectionHeading>
             <SCIPABChatbot />
           </div>
         );
@@ -2980,7 +2990,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
             <SectionArt src={artEmpathize} alt="Two people sitting in conversation, one listening closely" />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>            <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>            <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
             <Accordion spot={artEmpathyExercise} title="How to Run an Empathy Map Exercise" accent={phaseColors.empathy.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Choose Your Subject" duration="5 min" accent={phaseColors.empathy.accent} description="Decide who you're empathizing with — a real person, a type of person, or a community member affected by your challenge." />
@@ -3004,7 +3014,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="users" title="Personas" subtitle="Turn your empathy work into a few specific, memorable people your team designs for" accent={phaseColors.personas.accent} />
             <SectionArt src={artPersonaCard} alt="A persona profile card with a portrait, goals, and pain points" max={560} />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 20 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable — and they build directly on the empathy map you just made.</p>
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable — and they build directly on the empathy map you just made.</p>
             <AIHelper stepKey="persona" accent={phaseColors.personas.accent} />
             <Accordion spot={artEmpathyPersonas} title="How to Create Personas" accent={phaseColors.personas.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -3114,7 +3124,6 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="download" title="Templates & Resources" subtitle="Printable templates and quick-reference cards for your sprint" accent={phaseColors.templates.accent} />
-            <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
               <TemplateCard title="Empathy Map Template" image={artEmpathyMap} accent={color.accent} desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
               <TemplateCard title="Persona Card Template" image={artPersonaCard} accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("personas")} />
@@ -3130,7 +3139,6 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="download" title="Post-Sprint Templates" subtitle="Capture results and carry momentum into leadership and follow-up" accent={phaseColors.templates.accent} />
-            <h3 style={{ fontFamily: font.sans, fontSize: 18, margin: "0 0 14px", color: color.ink }}>Post-Sprint Templates</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
               <TemplateCard title="Sprint Summary One-Pager" image={artSprintSummary} accent={color.accent} desc="A one-page record each table fills out before leaving the room." items={["HMW problem statement", "Top ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Leadership Proposal Card" accent={color.accent} desc="A structured pitch card for presenting ideas to pastors and elder boards." items={["The problem (with evidence)", "The proposed solution", "Who it serves and expected impact", "Resources needed and timeline", "What success looks like"]} onLaunch={() => navigate("after")} />
