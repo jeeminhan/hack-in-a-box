@@ -1626,22 +1626,22 @@ function int16ToFloat32(int16) {
 function useVoice({ onTranscript, onSpeakEnd } = {}) {
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-  const [supported, setSupported] = useState({ recog: false, synth: false });
+  // Feature detection never changes within a session — derive once instead of
+  // setting state from an effect.
+  const [supported] = useState(() => {
+    const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    const canPlay = typeof window !== "undefined" && !!(window.AudioContext || window.webkitAudioContext || window.speechSynthesis);
+    return { recog: !!SR, synth: canPlay };
+  });
   const recogRef = useRef(null);
   const audioCtxRef = useRef(null);
   const sourceRef = useRef(null);
   const abortRef = useRef(null);
 
-  useEffect(() => {
-    const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
-    const canPlay = typeof window !== "undefined" && !!(window.AudioContext || window.webkitAudioContext || window.speechSynthesis);
-    setSupported({ recog: !!SR, synth: canPlay });
-  }, []);
-
   const startListening = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
-    if (recogRef.current) { try { recogRef.current.stop(); } catch {} }
+    if (recogRef.current) { try { recogRef.current.stop(); } catch { /* already stopped */ } }
     const r = new SR();
     r.lang = "en-US";
     r.interimResults = true;
@@ -1667,7 +1667,7 @@ function useVoice({ onTranscript, onSpeakEnd } = {}) {
   };
 
   const stopListening = () => {
-    if (recogRef.current) { try { recogRef.current.stop(); } catch {} }
+    if (recogRef.current) { try { recogRef.current.stop(); } catch { /* already stopped */ } }
     setListening(false);
   };
 
@@ -1819,7 +1819,7 @@ function ThinkingPartner({ setMode }) {
   });
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch { /* storage unavailable */ }
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 
     const last = messages[messages.length - 1];
@@ -1845,7 +1845,11 @@ function ThinkingPartner({ setMode }) {
     setMessages((prev) => [...prev, { role: "assistant", content: result.text }]);
     setLoading(false);
   };
-  sendRef.current = send;
+  // Keep the latest send in a ref so voice callbacks (registered once) always
+  // call the current closure. Refs must be written in an effect, not render.
+  useEffect(() => {
+    sendRef.current = send;
+  });
 
   const reset = () => {
     if (!confirm("Start a new conversation? This one will be deleted.")) return;
