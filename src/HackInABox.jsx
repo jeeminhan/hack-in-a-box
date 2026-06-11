@@ -1134,7 +1134,7 @@ function ProposalAccordion() {
   return (
     <div ref={ref} style={{
       borderRadius: 14, border: `1px solid ${color.line}`, marginBottom: 12,
-      overflow: "hidden", background: "#fff", boxShadow: "0 2px 12px rgba(67,97,238,0.06)",
+      overflow: "hidden", background: "#fff", boxShadow: `0 2px 12px ${color.accent}0F`,
     }}>
       <button onClick={() => setOpen(!open)} style={{
         width: "100%", padding: "18px 22px 10px", display: "flex", alignItems: "flex-start",
@@ -1163,7 +1163,7 @@ function ProposalAccordion() {
             background: color.accent, color: "#fff",
             fontFamily: font.sans, fontSize: 15, fontWeight: 600, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            boxShadow: "0 4px 16px rgba(29,78,216,0.25)",
+            boxShadow: `0 4px 16px ${color.accent}40`,
           }}>
             <Icon name="sparkle" size={18} color="#fff" /> Start Building Your Proposal
           </button>
@@ -2333,7 +2333,7 @@ function IntroModal({ onClose, isMobile }) {
         <button onClick={onClose} style={{
           width: "100%", padding: "13px 0", borderRadius: 10, border: "none",
           background: color.accent, color: "#fff", fontFamily: font.sans, fontSize: 15, fontWeight: 700,
-          cursor: "pointer", boxShadow: "0 4px 16px rgba(124,58,237,0.3)",
+          cursor: "pointer", boxShadow: `0 4px 16px ${color.accent}4D`,
         }}>Got it — let's go</button>
       </div>
     </div>
@@ -2457,7 +2457,7 @@ export default function HackInABox() {
               background: color.accent, borderRadius: 16, padding: "24px 28px",
               color: "#fff", margin: "0 0 32px", textAlign: "left",
               display: "flex", alignItems: "center", gap: 20, cursor: "pointer",
-              boxShadow: "0 4px 20px rgba(124,58,237,0.25)",
+              boxShadow: `0 4px 20px ${color.accent}40`,
             }} onClick={() => navigate("partner")}>
               <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name="chat" size={28} color="#fff" />
@@ -2961,7 +2961,7 @@ export default function HackInABox() {
               ].map((pitfall, i) => (
                 <div key={i} style={{ marginBottom: i < 2 ? 14 : 0 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ color: "#DC2626", fontWeight: 700, fontSize: 18 }}>✗</span>
+                    <span style={{ color: color.accent, fontWeight: 700, fontSize: 18 }}>✗</span>
                     <span style={{ fontWeight: 600, fontSize: 15 }}>"{pitfall.bad}"</span>
                   </div>
                   <p style={{ margin: "4px 0 0 26px", fontSize: 14, color: color.muted }}>{pitfall.why}</p>
