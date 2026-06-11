@@ -24,19 +24,28 @@ read live during an info session.
 That's it. The widget already works without this (responses are accepted and logged in
 Vercel function logs); this step is only what makes them land in the spreadsheet.
 
+## Updating the script on an existing sheet
+
+If you already deployed an earlier version: paste the new script over the old one, then
+**Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**. The `/exec`
+URL stays the same, so no Vercel change is needed. The script auto-upgrades a sheet
+created by the old version (it inserts the new **Name** column so existing rows stay
+aligned).
+
 ## Verify it works
 
 - Open the deployed site, sit on any page ~5s, answer the popup, hit **Send feedback**.
 - A new row should appear in the Sheet within a second or two.
-- The first row is auto-created as a header: `timestamp | section | helpful | wouldUse | comment | userAgent`.
+- The first row is auto-created as a header: `Time | Page | Name | Helpful? | Would use? | Comment | Device`.
 
 ## Fields each row stores
 
 | Column | Meaning |
 |--------|---------|
-| `timestamp` | ISO time the response was received (server-side) |
-| `section` | Which page the feedback was about (e.g. `empathy`, `prepare`) |
-| `helpful` | `TRUE` / `FALSE` / blank — "Is this helpful?" |
-| `wouldUse` | `TRUE` / `FALSE` / blank — "Would you use this tool?" |
-| `comment` | Optional free-text "Anything you'd change?" |
-| `userAgent` | Browser/device string, for rough desktop-vs-mobile context |
+| `Time` | When the response was received, in the Sheet's timezone (e.g. `Jun 10, 2026 9:41 AM`) |
+| `Page` | Human-readable page the feedback was about (e.g. `Getting Feedback`) |
+| `Name` | Who sent it — the widget asks for a name and remembers it across pages |
+| `Helpful?` | `Yes` / `No` / blank — "Is this helpful?" |
+| `Would use?` | `Yes` / `No` / blank — "Would you use this tool?" |
+| `Comment` | Optional free-text "Anything you'd change?" |
+| `Device` | Short summary like `Chrome · iPhone`, for rough desktop-vs-mobile context |

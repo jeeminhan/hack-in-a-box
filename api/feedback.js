@@ -12,16 +12,18 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { section, helpful, wouldUse, comment } = req.body || {};
+  const { section, page, name, helpful, wouldUse, comment } = req.body || {};
 
   // Light validation — never trust the browser, but never block on it either.
   const record = {
     section: typeof section === "string" ? section.slice(0, 80) : "",
+    page: typeof page === "string" ? page.slice(0, 120) : "",
+    name: typeof name === "string" ? name.slice(0, 120) : "",
     helpful: helpful === true || helpful === false ? helpful : null,
     wouldUse: wouldUse === true || wouldUse === false ? wouldUse : null,
     comment: typeof comment === "string" ? comment.slice(0, 2000) : "",
     timestamp: new Date().toISOString(),
-    userAgent: String(req.headers["user-agent"] || "").slice(0, 300),
+    device: describeDevice(req.headers["user-agent"]),
   };
 
   const webhook = resolveWebhook(process.env.FEEDBACK_WEBHOOK_URL);
@@ -49,6 +51,31 @@ export default async function handler(req, res) {
     console.error("[feedback] forward failed", err?.message);
     res.status(502).json({ ok: false, error: "Could not record feedback" });
   }
+}
+
+// Condenses a raw user-agent string into a short human-readable summary like
+// "Chrome · iPhone" so the spreadsheet column is skimmable instead of noise.
+function describeDevice(rawUa) {
+  const ua = String(rawUa || "");
+  if (!ua) return "";
+
+  let browser = "Unknown browser";
+  if (/Edg\//.test(ua)) browser = "Edge";
+  else if (/SamsungBrowser\//.test(ua)) browser = "Samsung Internet";
+  else if (/OPR\/|Opera/.test(ua)) browser = "Opera";
+  else if (/Firefox\//.test(ua)) browser = "Firefox";
+  else if (/Chrome\//.test(ua)) browser = "Chrome";
+  else if (/Safari\//.test(ua)) browser = "Safari";
+
+  let device = "Unknown device";
+  if (/iPhone/.test(ua)) device = "iPhone";
+  else if (/iPad/.test(ua)) device = "iPad";
+  else if (/Android/.test(ua)) device = "Android";
+  else if (/Macintosh/.test(ua)) device = "Mac";
+  else if (/Windows/.test(ua)) device = "Windows";
+  else if (/Linux/.test(ua)) device = "Linux";
+
+  return `${browser} · ${device}`;
 }
 
 // Accepts either a full Apps Script web-app URL or just the bare deployment id
