@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { color, font, pill } from "./theme.js";
-import EmpathyMapDemo from "./EmpathyMapDemo.jsx";
+import WalkthroughDemo from "./WalkthroughDemo.jsx";
+import { WALKTHROUGHS } from "./walkthroughs.js";
 
 // Textured-gouache illustration set (Indigitous orange accent). See
 // assets/illustrations/PLACEMENT.md for the full mapping.
@@ -1538,112 +1539,6 @@ function ProposalChatbot({ autoStart = false }) {
 }
 
 
-function AIHelper({ stepKey, accent }) {
-  const [responses, setResponses] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [demo, setDemo] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [context, setContext] = useState("");
-
-  const presets = {
-    empathize: [
-      { label: "Critique my empathy notes", build: (c) => `Here are my empathy notes about the person/group I'm designing for:\n\n${c}\n\nAct as a design thinking coach. Tell me where I'm making assumptions vs. genuinely observing. What's missing? What surprises should I dig into?` },
-      { label: "Turn a transcript into Says/Thinks/Does/Feels", build: (c) => `Here is an interview or testimony:\n\n${c}\n\nBreak it into an empathy map with four quadrants — Says, Thinks, Does, Feels. Short bullet points under each.` },
-    ],
-    persona: [
-      { label: "Draft a persona", build: (c) => `Based on what I know about the people I'm designing for:\n\n${c}\n\nDraft a vivid persona: name, age, role, a 2-sentence backstory, top goals, top pain points, and their likely relationship with church. Then suggest one detail I probably haven't considered.` },
-      { label: "Generate alternative personas", build: (c) => `Here's my current persona / audience:\n\n${c}\n\nGenerate 2 alternative personas representing different segments I might be missing. Give each a name, age, role, top goal, top pain, and one concrete habit that would surprise me.` },
-    ],
-    define: [
-      { label: "Sharpen my How Might We", build: (c) => `Here's my situation and rough problem:\n\n${c}\n\nWrite 3 sharper "How might we..." statements. Each specific enough to act on in a short sprint but open enough for creative solutions. Avoid jargon. Then tell me which one you'd pick and why.` },
-      { label: "Is this a good problem to solve?", build: (c) => `Here's my problem statement and what I've observed:\n\n${c}\n\nScore it 1-5 on specificity, actionability, human-centeredness, and room for creative solutions. Be honest. If weak, tell me how to sharpen it.` },
-    ],
-    ideate: [
-      { label: "Generate 10 more ideas", build: (c) => `Here's my challenge and the ideas I have so far:\n\n${c}\n\nGenerate 10 NEW ideas I haven't thought of. Push for wild, unexpected combinations. Include at least 2 that sound impossible at first.` },
-      { label: "Combine ideas in fresh ways", build: (c) => `Here are my favorite ideas:\n\n${c}\n\nSuggest 3 hybrid ideas that combine elements of two or more. Tell me the strongest combination and why.` },
-    ],
-    prototype: [
-      { label: "Suggest a prototype format", build: (c) => `Here's my top idea:\n\n${c}\n\nWhich prototype format would I learn the most from in 30 minutes? Options: storyboard, mock flyer, role-play, sketched landing page, schedule plan, paper model. Recommend one and tell me exactly what to build.` },
-      { label: "Stress-test the idea", build: (c) => `Here's my idea:\n\n${c}\n\nAct as a skeptical long-time member of my church. What concerns would you raise? Where might this fail? Be specific and respectful.` },
-    ],
-    pitch: [
-      { label: "Critique my proposal", build: (c) => `Here's my proposal to leadership:\n\n${c}\n\nCritique it as a busy pastor with healthy skepticism toward new programs. Where is it weak? What would make me say yes faster? Be direct.` },
-      { label: "Write the elevator pitch", build: (c) => `Here's my idea and the ask:\n\n${c}\n\nWrite a 60-second elevator pitch for my pastor in the hallway. Plain spoken, no jargon, lead with a human story or concrete observation.` },
-    ],
-  };
-
-  const stepPresets = presets[stepKey] || [];
-  if (stepPresets.length === 0) return null;
-
-  const hasResponses = responses.length > 0;
-  const expanded = open || hasResponses;
-
-  const ask = async (build) => {
-    const c = context.trim() || "(I haven't written my notes yet — give me general guidance for this step.)";
-    const userMessage = build(c);
-    setLoading(true);
-    const result = await callAI({
-      system: "You are a sharp, kind design thinking coach for church lay leaders. Be concrete, specific, and brief. Use plain English. Never preachy. Bullet points and short paragraphs only.",
-      messages: [{ role: "user", content: userMessage }],
-      max_tokens: 700,
-    });
-    setDemo(result.demo);
-    setResponses((prev) => [...prev, { q: userMessage, a: result.text }]);
-    setLoading(false);
-  };
-
-  if (!expanded) {
-    return (
-      <div style={{ marginTop: 20, marginBottom: 8 }}>
-        <button onClick={() => setOpen(true)} style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          background: "transparent", border: `1px dashed ${accent}55`, color: accent,
-          borderRadius: 20, padding: "6px 14px", fontSize: 13, fontWeight: 500,
-          cursor: "pointer", fontFamily: "inherit",
-        }}>
-          <Icon name="chat" size={14} color={accent} />
-          Ask AI for help with this step
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ marginTop: 20, marginBottom: 12, borderRadius: 12, border: `1px solid ${accent}30`, background: `${accent}05`, padding: "14px 16px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <Icon name="chat" size={16} color={color.accent} />
-        <div style={{ fontWeight: 700, color: accent, fontSize: 13 }}>AI Thinking Partner</div>
-        {demo && <span style={{ background: color.rail, color: color.accent, fontSize: 10, padding: "2px 6px", borderRadius: 4, fontWeight: 600 }}>DEMO</span>}
-        {!hasResponses && (
-          <button onClick={() => setOpen(false)} aria-label="Close" style={{ marginLeft: "auto", background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 16, lineHeight: 1, fontFamily: "inherit" }}>×</button>
-        )}
-      </div>
-      <textarea
-        value={context}
-        onChange={(e) => setContext(e.target.value)}
-        placeholder="Tell the AI about your situation for this step — your notes, your audience, your idea…"
-        rows={3}
-        style={{ width: "100%", boxSizing: "border-box", border: `1px solid ${color.line}`, borderRadius: 8, padding: "8px 10px", fontSize: 13, fontFamily: "inherit", resize: "vertical", marginBottom: 10, background: "#fff" }}
-      />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {stepPresets.map((p, i) => (
-          <button key={i} onClick={() => ask(p.build)} disabled={loading} style={{
-            background: "#fff", border: `1px solid ${accent}40`, color: accent,
-            borderRadius: 20, padding: "6px 14px", fontSize: 13, fontWeight: 500,
-            cursor: loading ? "wait" : "pointer", fontFamily: "inherit",
-          }}>{p.label}</button>
-        ))}
-      </div>
-      {loading && <div style={{ marginTop: 12, fontSize: 13, color: color.muted }}>Thinking…</div>}
-      {responses.map((r, i) => (
-        <div key={i} style={{ marginTop: 14, padding: "12px 14px", background: "#fff", borderRadius: 10, border: `1px solid ${color.line}` }}>
-          <div style={{ fontSize: 14, lineHeight: 1.6, color: color.ink, whiteSpace: "pre-wrap" }}>{r.a}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ========== SHARED: AI call helper ==========
 async function callAI({ system, messages, max_tokens = 800 }) {
   try {
@@ -3000,7 +2895,9 @@ export default function HackInABox() {
                 <StepCard number={4} title='Reframe as "How Might We..."' duration="10 min" accent={phaseColors.problem.accent} description='Craft a "How might we..." question that captures the problem. Write several versions and refine until it feels both inspiring and specific.' />
               </div>
             </Accordion>
-            <AIHelper stepKey="define" accent={phaseColors.problem.accent} />
+            <SectionHeading>Watch it narrow to one question</SectionHeading>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>This is the funnel in action: pains from your empathy work, a dot-voted focus, and three drafts of a How-Might-We — from solution-in-disguise to sharp.</p>
+            <WalkthroughDemo key="problem" script={WALKTHROUGHS.problem} accent={phaseColors.problem.accent} />
             <Accordion spot={artProblemPitfalls} title="Common Pitfalls to Avoid" accent={phaseColors.problem.accent}>
               {[
                 { bad: "We need a new website.", why: "This jumps to a solution. What's the underlying problem?" },
@@ -3028,7 +2925,7 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="heart" title="Empathy Maps" subtitle="Walk in someone else's shoes to truly understand their experience" accent={phaseColors.empathy.accent} />
             <SectionArt src={artEmpathize} alt="Two people sitting in conversation, one listening closely" />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>            <AIHelper stepKey="empathize" accent={phaseColors.empathy.accent} />
+            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>An empathy map helps your team build a shared understanding of the people you're trying to serve. It moves you beyond assumptions and into genuine compassion — the kind that leads to solutions that actually work.</p>
             <Accordion spot={artEmpathyExercise} title="How to Run an Empathy Map Exercise" accent={phaseColors.empathy.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Choose Your Subject" duration="5 min" accent={phaseColors.empathy.accent} description="Decide who you're empathizing with — a real person, a type of person, or a community member affected by your challenge." />
@@ -3039,7 +2936,7 @@ export default function HackInABox() {
             </Accordion>
             <SectionHeading>See one being built</SectionHeading>
             <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>An empathy map has four quadrants — Says, Thinks, Does, and Feels. Step through this worked example (or project it for your group) to see how observations land in each quadrant and how the insight emerges.</p>
-            <EmpathyMapDemo accent={phaseColors.empathy.accent} />
+            <WalkthroughDemo key="empathy" script={WALKTHROUGHS.empathy} accent={phaseColors.empathy.accent} />
             <TipBox accent={phaseColors.empathy.accent} label="Ministry connection">
               Empathy mapping is a spiritual exercise. It's about genuinely understanding another person's reality — the heart of loving your neighbor. Open with prayer, asking God to help your team see through others' eyes.
             </TipBox>
@@ -3052,7 +2949,6 @@ export default function HackInABox() {
             <PhaseHeader icon="users" title="Personas" subtitle="Turn your empathy work into a few specific, memorable people your team designs for" accent={phaseColors.personas.accent} />
             <SectionArt src={artPersonaCard} alt="A persona profile card with a portrait, goals, and pain points" max={560} />
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>A persona is a fictional but realistic character that represents a key group of people your church serves. Personas make "our community" specific and relatable — and they build directly on the empathy map you just made.</p>
-            <AIHelper stepKey="persona" accent={phaseColors.personas.accent} />
             <Accordion spot={artEmpathyPersonas} title="How to Create Personas" accent={phaseColors.personas.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <StepCard number={1} title="Review Your Empathy Map" duration="5 min" accent={phaseColors.personas.accent} description="Look at patterns from empathy mapping. Who are the distinct types of people that emerged? You'll typically identify 2–3 key personas." />
@@ -3061,6 +2957,9 @@ export default function HackInABox() {
                 <StepCard number={4} title="Write a Day-in-the-Life" duration="5 min" accent={phaseColors.personas.accent} description="2–3 sentences describing a typical day or week. This helps your team design solutions that fit their real life." />
               </div>
             </Accordion>
+            <SectionHeading>Watch the map become a persona</SectionHeading>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>Step through how Maria's empathy map from the last step turns into a persona card the whole team can design for.</p>
+            <WalkthroughDemo key="personas" script={WALKTHROUGHS.personas} accent={phaseColors.personas.accent} />
             <TipBox accent={phaseColors.personas.accent}>Keep personas visible throughout the sprint. Before every decision, ask: "Would this work for [persona name]?"</TipBox>
           </div>
         );
@@ -3087,7 +2986,9 @@ export default function HackInABox() {
                 ))}
               </div>
             </Accordion>
-            <AIHelper stepKey="ideate" accent={phaseColors.ideate.accent} />
+            <SectionHeading>Watch a wall fill up</SectionHeading>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>Here's a table brainstorming on Maria's How-Might-We — notice how the best idea only shows up after the obvious ones are out.</p>
+            <WalkthroughDemo key="ideate" script={WALKTHROUGHS.ideate} accent={phaseColors.ideate.accent} />
           </div>
         );
 
@@ -3107,6 +3008,9 @@ export default function HackInABox() {
                 <StepCard number={4} title="Dot-vote on favorites" duration="5 min" accent={phaseColors.ideate.accent} description="3 dot stickers each. Place on the most promising ideas." />
               </div>
             </Accordion>
+            <SectionHeading>Watch a round happen</SectionHeading>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>Eight panels, one a minute. Step through one participant's sheet and see where the dot votes land.</p>
+            <WalkthroughDemo key="crazy8s" script={WALKTHROUGHS.crazy8s} accent={phaseColors.ideate.accent} />
           </div>
         );
 
@@ -3134,8 +3038,10 @@ export default function HackInABox() {
                 ))}
               </div>
             </Accordion>
+            <SectionHeading>Watch a storyboard take shape</SectionHeading>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>The table storyboards Maria experiencing their winning idea — six frames, thirty minutes, testable.</p>
+            <WalkthroughDemo key="prototype" script={WALKTHROUGHS.prototype} accent={phaseColors.prototype.accent} />
             <PrototypePromptBuilder />
-            <AIHelper stepKey="prototype" accent={phaseColors.prototype.accent} />
             <ProposalAccordion />
           </div>
         );
@@ -3157,6 +3063,9 @@ export default function HackInABox() {
                 </div>
               ))}
             </Accordion>
+            <SectionHeading>Watch a feedback round</SectionHeading>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>The three sentence starters in action on a real prototype — and how the wishes and what-ifs pair into next steps.</p>
+            <WalkthroughDemo key="feedback" script={WALKTHROUGHS.feedback} accent={phaseColors.prototype.accent} />
             <TipBox accent={phaseColors.prototype.accent}>Assign one person per table to write down the "I wish" and "What if" notes — those are the seeds of your next iteration.</TipBox>
           </div>
         );
@@ -3326,11 +3235,13 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
+            <SectionHeading>Watch a pitch come together</SectionHeading>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>Story, problem, idea, evidence, ask — step through a three-minute pitch built from the sprint you just watched.</p>
+            <WalkthroughDemo key="pitch" script={WALKTHROUGHS.pitch} accent={phaseColors.proposal.accent} />
+
             <CtaBanner icon="edit" title="Build Your Leadership Proposal"
               desc="Use the Proposal Generator (on the Prototyping page) to turn your winning idea into a polished one-page proposal."
               onClick={() => navigate("prototype")} />
-
-            <AIHelper stepKey="pitch" accent={phaseColors.proposal.accent} />
           </div>
         );
 
