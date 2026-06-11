@@ -2442,12 +2442,12 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="sparkle" title="AI in Your Sprint" subtitle="Using AI to prep faster and run a better Hack In A Box" accent={ai.accent} />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
+            <SectionArt src={artAiWhy} alt="A spark of ideas radiating from a simple chat window" max={560} />
+            <Lead>
               You don't need to be technical to put AI to work in a sprint. Used well, it's a tireless thinking partner — it helps you prepare faster, hear your community more clearly, and turn rough ideas into plans you can act on. Think of it as a tool that <strong>amplifies</strong> your team's discernment, never replaces it.
-            </p>
+            </Lead>
 
             <SectionHeading>Why use AI in a Hack In A Box?</SectionHeading>
-            <SectionArt src={artAiWhy} alt="" max={560} />
             <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${ai.accent}20`, marginBottom: 28 }}>
               {[
                 { title: "Prep in a fraction of the time", desc: "Draft agendas, prompts, and participant invites in minutes so you can focus on the people in the room." },
@@ -2689,8 +2689,12 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="heart" title="Get Leadership Buy-In" subtitle="Lay a spiritual foundation and bring your pastor or leadership on board" accent={phaseColors.prepare.accent} />
+            <SectionArt src={artPreparePrayer} alt="Open hands lifted in prayer beneath a warm glow" max={560} />
+            <Lead>
+              Leadership support is the most important first step. Lay a spiritual foundation through prayer, then bring your pastor or leadership on board with a clear, small ask.
+            </Lead>
 
-            <Accordion spot={artPreparePrayer} title="Prayer & Spiritual Preparation" defaultOpen accent={phaseColors.prepare.accent}>
+            <Accordion title="Prayer & Spiritual Preparation" defaultOpen accent={phaseColors.prepare.accent}>
               <p>Before any logistics, lay a spiritual foundation. Invite your leadership team and participants into a season of intentional prayer.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
                 {["Pray for God to reveal the right challenge to focus on", "Ask for open hearts and minds among participants", "Pray for creative, Spirit-led ideas to come forward", "Commission the event during a Sunday service to build support"].map((item, i) => (
@@ -2723,8 +2727,12 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="users" title="Recruit & Plan" subtitle="Get the right people in the room and map your countdown to sprint day" accent={phaseColors.prepare.accent} />
+            <SectionArt src={artPrepareRecruit} alt="A group of people gathering around an invitation" max={560} />
+            <Lead>
+              The right mix of people makes the sprint. Recruit a diverse group, then work backward from sprint day with a week-by-week plan.
+            </Lead>
 
-            <Accordion spot={artPrepareRecruit} title="How to Market and Recruit Participants" accent={phaseColors.prepare.accent}>
+            <Accordion title="How to Market and Recruit Participants" accent={phaseColors.prepare.accent}>
               <p>Getting the right people in the room matters. Here's how to spread the word effectively:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -2777,6 +2785,10 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="clipboard" title="Team & Materials" subtitle="Assemble your facilitator team, gather supplies, and adapt for multi-church sprints" accent={phaseColors.prepare.accent} />
+            <SectionArt src={artPrepareTeam} alt="A facilitation team gathered around shared supplies" max={560} />
+            <Lead>
+              A small facilitation team and a box of simple supplies are all you need. Assign the key roles, run the checklist, and adapt the format if multiple churches are collaborating.
+            </Lead>
 
             <Accordion spot={artPrepareMultiChurch} title="Adapting for Multi-Church or Multi-Org Collaboration" accent={phaseColors.prepare.accent}>
               <p>HIAB is especially powerful when multiple churches or organizations come together around a shared challenge — like serving a neighborhood, reaching a people group, or tackling a community issue. Here's how to adapt:</p>
@@ -2799,7 +2811,7 @@ export default function HackInABox() {
               </FacilitatorNote>
             </Accordion>
 
-            <Accordion spot={artPrepareTeam} title="Team Assembly" accent={phaseColors.prepare.accent}>
+            <Accordion title="Team Assembly" accent={phaseColors.prepare.accent}>
               <p><strong>Ideal group size:</strong> 15–30 people, broken into tables of 4–6.</p>
               <p>Aim for diversity — different ages, roles, backgrounds, and time at your church. Consider inviting people who don't normally attend planning meetings.</p>
               <p><strong>Key roles:</strong> Lead Facilitator, Table Coaches (one per table), Timekeeper, and Notetaker/Photographer.</p>
@@ -2828,11 +2840,10 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="clock" title="Choose Your Sprint Format" subtitle="Ready-to-print agendas — pick the one that fits your group's time and energy" accent={phaseColors.prepare.accent} />
-            <h3 style={{ fontFamily: font.sans, fontSize: 22, margin: "28px 0 8px", color: color.ink }}>Sprint Formats & Agendas</h3>
-            <IllustrationBanner src={artPrepareAgendas} />
-            <p style={{ fontSize: 15, lineHeight: 1.65, color: color.body, marginBottom: 16 }}>
+            <SectionArt src={artPrepareAgendas} alt="A printed sprint agenda with highlighted time blocks" max={560} />
+            <Lead>
               Choose the format that fits your group's time and energy. Each agenda below is ready to print and follow.
-            </p>
+            </Lead>
 
             <div style={{ background: `${phaseColors.prepare.accent}08`, border: `1px solid ${phaseColors.prepare.accent}25`, borderRadius: 12, padding: "18px 20px", marginBottom: 20 }}>
               <div style={{ fontFamily: font.sans, fontSize: 15, fontWeight: 700, color: color.ink, marginBottom: 10 }}>
@@ -3059,6 +3070,9 @@ export default function HackInABox() {
           <div>
             <PhaseHeader icon="zap" title="Exercise: Crazy 8s" subtitle="The fastest way to push past the obvious — eight ideas in eight minutes" accent={phaseColors.ideate.accent} />
             <SectionArt src={artHandsCards} alt="Hands sketching quick ideas on a folded eight-panel sheet" max={560} />
+            <Lead>
+              Crazy 8s pushes everyone past their first, obvious idea — eight quick sketches in eight minutes, then share and vote on the most promising ones.
+            </Lead>
             <Accordion spot={artIdeateCrazy8s} title="How to Run Crazy 8s" defaultOpen accent={phaseColors.ideate.accent}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
                 <StepCard number={1} title="Fold your paper into 8 panels" duration="1 min" accent={phaseColors.ideate.accent} description="Fold a blank sheet into 8 equal rectangles." />
@@ -3104,8 +3118,9 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="chat" title="Test & Get Feedback" subtitle="Put your prototype in front of people and capture honest reactions" accent={phaseColors.prototype.accent} />
-            <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>Once a table has something tangible, have them share it and gather structured feedback. This simple three-prompt framework keeps reactions constructive and specific.</p>
-            <Accordion spot={artPrototypeFeedback} title="The Feedback Framework" defaultOpen accent={phaseColors.prototype.accent}>
+            <SectionArt src={artPrototypeFeedback} alt="Three feedback cards, the middle one marked with a heart" max={560} />
+            <Lead>Once a table has something tangible, have them share it and gather structured feedback. This simple three-prompt framework keeps reactions constructive and specific.</Lead>
+            <Accordion title="The Feedback Framework" defaultOpen accent={phaseColors.prototype.accent}>
               {[
                 { prompt: "I like...", desc: "What's working well?", color: color.accent },
                 { prompt: "I wish...", desc: "What would you change?", color: color.accent },
@@ -3124,6 +3139,9 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="download" title="Templates & Resources" subtitle="Printable templates and quick-reference cards for your sprint" accent={phaseColors.templates.accent} />
+            <Lead>
+              Print-ready templates for every step of the sprint. Each card lists what's inside and links to the step where you'll use it.
+            </Lead>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
               <TemplateCard title="Empathy Map Template" image={artEmpathyMap} accent={color.accent} desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
               <TemplateCard title="Persona Card Template" image={artPersonaCard} accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("personas")} />
@@ -3139,6 +3157,9 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="download" title="Post-Sprint Templates" subtitle="Capture results and carry momentum into leadership and follow-up" accent={phaseColors.templates.accent} />
+            <Lead>
+              Use these after sprint day to capture what happened and carry the momentum into leadership conversations and follow-up.
+            </Lead>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 28 }}>
               <TemplateCard title="Sprint Summary One-Pager" image={artSprintSummary} accent={color.accent} desc="A one-page record each table fills out before leaving the room." items={["HMW problem statement", "Top ideas from Crazy 8s", "Three key insights from empathy work", "Immediate next steps and owners"]} onLaunch={() => navigate("after")} />
               <TemplateCard title="Leadership Proposal Card" accent={color.accent} desc="A structured pitch card for presenting ideas to pastors and elder boards." items={["The problem (with evidence)", "The proposed solution", "Who it serves and expected impact", "Resources needed and timeline", "What success looks like"]} onLaunch={() => navigate("after")} />
@@ -3181,8 +3202,12 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="send" title="Share with Leadership" subtitle="Turn sprint energy into buy-in — make a compelling case in week 1–2" accent={phaseColors.after.accent} />
+            <SectionArt src={artAfterPhase2} alt="A sprint one-pager being passed across a table" max={560} />
+            <Lead>
+              Your ideas need champions. In the first week or two after the sprint, make a short, compelling case to your church leadership.
+            </Lead>
 
-            <Accordion spot={artAfterPhase2} title="Phase 2: Share with Leadership (Week 1–2)" defaultOpen accent={phaseColors.after.accent}>
+            <Accordion title="Phase 2: Share with Leadership (Week 1–2)" defaultOpen accent={phaseColors.after.accent}>
               <p>Your ideas need champions and buy-in from church leadership to move forward. Here's how to make a compelling case:</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
@@ -3211,8 +3236,12 @@ export default function HackInABox() {
         return (
           <div>
             <PhaseHeader icon="star" title="Keep It Alive" subtitle="Sustain momentum over the first months and build a lasting culture of innovation" accent={phaseColors.after.accent} />
+            <SectionArt src={artAfterPhase3} alt="A young plant being tended as it grows" max={560} />
+            <Lead>
+              Momentum fades fast after sprint day. Build a simple rhythm of ownership and check-ins so your best ideas keep moving.
+            </Lead>
 
-            <Accordion spot={artAfterPhase3} title="Phase 3: Keep It Alive (Month 1–3)" defaultOpen accent={phaseColors.after.accent}>
+            <Accordion title="Phase 3: Keep It Alive (Month 1–3)" defaultOpen accent={phaseColors.after.accent}>
               <p>The biggest risk after any sprint is losing momentum. Here's how to build a sustainable path forward:</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
