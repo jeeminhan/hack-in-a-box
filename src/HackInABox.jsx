@@ -2332,8 +2332,12 @@ export default function HackInABox() {
 
   // Reset scroll to the top whenever the page changes, after the new content
   // has rendered (doing it inside navigate runs against the old/unmounted DOM).
+  // Desktop scrolls inside contentRef; mobile scrolls the window (the layout
+  // uses minHeight:100vh, so the document — not the container — overflows), so
+  // reset both to cover every viewport.
   useEffect(() => {
     if (contentRef.current) contentRef.current.scrollTop = 0;
+    if (typeof window !== "undefined") window.scrollTo(0, 0);
   }, [view]);
 
   // Make the browser / Android hardware back button move between views.
