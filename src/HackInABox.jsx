@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { color, font, pill } from "./theme.js";
+import EmpathyMapDemo from "./EmpathyMapDemo.jsx";
 
 // Textured-gouache illustration set (Indigitous orange accent). See
 // assets/illustrations/PLACEMENT.md for the full mapping.
@@ -3036,8 +3037,9 @@ export default function HackInABox() {
                 <StepCard number={4} title="Identify Insights" duration="10 min" accent={phaseColors.empathy.accent} description="Look for tensions, surprises, patterns, and unmet needs. Circle the most important insights." />
               </div>
             </Accordion>
-            <SectionArt src={artEmpathyMap} alt="The four quadrants of an empathy map — Says, Thinks, Does, and Feels" max={560}
-              caption="An empathy map has four quadrants — Says, Thinks, Does, and Feels — that you fill in with observations about the person you're designing for." />
+            <SectionHeading>See one being built</SectionHeading>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>An empathy map has four quadrants — Says, Thinks, Does, and Feels. Step through this worked example (or project it for your group) to see how observations land in each quadrant and how the insight emerges.</p>
+            <EmpathyMapDemo accent={phaseColors.empathy.accent} />
             <TipBox accent={phaseColors.empathy.accent} label="Ministry connection">
               Empathy mapping is a spiritual exercise. It's about genuinely understanding another person's reality — the heart of loving your neighbor. Open with prayer, asking God to help your team see through others' eyes.
             </TipBox>
