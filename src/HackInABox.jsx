@@ -361,10 +361,11 @@ function PhaseHeader({ icon, title, subtitle, accent }) {
 
 // Reusable framed illustration. Warm-cream backing, rounded, lazy-loaded.
 // `ratio` keeps space reserved so images never cause layout shift.
-function SectionArt({ src, alt, ratio = "16 / 9", max = 680, style }) {
-  return (
+// `caption` renders the standard italic figcaption beneath the frame.
+function SectionArt({ src, alt, ratio = "16 / 9", max = 680, caption, style }) {
+  const frame = (
     <div style={{
-      maxWidth: max, margin: "0 auto 24px", borderRadius: 14, overflow: "hidden",
+      maxWidth: max, margin: caption ? "0 auto" : "0 auto 24px", borderRadius: 14, overflow: "hidden",
       background: color.rail, border: `1px solid ${color.line}`, ...style,
     }}>
       <img
@@ -372,6 +373,13 @@ function SectionArt({ src, alt, ratio = "16 / 9", max = 680, style }) {
         style={{ display: "block", width: "100%", aspectRatio: ratio, objectFit: "cover" }}
       />
     </div>
+  );
+  if (!caption) return frame;
+  return (
+    <figure style={{ margin: "0 0 24px" }}>
+      {frame}
+      <figcaption style={{ fontSize: 13, color: color.muted, marginTop: 8, fontStyle: "italic", textAlign: "center" }}>{caption}</figcaption>
+    </figure>
   );
 }
 
@@ -398,6 +406,25 @@ function Lead({ children }) {
 // Standard in-page section heading — one spec for every page.
 function SectionHeading({ children }) {
   return <h3 style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, margin: "0 0 14px", color: color.ink }}>{children}</h3>;
+}
+
+// The one deep-link banner style: dark ink panel, accent icon tile, chevron.
+function CtaBanner({ icon, title, desc, onClick }) {
+  return (
+    <div onClick={onClick} style={{
+      background: color.ink, borderRadius: 16, padding: "24px 28px",
+      color: "#fff", margin: "20px 0 28px", display: "flex", alignItems: "center", gap: 20, cursor: "pointer",
+    }}>
+      <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Icon name={icon} size={26} color={color.accent} />
+      </div>
+      <div style={{ flex: 1 }}>
+        <h3 style={{ margin: "0 0 4px", fontFamily: font.sans, fontSize: 18 }}>{title}</h3>
+        <p style={{ margin: 0, fontSize: 14, opacity: 0.75 }}>{desc}</p>
+      </div>
+      <Icon name="chevronRight" size={20} color="rgba(255,255,255,0.5)" />
+    </div>
+  );
 }
 
 function TemplateCard({ title, desc, items, accent, onLaunch, image, launchLabel = "Go to this step" }) {
@@ -2462,24 +2489,9 @@ export default function HackInABox() {
               ))}
             </div>
 
-            {/* CTA to the live AI Thinking Partner */}
-            <div style={{
-              background: color.accent, borderRadius: 16, padding: "24px 28px",
-              color: "#fff", margin: "0 0 32px", textAlign: "left",
-              display: "flex", alignItems: "center", gap: 20, cursor: "pointer",
-              boxShadow: `0 4px 20px ${color.accent}40`,
-            }} onClick={() => navigate("partner")}>
-              <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="chat" size={28} color="#fff" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: "0 0 4px", fontFamily: font.sans, fontSize: 19 }}>Try it now — the AI Thinking Partner</h3>
-                <p style={{ margin: 0, fontSize: 14, opacity: 0.9 }}>
-                  A conversational coach built into this kit. It interviews you about your challenge and organizes your thinking into a ready-to-use brief.
-                </p>
-              </div>
-              <Icon name="arrow" size={22} color="#fff" />
-            </div>
+            <CtaBanner icon="chat" title="Try it now — the AI Thinking Partner"
+              desc="A conversational coach built into this kit. It interviews you about your challenge and organizes your thinking into a ready-to-use brief."
+              onClick={() => navigate("partner")} />
 
             <SectionHeading>Tools you can use</SectionHeading>
             <IllustrationBanner src={artAiTools} />
@@ -3010,10 +3022,8 @@ export default function HackInABox() {
                 <StepCard number={4} title="Identify Insights" duration="10 min" accent={phaseColors.empathy.accent} description="Look for tensions, surprises, patterns, and unmet needs. Circle the most important insights." />
               </div>
             </Accordion>
-            <figure style={{ margin: "16px 0 8px" }}>
-              <SectionArt src={artEmpathyMap} alt="The four quadrants of an empathy map — Says, Thinks, Does, and Feels" max={560} style={{ margin: "0 auto" }} />
-              <figcaption style={{ fontSize: 13, color: color.muted, marginTop: 8, fontStyle: "italic", textAlign: "center" }}>An empathy map has four quadrants — Says, Thinks, Does, and Feels — that you fill in with observations about the person you're designing for.</figcaption>
-            </figure>
+            <SectionArt src={artEmpathyMap} alt="The four quadrants of an empathy map — Says, Thinks, Does, and Feels" max={560}
+              caption="An empathy map has four quadrants — Says, Thinks, Does, and Feels — that you fill in with observations about the person you're designing for." />
             <TipBox accent={phaseColors.empathy.accent} label="Ministry connection">
               Empathy mapping is a spiritual exercise. It's about genuinely understanding another person's reality — the heart of loving your neighbor. Open with prayer, asking God to help your team see through others' eyes.
             </TipBox>
@@ -3274,20 +3284,9 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <div style={{
-              background: color.ink, borderRadius: 16, padding: "24px 24px",
-              color: "#fff", marginTop: 20, display: "flex", alignItems: "center", gap: 20,
-              cursor: "pointer",
-            }} onClick={() => navigate("prototype")}>
-              <div style={{ width: 50, height: 50, borderRadius: 14, background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="edit" size={24} color={color.accent} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: "0 0 4px", fontFamily: font.sans, fontSize: 18 }}>Ready to Pitch Your Idea?</h3>
-                <p style={{ margin: 0, fontSize: 14, opacity: 0.7 }}>Use the Proposal Generator in the Prototyping section to build a polished leadership proposal from your sprint results.</p>
-              </div>
-              <Icon name="chevronRight" size={20} color="rgba(255,255,255,0.5)" />
-            </div>
+            <CtaBanner icon="edit" title="Ready to Pitch Your Idea?"
+              desc="Use the Proposal Generator in the Prototyping section to build a polished leadership proposal from your sprint results."
+              onClick={() => navigate("prototype")} />
           </div>
         );
 
@@ -3311,20 +3310,9 @@ export default function HackInABox() {
               </div>
             </Accordion>
 
-            <div style={{
-              background: color.ink, borderRadius: 16, padding: "24px 24px",
-              color: "#fff", marginTop: 20, display: "flex", alignItems: "center", gap: 20,
-              cursor: "pointer",
-            }} onClick={() => navigate("prototype")}>
-              <div style={{ width: 50, height: 50, borderRadius: 14, background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="edit" size={24} color={color.accent} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: "0 0 4px", fontFamily: font.sans, fontSize: 18 }}>Build Your Leadership Proposal</h3>
-                <p style={{ margin: 0, fontSize: 14, opacity: 0.7 }}>Use the Proposal Generator (on the Prototyping page) to turn your winning idea into a polished one-page proposal.</p>
-              </div>
-              <Icon name="chevronRight" size={20} color="rgba(255,255,255,0.5)" />
-            </div>
+            <CtaBanner icon="edit" title="Build Your Leadership Proposal"
+              desc="Use the Proposal Generator (on the Prototyping page) to turn your winning idea into a polished one-page proposal."
+              onClick={() => navigate("prototype")} />
 
             <AIHelper stepKey="pitch" accent={phaseColors.proposal.accent} />
           </div>
