@@ -408,6 +408,20 @@ function SectionHeading({ children }) {
   return <h3 style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, margin: "0 0 14px", color: color.ink }}>{children}</h3>;
 }
 
+// Rail-backed feature list — sparkle rows with bold titles, shared by overview and AI pages.
+function FeatureBox({ items, accent = color.accent }) {
+  return (
+    <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${color.line}`, marginBottom: 28 }}>
+      {items.map((item, i) => (
+        <div key={i} style={{ display: "flex", gap: 12, marginBottom: i < items.length - 1 ? 14 : 0 }}>
+          <div style={{ marginTop: 1 }}><Icon name="sparkle" size={16} color={accent} /></div>
+          <div><strong style={{ color: color.ink, fontSize: 15 }}>{item.title}:</strong> <span style={{ color: color.body, fontSize: 15, lineHeight: 1.6 }}>{item.desc}</span></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // The one deep-link banner style: dark ink panel, accent icon tile, chevron.
 function CtaBanner({ icon, title, desc, onClick }) {
   return (
@@ -2475,19 +2489,12 @@ export default function HackInABox() {
             </Lead>
 
             <SectionHeading>Why use AI in a Hack In A Box?</SectionHeading>
-            <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${ai.accent}20`, marginBottom: 28 }}>
-              {[
-                { title: "Prep in a fraction of the time", desc: "Draft agendas, prompts, and participant invites in minutes so you can focus on the people in the room." },
-                { title: "Hear your community more clearly", desc: "Synthesize interviews and survey notes into themes and empathy maps — without losing the human details." },
-                { title: "Get unstuck during ideation", desc: "When the room goes quiet, AI can offer fresh angles to react to and build on." },
-                { title: "Lower the barrier to building", desc: "Teams can prototype something tangible — a flyer, a page, a script — within the workshop itself." },
-              ].map((item, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, marginBottom: i < 3 ? 14 : 0 }}>
-                  <div style={{ marginTop: 1 }}><Icon name="sparkle" size={16} color={ai.accent} /></div>
-                  <div><strong style={{ color: color.ink, fontSize: 15 }}>{item.title}:</strong> <span style={{ color: color.body, fontSize: 15, lineHeight: 1.6 }}>{item.desc}</span></div>
-                </div>
-              ))}
-            </div>
+            <FeatureBox accent={ai.accent} items={[
+              { title: "Prep in a fraction of the time", desc: "Draft agendas, prompts, and participant invites in minutes so you can focus on the people in the room." },
+              { title: "Hear your community more clearly", desc: "Synthesize interviews and survey notes into themes and empathy maps — without losing the human details." },
+              { title: "Get unstuck during ideation", desc: "When the room goes quiet, AI can offer fresh angles to react to and build on." },
+              { title: "Lower the barrier to building", desc: "Teams can prototype something tangible — a flyer, a page, a script — within the workshop itself." },
+            ]} />
 
             <CtaBanner icon="chat" title="Try it now — the AI Thinking Partner"
               desc="A conversational coach built into this kit. It interviews you about your challenge and organizes your thinking into a ready-to-use brief."
@@ -2551,19 +2558,12 @@ export default function HackInABox() {
             </p>
             <SectionHeading>What Makes HIAB Different?</SectionHeading>
             <SectionArt src={artOverviewDifferent} alt="" max={560} />
-            <div style={{ background: color.rail, borderRadius: 16, padding: 28, border: `1px solid ${color.line}`, marginBottom: 28 }}>
-              {[
-                { title: "Faith at the Center", desc: "Every idea explored is rooted in your church's mission and values. We begin and end with prayer." },
-                { title: "Custom for Your Church", desc: "Every sprint is designed to reflect your congregation's unique strengths, challenges, and context." },
-                { title: "Immediate Impact", desc: "You'll leave with clear, God-inspired plans that you can start implementing right away." },
-                { title: "Ongoing Support", desc: "The playbook gives you everything to run sprints repeatedly, building an innovation culture." },
-              ].map((item, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, marginBottom: i < 3 ? 14 : 0 }}>
-                  <div style={{ marginTop: 1 }}><Icon name="sparkle" size={16} color={color.accent} /></div>
-                  <div><strong style={{ color: color.ink, fontSize: 15 }}>{item.title}:</strong> <span style={{ color: color.body, fontSize: 15, lineHeight: 1.6 }}>{item.desc}</span></div>
-                </div>
-              ))}
-            </div>
+            <FeatureBox items={[
+              { title: "Faith at the Center", desc: "Every idea explored is rooted in your church's mission and values. We begin and end with prayer." },
+              { title: "Custom for Your Church", desc: "Every sprint is designed to reflect your congregation's unique strengths, challenges, and context." },
+              { title: "Immediate Impact", desc: "You'll leave with clear, God-inspired plans that you can start implementing right away." },
+              { title: "Ongoing Support", desc: "The playbook gives you everything to run sprints repeatedly, building an innovation culture." },
+            ]} />
             <SectionHeading>The Design Thinking Process</SectionHeading>
             <SectionArt src={artOverviewProcess} alt="Five stepping stones — empathize, define, ideate, prototype, test — with the middle one highlighted" max={560} />
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
