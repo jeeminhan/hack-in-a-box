@@ -408,6 +408,28 @@ function SectionHeading({ children }) {
   return <h3 style={{ fontFamily: font.sans, fontSize: 20, fontWeight: 700, margin: "0 0 14px", color: color.ink }}>{children}</h3>;
 }
 
+// Numbered "pick your path" navigation rows — tells different readers where to go next.
+function PathList({ items, accent = color.accent, onNavigate }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+      {items.map((step, i) => (
+        <button key={step.id} onClick={() => onNavigate(step.id)} style={{
+          display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", textAlign: "left",
+          background: `${accent}06`, borderRadius: 12, cursor: "pointer",
+          border: `1px solid ${accent}18`, fontFamily: font.sans, width: "100%",
+        }}>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${accent}18`, color: accent, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, flexShrink: 0 }}>{i + 1}</div>
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: color.ink, fontSize: 15 }}>{step.title}</strong>
+            <p style={{ margin: "3px 0 0", fontSize: 14, color: color.muted, lineHeight: 1.5 }}>{step.desc}</p>
+          </div>
+          <Icon name="chevronRight" size={18} color={accent} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // Rail-backed feature list — sparkle rows with bold titles, shared by overview and AI pages.
 function FeatureBox({ items, accent = color.accent }) {
   return (
@@ -2556,6 +2578,12 @@ export default function HackInABox() {
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
               This isn't about technology or complicated tools. It's about guiding your team through creative discussions and hands-on activities to produce clear, actionable plans that work for your unique church family.
             </p>
+            <SectionHeading>Where should you start?</SectionHeading>
+            <PathList onNavigate={navigate} items={[
+              { id: "foundation", title: "I'm new to all of this", desc: "Keep reading in order — Heart of Innovation explains why creativity belongs in ministry, then Prepare walks you through planning your first sprint." },
+              { id: "prepare", title: "I'm planning a sprint", desc: "Jump to Prepare: leadership buy-in, recruiting, materials, and printable agendas — including a guide for first-time facilitators." },
+              { id: "empathy", title: "My sprint is happening soon", desc: "Go straight to Run the Sprint for step-by-step facilitation of each phase, from empathy maps to the final pitch." },
+            ]} />
             <SectionHeading>What Makes HIAB Different?</SectionHeading>
             <SectionArt src={artOverviewDifferent} alt="" max={560} />
             <FeatureBox items={[
@@ -2661,29 +2689,8 @@ export default function HackInABox() {
             <SectionArt src={artStopwatch} alt="A stopwatch marking a short timeboxed sprint" />
 
             <p style={{ fontSize: 16, lineHeight: 1.75, color: color.body, marginBottom: 24 }}>
-              Preparation is four steps, and the next four pages walk you through them in order:
+              Preparation is four steps, and the next four pages walk you through them in order. If you've never facilitated a sprint before, open the first-time facilitator guide right below before diving in.
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
-              {[
-                { id: "prepare-buyin", title: "Leadership Buy-In", desc: "Lay a spiritual foundation and bring your pastor or leadership on board." },
-                { id: "prepare-recruit", title: "Recruit & Plan", desc: "Get the right people in the room and map your countdown to sprint day." },
-                { id: "prepare-team", title: "Team & Materials", desc: "Assign roles and gather the supplies you'll need." },
-                { id: "prepare-agendas", title: "Sprint Formats", desc: "Pick a ready-to-print agenda (90 minutes to half a day) — and decide whether you're starting from a specific challenge or from empathy work." },
-              ].map((step, i) => (
-                <button key={step.id} onClick={() => navigate(step.id)} style={{
-                  display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", textAlign: "left",
-                  background: `${phaseColors.prepare.accent}06`, borderRadius: 12, cursor: "pointer",
-                  border: `1px solid ${phaseColors.prepare.accent}18`, fontFamily: font.sans, width: "100%",
-                }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${phaseColors.prepare.accent}18`, color: phaseColors.prepare.accent, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, flexShrink: 0 }}>{i + 1}</div>
-                  <div style={{ flex: 1 }}>
-                    <strong style={{ color: color.ink, fontSize: 15 }}>{step.title}</strong>
-                    <p style={{ margin: "3px 0 0", fontSize: 14, color: color.muted, lineHeight: 1.5 }}>{step.desc}</p>
-                  </div>
-                  <Icon name="chevronRight" size={18} color={phaseColors.prepare.accent} />
-                </button>
-              ))}
-            </div>
 
             <FacilitatorNote title="First-Time Facilitator? Start Here">
               <p>If you've never facilitated a sprint before, here's what to know:</p>
@@ -2694,6 +2701,13 @@ export default function HackInABox() {
               <p><strong>Celebrate generously.</strong> Clap for presentations, thank people for sharing, affirm wild ideas. A positive atmosphere unlocks creativity.</p>
               <p>If this is your first HIAB, start with the <strong>Quick Sprint (90 minutes)</strong> or <strong>Express Sprint (2 hours)</strong>. You can always run a longer format next time.</p>
             </FacilitatorNote>
+
+            <PathList accent={phaseColors.prepare.accent} onNavigate={navigate} items={[
+              { id: "prepare-buyin", title: "Leadership Buy-In", desc: "Lay a spiritual foundation and bring your pastor or leadership on board." },
+              { id: "prepare-recruit", title: "Recruit & Plan", desc: "Get the right people in the room and map your countdown to sprint day." },
+              { id: "prepare-team", title: "Team & Materials", desc: "Assign roles and gather the supplies you'll need." },
+              { id: "prepare-agendas", title: "Sprint Formats", desc: "Pick a ready-to-print agenda (90 minutes to half a day) — and decide whether you're starting from a specific challenge or from empathy work." },
+            ]} />
           </div>
         );
 
