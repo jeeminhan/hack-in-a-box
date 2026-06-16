@@ -637,6 +637,7 @@ function SCIPABChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [showHackableInfo, setShowHackableInfo] = useState(false);
   const [aiSummary, setAiSummary] = useState(null);
+  const [demo, setDemo] = useState(false);
   const [churchName, setChurchName] = useState("");
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -709,10 +710,12 @@ function SCIPABChatbot() {
         steps: SCIPAB_STEPS.map(({ key, label }) => ({ key, label })),
       });
       setAiSummary(data.result || data);
+      setDemo(!!data.demo);
       setIsLoading(false);
     } catch (err) {
       console.error("AI refinement error:", err);
       setAiSummary(null);
+      setDemo(true);
       setIsLoading(false);
       addBotMessage("I wasn't able to connect to the AI assistant right now, but your SCIPAB submission is saved above! You can still use it as-is for your Hack In A Box sprint.");
     }
@@ -826,7 +829,7 @@ function SCIPABChatbot() {
                 background: aiConfigured ? color.accent : color.line, color: "#fff",
                 fontFamily: font.sans, fontSize: 15, fontWeight: 600, cursor: aiConfigured ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                boxShadow: aiConfigured ? "0 4px 16px rgba(13,124,95,0.3)" : "none",
+                boxShadow: aiConfigured ? `0 4px 16px ${color.accent}4D` : "none",
               }}>
                 <Icon name="sparkle" size={18} color="#fff" /> {aiConfigured ? "Refine with AI Coach" : "AI Coach Not Configured"}
               </button>
@@ -847,6 +850,11 @@ function SCIPABChatbot() {
 
         {aiSummary && (
           <div style={{ marginTop: 16 }}>
+            {demo && (
+              <div style={{ background: color.rail, borderBottom: `1px solid ${color.line}`, padding: "8px 20px", fontSize: 12, color: color.accent, textAlign: "center", borderRadius: 10, marginBottom: 12 }}>
+                Running in <strong>demo mode</strong> — responses are example answers, not live AI.
+              </div>
+            )}
             {/* Hackability Score */}
             <div style={{
               background: color.ink, borderRadius: 16, padding: 24,
@@ -1029,7 +1037,7 @@ function SCIPABChatbot() {
             background: color.accent, color: "#fff",
             fontFamily: font.sans, fontSize: 16, fontWeight: 600, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            boxShadow: "0 4px 20px rgba(13,124,95,0.3)",
+            boxShadow: `0 4px 20px ${color.accent}4D`,
           }}>
             <Icon name="chat" size={20} color="#fff" /> Start Building Your Problem Statement
           </button>
@@ -1260,6 +1268,7 @@ function ProposalChatbot({ autoStart = false }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [aiProposal, setAiProposal] = useState(null);
+  const [demoProposal, setDemoProposal] = useState(false);
   const [teamName, setTeamName] = useState("");
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -1322,10 +1331,12 @@ function ProposalChatbot({ autoStart = false }) {
         steps: PROPOSAL_STEPS.map(({ key, label }) => ({ key, label })),
       });
       setAiProposal(data.result || data);
+      setDemoProposal(!!data.demo);
       setIsLoading(false);
     } catch (err) {
       console.error(err);
       setAiProposal(null);
+      setDemoProposal(true);
       setIsLoading(false);
       addBotMessage("I couldn't connect to the AI assistant, but your proposal content is saved above and ready to use!");
     }
@@ -1402,7 +1413,7 @@ function ProposalChatbot({ autoStart = false }) {
                 background: aiConfigured ? color.accent : color.line, color: "#fff",
                 fontFamily: font.sans, fontSize: 15, fontWeight: 600, cursor: aiConfigured ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                boxShadow: aiConfigured ? "0 4px 16px rgba(29,78,216,0.3)" : "none",
+                boxShadow: aiConfigured ? `0 4px 16px ${color.accent}4D` : "none",
               }}>{aiConfigured ? "Polish with AI" : "AI Not Configured"}</button>
             </div>
           )}
@@ -1418,6 +1429,11 @@ function ProposalChatbot({ autoStart = false }) {
 
         {aiProposal && (
           <div style={{ marginTop: 16 }}>
+            {demoProposal && (
+              <div style={{ background: color.rail, borderBottom: `1px solid ${color.line}`, padding: "8px 20px", fontSize: 12, color: color.accent, textAlign: "center", borderRadius: 10, marginBottom: 12 }}>
+                Running in <strong>demo mode</strong> — responses are example answers, not live AI.
+              </div>
+            )}
             {/* Elevator Pitch */}
             <div style={{ background: color.ink, borderRadius: 16, padding: 24, color: "#fff", marginBottom: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: color.accent, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Elevator Pitch</div>
@@ -1470,7 +1486,7 @@ function ProposalChatbot({ autoStart = false }) {
             background: color.accent, color: "#fff",
             fontFamily: font.sans, fontSize: 16, fontWeight: 600, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            boxShadow: "0 4px 20px rgba(29,78,216,0.3)",
+            boxShadow: `0 4px 20px ${color.accent}4D`,
           }}>Start Building Your Proposal</button>
         </div>
       )}
@@ -1775,7 +1791,7 @@ When you're ready to synthesize, start your message with "✦ Here's what I'm he
 
 Do NOT synthesize too early. Make sure you have concrete details first.`;
 
-function ThinkingPartner({ setMode }) {
+function ThinkingPartner({ setMode, hideHeader = false }) {
   const STORAGE_KEY = "hiab-partner-v1";
   const [messages, setMessages] = useState(() => {
     try {
@@ -1792,6 +1808,7 @@ function ThinkingPartner({ setMode }) {
   const [demo, setDemo] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(() => readStoredString("hiab-partner-autospeak", "off") === "on");
   const [handsFree, setHandsFree] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const scrollRef = useRef(null);
   const lastSpokenRef = useRef(null);
 
@@ -1838,6 +1855,7 @@ function ThinkingPartner({ setMode }) {
     setMessages(next);
     setInput("");
     setLoading(true);
+    setConfirmReset(false);
 
     const apiMessages = next.map((m) => ({ role: m.role, content: m.content }));
     const result = await callAI({ system: PARTNER_SYSTEM, messages: apiMessages, max_tokens: 600 });
@@ -1852,9 +1870,9 @@ function ThinkingPartner({ setMode }) {
   });
 
   const reset = () => {
-    if (!confirm("Start a new conversation? This one will be deleted.")) return;
     setMessages([{ role: "assistant", content: "Fresh start. What's a ministry challenge that's been on your mind?" }]);
     voice.stopSpeaking();
+    setConfirmReset(false);
   };
 
   const toggleHandsFree = () => {
@@ -1880,7 +1898,7 @@ function ThinkingPartner({ setMode }) {
   return (
     <div style={{ minHeight: "100vh", height: "100vh", background: color.rail, display: "flex", flexDirection: "column" }}>
       <style>{`@keyframes hiab-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }`}</style>
-      <ModeTopBar title="AI Thinking Partner" subtitle="CHAT-BASED COACH" accent={color.accent} onHome={() => setMode("picker")} />
+      {!hideHeader && <ModeTopBar title="AI Thinking Partner" subtitle="CHAT-BASED COACH" accent={color.accent} onHome={() => setMode("picker")} />}
 
       {demo && (
         <div style={{ background: color.rail, borderBottom: `1px solid ${color.line}`, padding: "8px 20px", fontSize: 12, color: color.accent, textAlign: "center" }}>
@@ -1976,7 +1994,14 @@ function ThinkingPartner({ setMode }) {
           </div>
         </div>
         <div style={{ maxWidth: 720, margin: "8px auto 0", display: "flex", justifyContent: "space-between", fontSize: 12, color: color.muted }}>
-          <button onClick={reset} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>Start over</button>
+          {confirmReset ? (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <button onClick={reset} style={{ background: color.accent, color: "#fff", border: "none", borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Delete &amp; start over</button>
+              <button onClick={() => setConfirmReset(false)} style={{ background: "none", border: `1px solid ${color.line}`, borderRadius: 6, padding: "3px 10px", fontSize: 12, color: color.muted, cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+            </span>
+          ) : (
+            <button onClick={() => setConfirmReset(true)} style={{ background: "none", border: "none", color: color.muted, cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>Start over</button>
+          )}
           <span>{Math.max(0, Math.floor((messages.length - 1) / 2))} exchanges</span>
         </div>
       </div>
@@ -1984,48 +2009,109 @@ function ThinkingPartner({ setMode }) {
   );
 }
 
-function Sidebar({ activePhase, onNavigate }) {
+function AIPartner({ onHome }) {
+  const [mode, setMode] = useState("structured");
+  return (
+    <div style={{ minHeight: "100vh", height: "100vh", display: "flex", flexDirection: "column", background: color.rail }}>
+      <ModeTopBar title="AI Thinking Partner" subtitle={mode === "structured" ? "STEP-BY-STEP" : "CHAT-BASED COACH"} accent={color.accent} onHome={onHome} />
+      <div style={{ display: "flex", justifyContent: "center", padding: "10px 20px 0", background: "#fff", borderBottom: `1px solid ${color.line}` }}>
+        <div style={{ display: "inline-flex", borderRadius: 999, border: `1px solid ${color.line}`, overflow: "hidden" }}>
+          {[{ key: "structured", label: "Step by step" }, { key: "chat", label: "Talk it through" }].map((m) => (
+            <button key={m.key} onClick={() => setMode(m.key)} style={{
+              padding: "7px 18px", fontSize: 13, fontWeight: 600, fontFamily: font.sans, cursor: "pointer",
+              background: mode === m.key ? color.accent : "transparent",
+              color: mode === m.key ? "#fff" : color.body,
+              border: "none",
+            }}>{m.label}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ flex: 1, display: mode === "structured" ? "flex" : "none", flexDirection: "column", overflowY: "auto" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+            <SCIPABChatbot />
+          </div>
+        </div>
+      </div>
+      <div style={{ flex: 1, display: mode === "chat" ? "flex" : "none", flexDirection: "column" }}>
+        <ThinkingPartner setMode={() => {}} hideHeader />
+      </div>
+    </div>
+  );
+}
+
+function Sidebar({ activePhase, onNavigate, view }) {
+  const [extraExpanded, setExtraExpanded] = useState(null);
+  const togglePhase = (id) => setExtraExpanded((prev) => prev === id ? null : id);
+  const isExpanded = (id) => id === activePhase || id === extraExpanded;
   return (
     <nav style={{ background: color.rail, borderRight: `1px solid ${color.lineSoft}`, padding: "22px 0", minWidth: 188 }}>
       <button onClick={() => onNavigate("home")} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 20px 20px", background: "none", border: "none", cursor: "pointer" }}>
         <BrandMark size={26} />
         <span style={{ fontFamily: font.sans, fontWeight: 700, fontSize: 14, color: color.ink }}>Hack In A Box</span>
       </button>
-      {PHASES.map((p) => (
-        <button key={p.id} onClick={() => onNavigate(p.sections[0])} style={{
-          display: "block", width: "100%", textAlign: "left", padding: "9px 20px",
-          fontFamily: font.sans, fontSize: 13.5, fontWeight: activePhase === p.id ? 700 : 500,
-          color: activePhase === p.id ? color.accent : color.body,
-          background: "none", border: "none", cursor: "pointer",
-        }}>{p.label}</button>
-      ))}
+      {PHASES.map((p) => {
+        const isActive = activePhase === p.id;
+        const open = isExpanded(p.id);
+        const sections = p.sections.filter((id) => id !== "partner");
+        return (
+          <div key={p.id}>
+            <div style={{ display: "flex", alignItems: "center", padding: "9px 20px", cursor: "pointer" }}>
+              <button onClick={() => onNavigate(p.sections[0])} style={{
+                flex: 1, textAlign: "left", background: "none", border: "none", cursor: "pointer",
+                fontFamily: font.sans, fontSize: 13.5, fontWeight: isActive ? 700 : 500,
+                color: isActive ? color.accent : color.body, padding: 0,
+              }}>{p.label}</button>
+              {sections.length > 1 && (
+                <button onClick={() => togglePhase(p.id)} style={{
+                  background: "none", border: "none", cursor: "pointer", padding: "0 0 0 4px",
+                  transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s",
+                }}>
+                  <Icon name="chevronDown" size={14} color={color.muted} />
+                </button>
+              )}
+            </div>
+            {open && sections.length > 1 && (
+              <div style={{ paddingBottom: 4 }}>
+                {sections.map((sectionId) => (
+                  <button key={sectionId} onClick={() => onNavigate(sectionId)} style={{
+                    display: "block", width: "100%", textAlign: "left", padding: "5px 20px 5px 34px",
+                    fontFamily: font.sans, fontSize: 12, fontWeight: view === sectionId ? 600 : 400,
+                    color: view === sectionId ? color.accent : color.muted,
+                    background: "none", border: "none", cursor: "pointer",
+                  }}>{SECTION_LABELS[sectionId]}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </nav>
   );
 }
 
 function StepBar({ activeSection, onNavigate }) {
-  const idx = STEPS.findIndex((s) => (STEP_PAGES[s.id] || [s.id]).includes(activeSection));
   return (
     <div style={{ display: "flex", alignItems: "center", padding: "10px 28px", borderBottom: `1px solid ${color.lineSoft}`, background: color.surface, overflowX: "auto" }}>
       {STEPS.map((s, i) => {
-        const state = i < idx ? "done" : i === idx ? "on" : "todo";
+        const isActive = (STEP_PAGES[s.id] || [s.id]).includes(activeSection);
         return (
           <div key={s.id} style={{ display: "flex", alignItems: "center" }}>
             <button onClick={() => onNavigate(s.id)} title={s.label} style={{
               display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer",
               fontFamily: font.sans, fontSize: 12, fontWeight: 700,
-              color: state === "on" ? color.accent : color.faint, padding: "2px 4px",
+              color: isActive ? color.accent : color.muted, padding: "2px 4px",
             }}>
               <span style={{
                 width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 10, fontWeight: 700,
-                background: state === "on" ? color.accent : state === "done" ? color.ink : "transparent",
-                border: state === "todo" ? `1.5px solid ${color.line}` : "none",
-                color: state === "todo" ? color.faint : "#fff",
+                background: isActive ? color.accent : "transparent",
+                border: isActive ? "none" : `1.5px solid ${color.line}`,
+                color: isActive ? "#fff" : color.muted,
               }}>
-                {state === "done" ? "✓" : s.n}
+                {s.n}
               </span>
-              {state === "on" && s.label}
+              {isActive && s.label}
             </button>
             {i < STEPS.length - 1 && <span style={{ width: 18, height: 1.5, background: color.line, margin: "0 4px" }} />}
           </div>
@@ -2052,7 +2138,7 @@ function FlowNav({ view, navigate, isMobile }) {
         border: dir === "next" ? "none" : `1px solid ${color.line}`,
         borderRadius: 10, padding: isMobile ? "11px 16px" : "11px 20px",
         fontFamily: font.sans, fontSize: 14, fontWeight: 700, cursor: "pointer",
-        maxWidth: "48%", boxShadow: dir === "next" ? "0 2px 12px rgba(124,58,237,0.25)" : "none",
+        maxWidth: "48%", boxShadow: dir === "next" ? `0 2px 12px ${color.accent}40` : "none",
       }}
     >
       {dir === "prev" && <Icon name="arrow" size={16} color={color.muted} style={{ transform: "rotate(180deg)" }} />}
@@ -2160,7 +2246,7 @@ function FeedbackWidget({ section, isMobile }) {
         border: answered ? `1px solid ${color.line}` : "none",
         borderRadius: 999, padding: isMobile ? "9px 13px" : "10px 16px",
         fontFamily: font.sans, fontSize: 13, fontWeight: 700, cursor: "pointer",
-        boxShadow: answered ? "0 4px 14px rgba(15,23,42,0.12)" : "0 6px 20px rgba(124,58,237,0.35)",
+        boxShadow: answered ? "0 4px 14px rgba(15,23,42,0.12)" : `0 6px 20px ${color.accent}59`,
       }}>
         <Icon name={answered ? "check" : "chat"} size={16} color={answered ? color.accent : "#fff"} />
         <span style={{ flexShrink: 0 }}>{answered ? "Sent" : "Feedback"}</span>
@@ -2423,7 +2509,7 @@ export default function HackInABox() {
             ]} />
 
             <CtaBanner icon="chat" title="Try it now — the AI Thinking Partner"
-              desc="A conversational coach built into this kit. It interviews you about your challenge and organizes your thinking into a ready-to-use brief."
+              desc="A structured step-by-step mode or a free-flowing conversation — both help you define your challenge and produce a ready-to-use brief."
               onClick={() => navigate("partner")} />
 
             <SectionHeading>Tools you can use</SectionHeading>
@@ -2924,7 +3010,9 @@ export default function HackInABox() {
 
             <hr style={{ border: "none", borderTop: `1px solid ${color.line}`, margin: "32px 0" }} />
             <SectionHeading>Build your problem statement (AI-guided)</SectionHeading>
-            <SCIPABChatbot />
+            <CtaBanner icon="sparkle" title="Build it with the AI Thinking Partner"
+              desc="Walk through the SCIPAB framework step by step, or talk it through in a free-flowing conversation — both produce a ready-to-use HMW statement."
+              onClick={() => navigate("partner")} />
           </div>
         );
 
@@ -3050,7 +3138,6 @@ export default function HackInABox() {
             <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>The table storyboards Maria experiencing their winning idea — six frames, thirty minutes, testable.</p>
             <WalkthroughDemo key="prototype" script={WALKTHROUGHS.prototype} accent={phaseColors.prototype.accent} />
             <PrototypePromptBuilder />
-            <ProposalAccordion />
           </div>
         );
 
@@ -3089,7 +3176,7 @@ export default function HackInABox() {
               <TemplateCard title="Empathy Map Template" image={artEmpathyMap} accent={color.accent} desc="A 4-quadrant canvas for understanding." items={["Says — Direct quotes", "Thinks — Unspoken thoughts", "Does — Observable actions", "Feels — Emotions"]} onLaunch={() => navigate("empathy")} />
               <TemplateCard title="Persona Card Template" image={artPersonaCard} accent={color.accent} desc="Structured profile card for personas." items={["Name, age, role, backstory", "Goals and motivations", "Pain points", "Faith journey and church needs"]} onLaunch={() => navigate("personas")} />
               <TemplateCard title="Problem Statement Worksheet" image={artProblemStatement} accent={color.accent} desc="Guided worksheet for HMW statements." items={["Observation prompts", "Pain clustering exercise", "HMW formula and examples", "Quality checklist"]} onLaunch={() => navigate("problem")} />
-              <TemplateCard title="SCIPAB Submission Template" image={artTemplateScipab} accent={color.accent} desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("problem")} launchLabel="Open AI-guided chatbot" />
+              <TemplateCard title="SCIPAB Submission Template" image={artTemplateScipab} accent={color.accent} desc="The same framework used in our chatbot." items={["Situation — Current state", "Complication — Critical issues", "Implication — Consequences", "Position, Action, Benefit"]} onLaunch={() => navigate("partner")} launchLabel="Open AI Thinking Partner" />
               <TemplateCard title="Crazy 8s Sheet" image={artHandsCards} accent={color.accent} desc="Fold one sheet of paper into 8 panels for rapid idea sketching." items={["8 panels, one sketch per panel", "1 minute per sketch — 8 minutes total", "Write your HMW question at the top", "Circle your top 2 ideas to share"]} onLaunch={() => navigate("crazy8s")} />
               <TemplateCard title="Feedback Cards" accent={color.accent} desc="Structured feedback for prototyping." items={["I like...", "I wish...", "What if...", "Overall notes"]} onLaunch={() => navigate("feedback")} />
             </div>
@@ -3169,7 +3256,7 @@ export default function HackInABox() {
               </div>
 
               <TipBox accent={phaseColors.after.accent} label="Pro tip">
-                Use the <strong onClick={() => navigate("prototype")} style={{ color: phaseColors.after.accent, cursor: "pointer", textDecoration: "underline" }}>Proposal Generator tool</strong> (inside the Prototyping section) to create a polished, AI-refined proposal you can present to leadership.
+                Use the <strong onClick={() => navigate("pitch")} style={{ color: phaseColors.after.accent, cursor: "pointer", textDecoration: "underline" }}>Proposal Generator tool</strong> (on the Pitch page) to create a polished, AI-refined proposal you can present to leadership.
               </TipBox>
             </Accordion>
           </div>
@@ -3218,8 +3305,8 @@ export default function HackInABox() {
             </Accordion>
 
             <CtaBanner icon="edit" title="Ready to Pitch Your Idea?"
-              desc="Use the Proposal Generator in the Prototyping section to build a polished leadership proposal from your sprint results."
-              onClick={() => navigate("prototype")} />
+              desc="Use the Proposal Generator on the Pitch page to build a polished leadership proposal from your sprint results."
+              onClick={() => navigate("pitch")} />
           </div>
         );
 
@@ -3247,14 +3334,12 @@ export default function HackInABox() {
             <p style={{ fontSize: 15, lineHeight: 1.7, color: color.body, marginBottom: 16 }}>Story, problem, idea, evidence, ask — step through a three-minute pitch built from the sprint you just watched.</p>
             <WalkthroughDemo key="pitch" script={WALKTHROUGHS.pitch} accent={phaseColors.proposal.accent} />
 
-            <CtaBanner icon="edit" title="Build Your Leadership Proposal"
-              desc="Use the Proposal Generator (on the Prototyping page) to turn your winning idea into a polished one-page proposal."
-              onClick={() => navigate("prototype")} />
+            <ProposalAccordion />
           </div>
         );
 
       case "partner":
-        return <ThinkingPartner setMode={(m) => navigate(m === "picker" ? "home" : m)} />;
+        return <AIPartner onHome={() => navigate("home")} />;
 
       default: return null;
     }
@@ -3270,11 +3355,11 @@ export default function HackInABox() {
         }
         html { -webkit-text-size-adjust: 100%; }
       `}</style>
-      {!isMobile && <Sidebar activePhase={activePhase} onNavigate={goNav} />}
+      {!isMobile && <Sidebar activePhase={activePhase} onNavigate={goNav} view={view} />}
       {isMobile && navOpen && (
         <div onClick={() => setNavOpen(false)} style={{ position: "fixed", inset: 0, background: `${color.ink}55`, zIndex: 40 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 41 }}>
-            <Sidebar activePhase={activePhase} onNavigate={goNav} />
+            <Sidebar activePhase={activePhase} onNavigate={goNav} view={view} />
           </div>
         </div>
       )}
