@@ -1635,6 +1635,35 @@ function int16ToFloat32(int16) {
   return float32;
 }
 
+// Picks the best available English voice for the browser fallback. Prefers
+// known-good US English voices, then any en-US, then any English at all.
+// Returns null if voices haven't loaded yet (the utterance's u.lang="en-US"
+// still steers the OS toward an English voice in that case).
+function pickEnglishVoice() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices() || [];
+  if (!voices.length) return null;
+  const PREFERRED = ["Samantha", "Google US English", "Microsoft Aria", "Microsoft Jenny", "Alex"];
+  for (const name of PREFERRED) {
+    const m = voices.find((v) => v.name === name);
+    if (m) return m;
+  }
+  return (
+    voices.find((v) => /^en[-_]US/i.test(v.lang)) ||
+    voices.find((v) => /^en\b/i.test(v.lang)) ||
+    null
+  );
+}
+
+// Voice lists load asynchronously in some browsers; nudge them to populate so
+// pickEnglishVoice() has data on the first fallback utterance.
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  try {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => { try { window.speechSynthesis.getVoices(); } catch { /* no-op */ } };
+  } catch { /* speechSynthesis unavailable */ }
+}
+
 // ========== VOICE: speech recognition + synthesis hook ==========
 // Speech-to-text uses the browser's SpeechRecognition. Text-to-speech prefers
 // Gemini TTS via /api/tts (natural voice) and falls back to the browser's
@@ -1705,6 +1734,12 @@ function useVoice({ onTranscript, onSpeakEnd } = {}) {
     if (!window.speechSynthesis) { setSpeaking(false); if (onSpeakEnd) onSpeakEnd(); return; }
     try {
       const u = new SpeechSynthesisUtterance(clean);
+      // Pin English so the OS never reads English text with its default
+      // (possibly non-English) system voice — the cause of the "Japanese
+      // English voice" in the fallback path.
+      u.lang = "en-US";
+      const enVoice = pickEnglishVoice();
+      if (enVoice) u.voice = enVoice;
       u.rate = 1.0;
       u.pitch = 1.0;
       u.onend = () => { setSpeaking(false); if (onSpeakEnd) onSpeakEnd(); };
@@ -1753,13 +1788,16 @@ function useVoice({ onTranscript, onSpeakEnd } = {}) {
       if (controller.signal.aborted) return;
       abortRef.current = null;
       if (res.ok && data.audio) {
+        console.info("[voice] using Gemini TTS");
         await playPcm(data.audio, data.sampleRate);
       } else {
+        console.info("[voice] falling back to browser speechSynthesis", data?.demo ? "(no GEMINI_API_KEY / demo mode)" : "(no audio in response)");
         speakWithBrowser(clean);
       }
     } catch (err) {
       if (err?.name === "AbortError") return;
       abortRef.current = null;
+      console.info("[voice] /api/tts unreachable — falling back to browser speechSynthesis");
       speakWithBrowser(clean);
     }
   };
