@@ -1835,7 +1835,7 @@ function ThinkingPartner({ setMode, hideHeader = false }) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : [
-        { role: "assistant", content: "Hi — I'm here to help you think through a challenge your church is facing. No worksheets, no formal process. Just tell me what's on your mind.\n\nWant to talk it out in the car? Tap the mic to speak, or turn on Hands-free mode to have a real conversation.\n\nWhat's a ministry situation you've been turning over in your head lately?" },
+        { role: "assistant", content: "Hi — I'm here to help you think through a challenge your church is facing. No worksheets, no formal process. Just tell me what's on your mind.\n\nPrefer to talk? Turn on Voice mode and we can go back and forth out loud — or just tap the mic to speak a single message.\n\nWhat's a ministry situation you've been turning over in your head lately?" },
       ];
     } catch {
       return [];
@@ -1844,13 +1844,13 @@ function ThinkingPartner({ setMode, hideHeader = false }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [demo, setDemo] = useState(false);
-  const [autoSpeak, setAutoSpeak] = useState(() => readStoredString("hiab-partner-autospeak", "off") === "on");
-  const [handsFree, setHandsFree] = useState(false);
+  // Single voice toggle: when on, replies are read aloud and the mic
+  // auto-listens again after each reply for a hands-free back-and-forth.
+  // Starts off so the page never grabs the mic or talks unprompted.
+  const [voiceMode, setVoiceMode] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const scrollRef = useRef(null);
   const lastSpokenRef = useRef(null);
-
-  useEffect(() => { writeStoredString("hiab-partner-autospeak", autoSpeak ? "on" : "off"); }, [autoSpeak]);
 
   const sendRef = useRef(null);
 
@@ -1859,15 +1859,15 @@ function ThinkingPartner({ setMode, hideHeader = false }) {
       if (interim) setInput(interim);
       if (isFinal && final) {
         setInput(final);
-        if (handsFree && ended) {
-          // auto-send when user stops talking in hands-free mode
+        if (voiceMode && ended) {
+          // auto-send when the user stops talking in voice mode
           setTimeout(() => sendRef.current && sendRef.current(final), 200);
         }
       }
     },
     onSpeakEnd: () => {
-      if (handsFree && !loading) {
-        // After AI finishes speaking, auto-listen for the next reply
+      if (voiceMode && !loading) {
+        // After the AI finishes speaking, auto-listen for the next reply
         setTimeout(() => voice.startListening(), 400);
       }
     },
@@ -1878,12 +1878,12 @@ function ThinkingPartner({ setMode, hideHeader = false }) {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 
     const last = messages[messages.length - 1];
-    if (last && last.role === "assistant" && autoSpeak && lastSpokenRef.current !== last.content) {
+    if (last && last.role === "assistant" && voiceMode && lastSpokenRef.current !== last.content) {
       lastSpokenRef.current = last.content;
       voice.speak(last.content);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, loading, autoSpeak]);
+  }, [messages, loading, voiceMode]);
 
   const send = async (overrideText) => {
     const text = (overrideText ?? input).trim();
@@ -1913,14 +1913,13 @@ function ThinkingPartner({ setMode, hideHeader = false }) {
     setConfirmReset(false);
   };
 
-  const toggleHandsFree = () => {
-    if (handsFree) {
+  const toggleVoiceMode = () => {
+    if (voiceMode) {
       voice.stopListening();
       voice.stopSpeaking();
-      setHandsFree(false);
+      setVoiceMode(false);
     } else {
-      setHandsFree(true);
-      setAutoSpeak(true);
+      setVoiceMode(true);
       setTimeout(() => voice.startListening(), 100);
     }
   };
@@ -1972,20 +1971,14 @@ function ThinkingPartner({ setMode, hideHeader = false }) {
           {/* Voice control row */}
           {(voice.supported.recog || voice.supported.synth) && (
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, flexWrap: "wrap", fontSize: 12, color: color.muted }}>
-              {voice.supported.synth && (
-                <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-                  <input type="checkbox" checked={autoSpeak} onChange={(e) => setAutoSpeak(e.target.checked)} />
-                  Auto-speak replies
-                </label>
-              )}
               {voice.supported.recog && voice.supported.synth && (
-                <button onClick={toggleHandsFree} style={{
-                  background: handsFree ? color.accent : "#fff",
-                  color: handsFree ? "#fff" : color.accent,
+                <button onClick={toggleVoiceMode} style={{
+                  background: voiceMode ? color.accent : "#fff",
+                  color: voiceMode ? "#fff" : color.accent,
                   border: `1px solid ${color.accent}`, borderRadius: 20,
                   padding: "4px 12px", fontSize: 12, fontWeight: 600,
                   cursor: "pointer", fontFamily: "inherit",
-                }}>{handsFree ? "Hands-free ON" : "Hands-free mode"}</button>
+                }}>{voiceMode ? "Voice mode ON" : "Voice mode"}</button>
               )}
               {voice.speaking && (
                 <button onClick={voice.stopSpeaking} style={{ background: "none", border: "none", color: color.accent, cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline", fontFamily: "inherit" }}>Stop speaking</button>
